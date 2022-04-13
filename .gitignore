@@ -1,0 +1,6 @@
+data/cifar10/cifar-10-batches-py/*
+/data/cifar10/cifar-10-python.tar.gz
+*obj
+/trainers/outputs/*
+*.ipynb_checkpoints*
+*.idea*
