@@ -4,3 +4,6 @@ data/cifar10/cifar-10-batches-py/*
 /trainers/outputs/*
 *.ipynb_checkpoints*
 *.idea*
+
+data/cifar10/cifar-10-batches-py/*
+*.pyc
