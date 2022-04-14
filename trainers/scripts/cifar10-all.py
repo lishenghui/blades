@@ -91,7 +91,7 @@ MOMENTUM = args.momentum
 LOG_DIR = (
     EXP_DIR
     + ("debug/" if args.debug else "")
-    + f"f{N_BYZ}_{args.attack}_{args.agg}_m{args.momentum}_b{args.num_byzantine}"
+    + f"f{N_BYZ}_{args.attack}_{args.agg}_m{args.momentum}"
     + (f"_lr{args.lr}" if args.lr !=0.1 else "")
     + (f"_bz{args.batch_size}" if args.batch_size !=32 else "")
     + f"_seed{args.seed}"
@@ -323,9 +323,8 @@ def main(args):
         else:
             trainer.train(epoch)
         evaluator.evaluate(epoch)
-        # trainer.parallel_call(lambda w: w.data_loader.sampler.set_epoch(epoch))
         scheduler.step()
-        print(f"E={epoch}; Learning rate = {scheduler.get_lr()[0]:}")
+        print(f"E={epoch}; Learning rate = {scheduler.get_last_lr()[0]:}")
 
 
 if __name__ == "__main__":
