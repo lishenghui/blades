@@ -7,3 +7,4 @@ data/cifar10/cifar-10-batches-py/*
 
 data/cifar10/cifar-10-batches-py/*
 *.pyc
+*nohup.out

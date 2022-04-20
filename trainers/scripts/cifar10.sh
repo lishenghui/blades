@@ -1,10 +1,10 @@
 #!/bin/bash
 
 
-cuda=0
+cuda=3
 for seed in 0
 do
-    for num_byzantine in 0
+    for num_byzantine in 5
     do
         for attack in "ALIE" # "IPM" "LF" "IPM_large"  "ALIE"  "IPM" "ALIE" # "ALIE" "IPM" 
         do  
@@ -12,7 +12,8 @@ do
             do
                 export CUDA_VISIBLE_DEVICES=$(((cuda)))
                 cuda=$(((cuda + 1) % 4))
-                args="--round 50 --use-cuda --batch_size 32 --seed $seed --agg ${agg} --momentum 0 --num_byzantine ${num_byzantine} --attack $attack --fedavg"
+                args="--round 150 --use-cuda --batch_size 32 --seed $seed --agg ${agg} --momentum 0.9 --num_byzantine ${num_byzantine} --attack $attack"
+                # args="--round 50 --use-cuda --batch_size 32 --seed $seed --agg ${agg} --momentum 0 --num_byzantine ${num_byzantine} --attack $attack --fedavg"
                 echo ${args}
                 arg_str="\""
                 for var in ${args}

@@ -202,7 +202,7 @@ class WorkerWithMomentum(TorchWorker):
                 if "momentum_buffer" not in param_state:
                     param_state["momentum_buffer"] = torch.clone(p.grad).detach()
                 else:
-                    param_state["momentum_buffer"].mul_(self.momentum).add_(p.grad)
+                    param_state["momentum_buffer"].mul_(self.momentum).add_(p.grad.mul_(1 - self.momentum))
 
     def _get_saved_grad(self) -> torch.Tensor:
         layer_gradients = []
