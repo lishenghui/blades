@@ -1,8 +1,9 @@
-from torch.hub import load_state_dict_from_url
 import torch.nn as nn
-from .utils.transformers import TransformerClassifier
-from .utils.tokenizer import Tokenizer
+from torch.hub import load_state_dict_from_url
+
 from .utils.helpers import pe_check
+from .utils.tokenizer import Tokenizer
+from .utils.transformers import TransformerClassifier
 
 try:
     from timm.models.registry import register_model
@@ -40,7 +41,7 @@ class CVT(nn.Module):
                                    activation=None,
                                    n_conv_layers=1,
                                    conv_bias=True)
-
+        
         self.classifier = TransformerClassifier(
             sequence_length=self.tokenizer.sequence_length(n_channels=n_input_channels,
                                                            height=img_size,
@@ -56,7 +57,7 @@ class CVT(nn.Module):
             num_classes=num_classes,
             positional_embedding=positional_embedding
         )
-
+    
     def forward(self, x):
         x = self.tokenizer(x)
         return self.classifier(x)
@@ -72,7 +73,7 @@ def _cvt(arch, pretrained, progress,
                 embedding_dim=embedding_dim,
                 kernel_size=kernel_size,
                 *args, **kwargs)
-
+    
     if pretrained and arch in model_urls:
         state_dict = load_state_dict_from_url(model_urls[arch],
                                               progress=progress)

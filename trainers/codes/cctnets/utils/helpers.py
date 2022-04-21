@@ -1,7 +1,7 @@
+import logging
 import math
 import torch
 import torch.nn.functional as F
-import logging
 
 _logger = logging.getLogger('train')
 

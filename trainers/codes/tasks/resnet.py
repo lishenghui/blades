@@ -19,6 +19,7 @@ import torch
 import torch.nn as nn
 from torch.nn import functional as F
 
+
 # from mlbench_core.controlflow.pytorch.helpers import convert_dtype
 
 
@@ -75,7 +76,7 @@ class BasicBlockV1(nn.Module):
         `resnet <https://github.com/pytorch/vision/blob/master/torchvision/models/resnet.py>`_.
         but with different nn.BatchNorm2d configuration.
     """
-
+    
     def __init__(self, in_channels, out_channels, stride=1, downsample=None):
         """
         :param in_channels: input channels
@@ -88,7 +89,7 @@ class BasicBlockV1(nn.Module):
         :type downsample: nn.module or None, optional
         """
         super(BasicBlockV1, self).__init__()
-
+        
         self.conv1 = conv3x3(in_channels, out_channels, stride)
         self.bn1 = batch_norm(out_channels)
         self.relu = nn.ReLU(inplace=True)
@@ -96,16 +97,16 @@ class BasicBlockV1(nn.Module):
         self.bn2 = batch_norm(out_channels)
         self.downsample = downsample
         self.stride = stride
-
+    
     def forward(self, x):
         residual = self.downsample(x) if self.downsample is not None else x
-
+        
         out = self.conv1(x)
         out = self.bn1(out)
         out = self.relu(out)
         out = self.conv2(out)
         out = self.bn2(out)
-
+        
         # Shortcut connection.
         out += residual
         out = self.relu(out)
@@ -116,7 +117,7 @@ class BasicBlockV2(nn.Module):
     """The basic block in :cite:`he2016identity` is used for shallower ResNets.
     The activation functions (ReLU and BN) are viewed as pre-activation of the weight layer.
     """
-
+    
     def __init__(self, in_channels, out_channels, stride=1, downsample=None):
         """
         :param in_channels: input channels
@@ -129,7 +130,7 @@ class BasicBlockV2(nn.Module):
         :type downsample: nn.module or None, optional
         """
         super(BasicBlockV2, self).__init__()
-
+        
         self.bn1 = batch_norm(in_channels)
         self.relu = nn.ReLU(inplace=True)
         self.conv1 = conv3x3(in_channels, out_channels, stride)
@@ -137,17 +138,17 @@ class BasicBlockV2(nn.Module):
         self.conv2 = conv3x3(out_channels, out_channels)
         self.downsample = downsample
         self.stride = stride
-
+    
     def forward(self, x):
         residual = self.downsample(x) if self.downsample is not None else x
-
+        
         out = self.bn1(x)
         out = self.relu(out)
         out = self.conv1(out)
         out = self.bn2(out)
         out = self.relu(out)
         out = self.conv2(out)
-
+        
         # Shortcut connection.
         out += residual
         return out
@@ -171,24 +172,24 @@ class ResNetCIFAR(nn.Module):
         num_classes (int): Number of output classes
         version (int): Resnet version (1 or 2). Default: ``1``
     """
-
+    
     def __init__(
-        self, resnet_size, bottleneck, num_classes, version=_DEFAULT_RESNETCIFAR_VERSION
+            self, resnet_size, bottleneck, num_classes, version=_DEFAULT_RESNETCIFAR_VERSION
     ):
         super(ResNetCIFAR, self).__init__()
-
+        
         if resnet_size % 6 != 2:
             raise ValueError(
                 "The resnet_size should be (6 * num_blocks + 2). Got {}.".format(
                     resnet_size
                 )
             )
-
+        
         num_blocks = (resnet_size - 2) // 6
-
+        
         if version not in (1, 2):
             raise ValueError("Resnet version should be 1 or 2, got {}.".format(version))
-
+        
         if bottleneck:
             raise NotImplementedError
         else:
@@ -198,7 +199,7 @@ class ResNetCIFAR(nn.Module):
                 block = BasicBlockV2
             else:
                 raise NotImplementedError
-
+        
         # The first layer
         if version == 1 or version == 2:
             self.prep = nn.Sequential(
@@ -208,7 +209,7 @@ class ResNetCIFAR(nn.Module):
             )
         else:
             raise NotImplementedError
-
+        
         # 6n layers
         self.conv_1 = self._make_layer(
             block, in_channels=16, out_channels=16, num_blocks=num_blocks, init_stride=1
@@ -219,21 +220,21 @@ class ResNetCIFAR(nn.Module):
         self.conv_3 = self._make_layer(
             block, in_channels=32, out_channels=64, num_blocks=num_blocks, init_stride=2
         )
-
+        
         # Add an average pooling layer:
         # the output of conv_3 has shape H=W=8
         # the output average pooling will be (batch_size, channels, 1, 1)
         self.avgpool = nn.AvgPool2d(8, stride=8)
-
+        
         self.classifier = nn.Linear(in_features=64, out_features=num_classes, bias=True)
-
+        
         for m in self.modules():
             if isinstance(m, nn.Conv2d):
                 nn.init.kaiming_normal_(m.weight, mode="fan_out", nonlinearity="relu")
             elif isinstance(m, nn.BatchNorm2d):
                 nn.init.constant_(m.weight, 1)
                 nn.init.constant_(m.bias, 0)
-
+    
     def _make_layer(self, block, in_channels, out_channels, num_blocks, init_stride=1):
         """Create a block of 2*n depth.
         .. note::
@@ -258,23 +259,23 @@ class ResNetCIFAR(nn.Module):
                 ),
                 batch_norm(num_features=out_channels),
             )
-
+        
         # Maybe use downsample in the first block.
         layers = [
             block(in_channels, out_channels, stride=init_stride, downsample=downsample)
         ]
         for _ in range(1, num_blocks):
             layers.append(block(out_channels, out_channels))
-
+        
         return nn.Sequential(*layers)
-
+    
     def forward(self, x):
         x = self.prep(x)
         x = self.conv_1(x)
         x = self.conv_2(x)
         x = self.conv_3(x)
         x = self.avgpool(x)
-
+        
         # The plane has shape (1, 1)
         x = x.view(x.size(0), -1)
         x = self.classifier(x)
@@ -286,10 +287,10 @@ class ResNetCIFAR(nn.Module):
 
 class PreActBlock(nn.Module):
     r""""Pre-activation Resnet Block used in ResNet-18"""
-
+    
     def __init__(self, in_channels, out_channels, stride=1):
         super(PreActBlock, self).__init__()
-
+        
         self.bn1 = nn.BatchNorm2d(in_channels)
         self.conv1 = nn.Conv2d(
             in_channels,
@@ -303,14 +304,14 @@ class PreActBlock(nn.Module):
         self.conv2 = nn.Conv2d(
             out_channels, out_channels, kernel_size=3, stride=1, padding=1, bias=False
         )
-
+        
         if stride != 1 or in_channels != out_channels:
             self.shortcut = nn.Sequential(
                 nn.Conv2d(
                     in_channels, out_channels, kernel_size=1, stride=stride, bias=False
                 )
             )
-
+    
     def forward(self, x):
         out = F.relu(self.bn1(x))
         shortcut = self.shortcut(out) if hasattr(self, "shortcut") else x
@@ -328,7 +329,7 @@ class ResNet18CIFAR10(nn.Module):
         layers (:obj:`list` of :obj:`int`): List of resnet blocks per layer. Must contain 4 elements.
         num_classes (int): Number of output classes. Default: ``1000``
     """
-
+    
     def __init__(self, layers, num_classes=1000):
         super(ResNet18CIFAR10, self).__init__()
         self.prep = nn.Sequential(
@@ -336,18 +337,17 @@ class ResNet18CIFAR10(nn.Module):
             nn.BatchNorm2d(64),
             nn.ReLU(),
         )
-
+        
         self.layers = nn.Sequential(
             self._make_layer(64, 64, layers[0], stride=1),
             self._make_layer(64, 128, layers[1], stride=2),
             self._make_layer(128, 256, layers[2], stride=2),
             self._make_layer(256, 256, layers[3], stride=2),
         )
-
+        
         self.classifier = nn.Linear(512, num_classes)
-
+    
     def _make_layer(self, in_channels, out_channels, num_blocks, stride):
-
         strides = [stride] + [1] * (num_blocks - 1)
         layers = []
         for stride in strides:
@@ -357,24 +357,24 @@ class ResNet18CIFAR10(nn.Module):
                 )
             )
             in_channels = out_channels
-
+        
         return nn.Sequential(*layers)
-
+    
     def forward(self, x):
         x = self.prep(x)
-
+        
         x = self.layers(x)
-
+        
         x_avg = F.adaptive_avg_pool2d(x, (1, 1))
         x_avg = x_avg.view(x_avg.size(0), -1)
-
+        
         x_max = F.adaptive_max_pool2d(x, (1, 1))
         x_max = x_max.view(x_max.size(0), -1)
-
+        
         x = torch.cat([x_avg, x_max], dim=-1)
-
+        
         x = self.classifier(x)
-
+        
         return x
 
 
@@ -404,11 +404,11 @@ def get_resnet_model(model, version, dtype, num_classes=1000, use_cuda=False):
     if model == "resnet18":
         model = resnet18_bkj(num_classes)
     elif model in ["resnet20", "resnet32", "resnet44", "resnet56", "resnet110"]:
-        resnet_size = int(model[len("resnet") :])
+        resnet_size = int(model[len("resnet"):])
         model = ResNetCIFAR(resnet_size, False, 10, version=version)
     else:
         raise NotImplementedError("{}_{} is not implemented.".format(model, version))
-
+    
     model = convert_dtype(dtype, model)
     if use_cuda:
         model = model.cuda()

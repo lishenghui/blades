@@ -23,7 +23,7 @@ class VGG(nn.Module):
     """
     VGG model
     """
-
+    
     def __init__(self, features):
         super(VGG, self).__init__()
         self.features = features
@@ -42,7 +42,7 @@ class VGG(nn.Module):
                 n = m.kernel_size[0] * m.kernel_size[1] * m.out_channels
                 m.weight.data.normal_(0, math.sqrt(2.0 / n))
                 m.bias.data.zero_()
-
+    
     def forward(self, x):
         x = self.features(x)
         x = x.view(x.size(0), -1)

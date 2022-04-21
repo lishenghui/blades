@@ -50,8 +50,10 @@ def aggregate(update_list, alphas=None):
 def l2dist(model1, model2):
     return LA.norm(model1 - model2)
 
+
 def l2norm(model):
     return LA.norm(model)
+
 
 def geometric_median_objective(median, points, alphas):
     return sum([alpha * l2dist(median, p) for alpha, p in zip(alphas, points)])

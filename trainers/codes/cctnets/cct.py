@@ -1,8 +1,9 @@
-from torch.hub import load_state_dict_from_url
 import torch.nn as nn
-from .utils.transformers import TransformerClassifier
-from .utils.tokenizer import Tokenizer
+from torch.hub import load_state_dict_from_url
+
 from .utils.helpers import pe_check, fc_check
+from .utils.tokenizer import Tokenizer
+from .utils.transformers import TransformerClassifier
 
 try:
     from timm.models.registry import register_model
@@ -51,7 +52,7 @@ class CCT(nn.Module):
                  positional_embedding='learnable',
                  *args, **kwargs):
         super(CCT, self).__init__()
-
+        
         self.tokenizer = Tokenizer(n_input_channels=n_input_channels,
                                    n_output_channels=embedding_dim,
                                    kernel_size=kernel_size,
@@ -64,7 +65,7 @@ class CCT(nn.Module):
                                    activation=nn.ReLU,
                                    n_conv_layers=n_conv_layers,
                                    conv_bias=False)
-
+        
         self.classifier = TransformerClassifier(
             sequence_length=self.tokenizer.sequence_length(n_channels=n_input_channels,
                                                            height=img_size,
@@ -80,7 +81,7 @@ class CCT(nn.Module):
             num_classes=num_classes,
             positional_embedding=positional_embedding
         )
-
+    
     def forward(self, x):
         x = self.tokenizer(x)
         return self.classifier(x)
@@ -101,7 +102,7 @@ def _cct(arch, pretrained, progress,
                 stride=stride,
                 padding=padding,
                 *args, **kwargs)
-
+    
     if pretrained:
         if arch in model_urls:
             state_dict = load_state_dict_from_url(model_urls[arch],

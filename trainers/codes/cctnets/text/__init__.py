@@ -1,3 +1,3 @@
-from .vit import *
-from .cvt import *
 from .cct import *
+from .cvt import *
+from .vit import *

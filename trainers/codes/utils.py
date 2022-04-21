@@ -1,6 +1,6 @@
+import logging
 import os
 import shutil
-import logging
 
 
 class BColors(object):
@@ -33,11 +33,11 @@ def accuracy(output, target, topk=(1,)):
     """Computes the precision@k for the specified values of k"""
     maxk = max(topk)
     batch_size = target.size(0)
-
+    
     _, pred = output.topk(maxk, 1, True, True)
     pred = pred.t()
     correct = pred.eq(target.view(1, -1).expand_as(pred))
-
+    
     res = []
     for k in topk:
         correct_k = correct[:k].view(-1).float().sum(0)
@@ -63,9 +63,9 @@ def initialize_logger(log_root):
     else:
         shutil.rmtree(log_root)
         os.makedirs(log_root)
-
+    
     print(f"Logging files to {log_root}")
-
+    
     # Only to file; One dict per line; Easy to process
     json_logger = logging.getLogger("stats")
     json_logger.setLevel(logging.INFO)
@@ -73,7 +73,7 @@ def initialize_logger(log_root):
     fh.setLevel(logging.INFO)
     fh.setFormatter(logging.Formatter("%(message)s"))
     json_logger.addHandler(fh)
-
+    
     debug_logger = logging.getLogger("debug")
     debug_logger.setLevel(logging.INFO)
     ch = logging.StreamHandler()

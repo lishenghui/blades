@@ -1,17 +1,16 @@
 import copy
 import logging
+import numpy as np
 import os
 import random
 import time
-from abc import ABCMeta, abstractmethod
-
-import numpy as np
 import torch
+from abc import ABCMeta, abstractmethod
 from torch import linalg as LA
 from torch.utils.data import TensorDataset, DataLoader
+from utils.data_utils import read_data, preprocess_data
 
 from models.actormanager import ActorManager
-from utils.data_utils import read_data, preprocess_data
 
 
 class BaseClient:
@@ -209,7 +208,7 @@ class BaseServer(object):
             num_clients -= 1
         possible_clients = np.array([client for i, client in enumerate(self.clients) if i != trusted_idx])
         num_clients = min(num_clients, len(possible_clients))
-        candidates = [i if i < trusted_idx else i + 1 for i in range(len(possible_clients)) ]
+        candidates = [i if i < trusted_idx else i + 1 for i in range(len(possible_clients))]
         print('candidates:', candidates)
         if weighted:
             p = np.array([client.num_train_samples for client in self.clients]) / \
@@ -217,7 +216,7 @@ class BaseServer(object):
             selected_index = np.random.choice(candidates, num_clients, p=p, replace=False)
         else:
             selected_index = np.random.choice(candidates, num_clients, replace=False)
-
+        
         if trusted_idx:
             self.selected_clients = np.insert(np.array(possible_clients)[selected_index], 0, self.clients[trusted_idx])
         else:

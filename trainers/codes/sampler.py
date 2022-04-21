@@ -1,7 +1,7 @@
 import math
 import torch
-from torch.utils.data.sampler import Sampler
 import torch.distributed as dist
+from torch.utils.data.sampler import Sampler
 
 
 class DistributedSampler(Sampler):
@@ -21,7 +21,7 @@ class DistributedSampler(Sampler):
         rank (optional): Rank of the current process within num_replicas.
         shuffle (optional): If true (default), sampler will shuffle the indices
     """
-
+    
     def __init__(self, dataset, num_replicas=None, rank=None, shuffle=True):
         if num_replicas is None:
             if not dist.is_available():
@@ -38,7 +38,7 @@ class DistributedSampler(Sampler):
         self.num_samples = int(math.ceil(len(self.dataset) * 1.0 / self.num_replicas))
         self.total_size = self.num_samples * self.num_replicas
         self.shuffle = shuffle
-
+    
     def __iter__(self):
         # deterministically shuffle based on epoch
         g = torch.Generator()
@@ -47,23 +47,23 @@ class DistributedSampler(Sampler):
             indices = torch.randperm(len(self.dataset), generator=g).tolist()
         else:
             indices = list(range(len(self.dataset)))
-
+        
         # add extra samples to make it evenly divisible
         indices += indices[: (self.total_size - len(indices))]
         assert len(indices) == self.total_size
-
+        
         # subsample
-        indices = indices[self.rank : self.total_size : self.num_replicas]
+        indices = indices[self.rank: self.total_size: self.num_replicas]
         assert len(indices) == self.num_samples
-
+        
         return iter(indices)
-
+    
     def __len__(self):
         return self.num_samples
-
+    
     def set_epoch(self, epoch):
         self.epoch = epoch
-
+    
     def __str__(self):
         return "DistributedSampler(num_replicas={num_replicas},rank={rank},shuffle={shuffle})".format(
             num_replicas=self.num_replicas, rank=self.rank, shuffle=self.shuffle
@@ -73,36 +73,36 @@ class DistributedSampler(Sampler):
 class DecentralizedNonIIDSampler(DistributedSampler):
     def __iter__(self):
         nlabels = len(self.dataset.classes)
-
+        
         # deterministically shuffle based on epoch
         g = torch.Generator()
         g.manual_seed(0)
-
+        
         indices = []
         for i in range(nlabels):
             indices_i = torch.nonzero(self.dataset.targets == i)
-
+            
             indices_i = indices_i.flatten().tolist()
             indices += indices_i
-
+        
         # add extra samples to make it evenly divisible
         indices += indices[: (self.total_size - len(indices))]
         assert len(indices) == self.total_size
-
+        
         # subsample
         indices = indices[
-            self.rank * self.num_samples : (self.rank + 1) * self.num_samples
-        ]
+                  self.rank * self.num_samples: (self.rank + 1) * self.num_samples
+                  ]
         assert len(indices) == self.num_samples
-
+        
         if self.shuffle:
             g = torch.Generator()
             g.manual_seed(self.epoch)
             idx_idx = torch.randperm(len(indices), generator=g).tolist()
             indices = [indices[i] for i in idx_idx]
-
+        
         return iter(indices)
-
+    
     def __str__(self):
         return "DecentralizedNonIIDSampler(num_replicas={num_replicas},rank={rank},shuffle={shuffle})".format(
             num_replicas=self.num_replicas, rank=self.rank, shuffle=self.shuffle
