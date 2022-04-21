@@ -3,11 +3,12 @@
     the loss value, accuracy and eigen values of the hessian matrix
 """
 
+import time
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-import time
 from torch.autograd.variable import Variable
+
 
 def eval_loss(net, criterion, loader, use_cuda=False):
     """
@@ -23,13 +24,13 @@ def eval_loss(net, criterion, loader, use_cuda=False):
     """
     correct = 0
     total_loss = 0
-    total = 0 # number of samples
+    total = 0  # number of samples
     num_batch = len(loader)
-
+    
     if use_cuda:
         net.cuda()
     net.eval()
-
+    
     with torch.no_grad():
         if isinstance(criterion, nn.CrossEntropyLoss):
             for batch_idx, (inputs, targets) in enumerate(loader):
@@ -41,16 +42,16 @@ def eval_loss(net, criterion, loader, use_cuda=False):
                     inputs, targets = inputs.cuda(), targets.cuda()
                 outputs = net(inputs)
                 loss = criterion(outputs, targets)
-                total_loss += loss.item()*batch_size
+                total_loss += loss.item() * batch_size
                 _, predicted = torch.max(outputs.data, 1)
                 correct += predicted.eq(targets).sum().item()
-
+        
         elif isinstance(criterion, nn.MSELoss):
             for batch_idx, (inputs, targets) in enumerate(loader):
                 batch_size = inputs.size(0)
                 total += batch_size
                 inputs = Variable(inputs)
-
+                
                 one_hot_targets = torch.FloatTensor(batch_size, 10).zero_()
                 one_hot_targets = one_hot_targets.scatter_(1, targets.view(batch_size, 1), 1.0)
                 one_hot_targets = one_hot_targets.float()
@@ -59,8 +60,8 @@ def eval_loss(net, criterion, loader, use_cuda=False):
                     inputs, one_hot_targets = inputs.cuda(), one_hot_targets.cuda()
                 outputs = F.softmax(net(inputs))
                 loss = criterion(outputs, one_hot_targets)
-                total_loss += loss.item()*batch_size
+                total_loss += loss.item() * batch_size
                 _, predicted = torch.max(outputs.data, 1)
                 correct += predicted.cpu().eq(targets).sum().item()
-
-    return total_loss/total, 100.*correct/total
+    
+    return total_loss / total, 100. * correct / total

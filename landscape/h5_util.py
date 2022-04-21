@@ -4,6 +4,7 @@
 
 import torch
 
+
 def write_list(f, name, direction):
     """ Save the direction to the hdf5 file with name as the key
 
@@ -12,7 +13,7 @@ def write_list(f, name, direction):
             name: key name_surface_file
             direction: a list of tensors
     """
-
+    
     grp = f.create_group(name)
     for i, l in enumerate(direction):
         if isinstance(l, torch.Tensor):

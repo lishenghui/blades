@@ -74,7 +74,7 @@ class FedModel():
             if kwargs['attack_type'] == 'scaling':
                 for name, p in self.net.named_parameters():
                     p.grad.data *= 100
-
+            
             if kwargs['clip']:
                 torch.nn.utils.clip_grad_norm_(self.net.parameters(), kwargs['clip'])
             self.optimizer.step()
@@ -86,7 +86,7 @@ class FedModel():
         # if kwargs['attack_type'] == 'scaling':
         #         for k in curr_global_model.keys():
         #             curr_global_model[k] *= 50
-
+        
         if noise > 0:
             for k in curr_global_model.keys():
                 curr_global_model[k] = torch.ones_like(curr_global_model[k]).to(self.device) / 3
