@@ -1,10 +1,12 @@
 """
 A better name will be Inner Product Manipulation Attack.
 """
+import os
+import sys
 from pathlib import Path
-import os,sys 
+
 sys.path.append(os.path.dirname(Path(os.path.abspath(__file__)).parent))
-import torch 
+import torch
 from simulators.worker import ByzantineWorker
 
 
@@ -14,24 +16,24 @@ class NoiseAttack(ByzantineWorker):
         self.__fedavg = is_fedavg
         self.__noise = noise
         self._gradient = None
-
+    
     def get_gradient(self):
         noise = 0.1
         # return torch.ones_like(super().get_gradient()).to(self.device) / 3
         return torch.normal(self.__noise, self.__noise, size=super().get_gradient().shape).to(self.device)
         # return self._gradient
-
-   
+    
     def omniscient_callback(self):
-       if self.__fedavg:
-            self.state['saved_update'] = torch.normal(self.__noise, self.__noise, size=super().get_update().shape).to(self.device)
-
+        if self.__fedavg:
+            self.state['saved_update'] = torch.normal(self.__noise, self.__noise, size=super().get_update().shape).to(
+                self.device)
+    
     # def set_gradient(self, gradient) -> None:
     #     raise NotImplementedError
-
+    
     # def apply_gradient(self) -> None:
     #     raise NotImplementedError
-
+    
     # def local_training(self, num_rounds):
     #     self._save_para()
     #     results = {}
@@ -41,10 +43,10 @@ class NoiseAttack(ByzantineWorker):
     #     loss = self.loss_func(output, target)
     #     loss.backward()
     #     self._save_update()
-
+    
     #     self.running["data"] = data
     #     self.running["target"] = target
-
+    
     #     results["loss"] = loss.item()
     #     results["length"] = len(target)
     #     results["metrics"] = {}

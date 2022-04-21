@@ -20,7 +20,7 @@ class Net(nn.Module):
         self.conv2 = torch.nn.Sequential(nn.Conv2d(32, 64, 5, 1, 1), torch.nn.ReLU())
         self.fc1 = torch.nn.Sequential(nn.Linear(9216, 128), torch.nn.ReLU())
         self.fc2 = torch.nn.Sequential(nn.Linear(128, num_classes))
-
+    
     #     self.fc3 = torch.nn.Sequential(nn.Linear(28 * 28, 128, torch.nn.ReLU()))
     #     self.fc4 = torch.nn.Sequential(nn.Linear(128, num_classes))
     
@@ -30,7 +30,7 @@ class Net(nn.Module):
     #     x = self.fc4(x)
     #     output = F.log_softmax(x, dim=1)
     #     return output
-
+    
     def forward(self, x):
         x = x.view(-1, 1, 28, 28)
         x = self.conv1(x)

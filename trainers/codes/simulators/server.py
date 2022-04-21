@@ -5,14 +5,13 @@ class TorchServer(object):
     def __init__(self, optimizer: torch.optim.Optimizer, model):
         self.optimizer = optimizer
         self.model = model
-
+    
     def get_model(self):
         return self.model
-
-
+    
     def apply_gradient(self) -> None:
         self.optimizer.step()
-
+    
     # def get_mdoel(self):
     def apply_update(self, update: torch.Tensor) -> None:
         beg = 0
@@ -25,7 +24,7 @@ class TorchServer(object):
                 x = update[beg:end].reshape_as(p.data)
                 p.data += x.clone().detach()
                 beg = end
-
+    
     def set_gradient(self, gradient: torch.Tensor) -> None:
         beg = 0
         for group in self.optimizer.param_groups:

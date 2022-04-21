@@ -1,7 +1,8 @@
 import torch.nn as nn
-from ..utils.transformers import MaskedTransformerClassifier
-from ..utils.tokenizer import TextTokenizer
+
 from ..utils.embedder import Embedder
+from ..utils.tokenizer import TextTokenizer
+from ..utils.transformers import MaskedTransformerClassifier
 
 __all__ = [
     'text_vit_2',
@@ -22,7 +23,7 @@ class TextViTLite(nn.Module):
                                           f"divisible by patch size ({patch_size})"
         self.embedder = Embedder(word_embedding_dim=word_embedding_dim,
                                  *args, **kwargs)
-
+        
         self.tokenizer = TextTokenizer(n_input_channels=word_embedding_dim,
                                        n_output_channels=embedding_dim,
                                        kernel_size=patch_size,
@@ -30,7 +31,7 @@ class TextViTLite(nn.Module):
                                        padding=0,
                                        max_pool=False,
                                        activation=None)
-
+        
         self.classifier = MaskedTransformerClassifier(
             seq_len=self.tokenizer.seq_len(seq_len=seq_len, embed_dim=word_embedding_dim),
             embedding_dim=embedding_dim,
@@ -39,7 +40,7 @@ class TextViTLite(nn.Module):
             attention_dropout=0.1,
             stochastic_depth=0.1,
             *args, **kwargs)
-
+    
     def forward(self, x, mask=None):
         x, mask = self.embedder(x, mask=mask)
         x, mask = self.tokenizer(x, mask=mask)

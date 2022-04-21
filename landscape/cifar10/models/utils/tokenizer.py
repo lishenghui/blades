@@ -15,11 +15,11 @@ class Tokenizer(nn.Module):
                  max_pool=True,
                  conv_bias=False):
         super(Tokenizer, self).__init__()
-
+        
         n_filter_list = [n_input_channels] + \
                         [in_planes for _ in range(n_conv_layers - 1)] + \
                         [n_output_channels]
-
+        
         self.conv_layers = nn.Sequential(
             *[nn.Sequential(
                 nn.Conv2d(n_filter_list[i], n_filter_list[i + 1],
@@ -33,16 +33,16 @@ class Tokenizer(nn.Module):
             )
                 for i in range(n_conv_layers)
             ])
-
+        
         self.flattener = nn.Flatten(2, 3)
         self.apply(self.init_weight)
-
+    
     def sequence_length(self, n_channels=3, height=224, width=224):
         return self.forward(torch.zeros((1, n_channels, height, width))).shape[1]
-
+    
     def forward(self, x):
         return self.flattener(self.conv_layers(x)).transpose(-2, -1)
-
+    
     @staticmethod
     def init_weight(m):
         if isinstance(m, nn.Conv2d):
@@ -59,7 +59,7 @@ class TextTokenizer(nn.Module):
                  max_pool=True,
                  *args, **kwargs):
         super(TextTokenizer, self).__init__()
-
+        
         self.max_pool = max_pool
         self.conv_layers = nn.Sequential(
             nn.Conv2d(1, n_output_channels,
@@ -73,12 +73,12 @@ class TextTokenizer(nn.Module):
                 padding=(pooling_padding, 0)
             ) if max_pool else nn.Identity()
         )
-
+        
         self.apply(self.init_weight)
-
+    
     def seq_len(self, seq_len=32, embed_dim=300):
         return self.forward(torch.zeros((1, seq_len, embed_dim)))[0].shape[1]
-
+    
     def forward_mask(self, mask):
         new_mask = mask.unsqueeze(1).float()
         cnn_weight = torch.ones(
@@ -95,7 +95,7 @@ class TextTokenizer(nn.Module):
         new_mask = new_mask.squeeze(1)
         new_mask = (new_mask > 0)
         return new_mask
-
+    
     def forward(self, x, mask=None):
         x = x.unsqueeze(1)
         x = self.conv_layers(x)
@@ -104,7 +104,7 @@ class TextTokenizer(nn.Module):
             mask = self.forward_mask(mask).unsqueeze(-1).float()
             x = x * mask
         return x, mask
-
+    
     @staticmethod
     def init_weight(m):
         if isinstance(m, nn.Conv2d):

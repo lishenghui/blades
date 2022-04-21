@@ -1,7 +1,8 @@
 import torch.nn as nn
-from ..utils.transformers import MaskedTransformerClassifier
-from ..utils.tokenizer import TextTokenizer
+
 from ..utils.embedder import Embedder
+from ..utils.tokenizer import TextTokenizer
+from ..utils.transformers import MaskedTransformerClassifier
 
 __all__ = [
     'text_cct_2',
@@ -23,10 +24,10 @@ class TextCCT(nn.Module):
                  pooling_padding=1,
                  *args, **kwargs):
         super(TextCCT, self).__init__()
-
+        
         self.embedder = Embedder(word_embedding_dim=word_embedding_dim,
                                  *args, **kwargs)
-
+        
         self.tokenizer = TextTokenizer(n_input_channels=word_embedding_dim,
                                        n_output_channels=embedding_dim,
                                        kernel_size=kernel_size,
@@ -37,7 +38,7 @@ class TextCCT(nn.Module):
                                        pooling_padding=pooling_padding,
                                        max_pool=True,
                                        activation=nn.ReLU)
-
+        
         self.classifier = MaskedTransformerClassifier(
             seq_len=self.tokenizer.seq_len(seq_len=seq_len, embed_dim=word_embedding_dim),
             embedding_dim=embedding_dim,
@@ -46,7 +47,7 @@ class TextCCT(nn.Module):
             attention_dropout=0.1,
             stochastic_depth=0.1,
             *args, **kwargs)
-
+    
     def forward(self, x, mask=None):
         x, mask = self.embedder(x, mask=mask)
         x, mask = self.tokenizer(x, mask=mask)
@@ -59,7 +60,7 @@ def _text_cct(num_layers, num_heads, mlp_ratio, embedding_dim,
               *args, **kwargs):
     stride = stride if stride is not None else max(1, (kernel_size // 2) - 1)
     padding = padding if padding is not None else max(1, (kernel_size // 2))
-
+    
     return TextCCT(num_layers=num_layers,
                    num_heads=num_heads,
                    mlp_ratio=mlp_ratio,

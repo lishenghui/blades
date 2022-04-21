@@ -1,8 +1,8 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-
 from torchvision import datasets, transforms
+
 from ..utils import log_dict
 
 
@@ -15,7 +15,7 @@ class Net(nn.Module):
         self.dropout2 = nn.Dropout2d(0.5)
         self.fc1 = nn.Linear(9216, 128)
         self.fc2 = nn.Linear(128, 10)
-
+    
     def forward(self, x):
         x = self.conv1(x)
         x = F.relu(x)
@@ -32,19 +32,19 @@ class Net(nn.Module):
 
 
 def mnist(
-    data_dir,
-    train,
-    download,
-    batch_size,
-    shuffle=None,
-    sampler_callback=None,
-    dataset_cls=datasets.MNIST,
-    drop_last=True,
-    **loader_kwargs
+        data_dir,
+        train,
+        download,
+        batch_size,
+        shuffle=None,
+        sampler_callback=None,
+        dataset_cls=datasets.MNIST,
+        drop_last=True,
+        **loader_kwargs
 ):
     # if sampler_callback is not None and shuffle is not None:
     #     raise ValueError
-
+    
     dataset = dataset_cls(
         data_dir,
         train=train,
@@ -56,7 +56,7 @@ def mnist(
             ]
         ),
     )
-
+    
     sampler = sampler_callback(dataset) if sampler_callback else None
     log_dict(
         {

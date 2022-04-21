@@ -1,10 +1,10 @@
-from sklearn.cluster import AgglomerativeClustering
-from scipy import spatial
-import torch
 import numpy as np
-from numpy import inf
 import os
 import sys
+import torch
+from numpy import inf
+from scipy import spatial
+from sklearn.cluster import AgglomerativeClustering
 
 file_dir = os.path.dirname(__file__)
 sys.path.append(file_dir)
@@ -25,7 +25,7 @@ class ClusteringClipping():
         for idx, l2 in enumerate(l2norms):
             if l2 > threshold:
                 inputs[idx] = torch_utils.clip_tensor_norm_(inputs[idx], threshold)
-
+        
         stacked_models = torch.vstack(inputs)
         np_models = stacked_models.cpu().detach().numpy()
         num = len(inputs)

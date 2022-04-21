@@ -36,17 +36,17 @@ def multi_krum(distances, n, f, m):
         raise ValueError(
             "Number of workers should be positive integer. Got {}.".format(f)
         )
-
+    
     if m < 1 or m > n:
         raise ValueError(
             "Number of workers for aggregation should be >=1 and <= {}. Got {}.".format(
                 m, n
             )
         )
-
+    
     if 2 * f + 2 > n:
         raise ValueError("Too many Byzantine workers: 2 * {} + 2 >= {}.".format(f, n))
-
+    
     for i in range(n - 1):
         for j in range(i + 1, n):
             if distances[i][j] < 0:
@@ -55,7 +55,7 @@ def multi_krum(distances, n, f, m):
                         i, j, distances[i][j]
                     )
                 )
-
+    
     scores = [(i, _compute_scores(distances, i, n, f)) for i in range(n)]
     sorted_scores = sorted(scores, key=lambda x: x[1])
     return list(map(lambda x: x[0], sorted_scores))[:m]
@@ -76,7 +76,7 @@ def pairwise_euclidean_distances(vectors):
     """
     n = len(vectors)
     vectors = [v.flatten() for v in vectors]
-
+    
     distances = {}
     for i in range(n - 1):
         distances[i] = {}
@@ -93,18 +93,18 @@ class Krum(_BaseAggregator):
     "Machine learning with adversaries: Byzantine tolerant gradient descent."
     Advances in Neural Information Processing Systems. 2017.
     """
-
+    
     def __init__(self, n, f, m):
         self.n = n
         self.f = f
         self.m = m
         super(Krum, self).__init__()
-
+    
     def __call__(self, inputs):
         distances = pairwise_euclidean_distances(inputs)
         top_m_indices = multi_krum(distances, self.n, self.f, self.m)
         values = sum(inputs[i] for i in top_m_indices)
         return values
-
+    
     def __str__(self):
         return "Krum (m={})".format(self.m)

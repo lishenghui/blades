@@ -1,9 +1,8 @@
 """Utils for language tf_models."""
 
 import json
-import re
-
 import numpy as np
+import re
 
 # ------------------------
 # utils for shakespeare dataset

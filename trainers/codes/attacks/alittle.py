@@ -1,6 +1,6 @@
+import numpy as np
 import torch
 import torch.distributed as dist
-import numpy as np
 from scipy.stats import norm
 
 from ..simulators.worker import ByzantineWorker
@@ -12,7 +12,7 @@ class ALittleIsEnoughAttack(ByzantineWorker):
         n (int): Total number of workers
         m (int): Number of Byzantine workers
     """
-
+    
     def __init__(self, n, m, is_fedavg, z=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.__fedavg = is_fedavg
@@ -24,10 +24,10 @@ class ALittleIsEnoughAttack(ByzantineWorker):
             cdf_value = (n - m - s) / (n - m)
             self.z_max = norm.ppf(cdf_value)
         self.n_good = n - m
-
+    
     def get_gradient(self):
         return self._gradient
-
+    
     def omniscient_callback(self):
         # Loop over good workers and accumulate their gradients
         updates = []
@@ -37,21 +37,20 @@ class ALittleIsEnoughAttack(ByzantineWorker):
                     updates.append(w.get_update())
                 else:
                     updates.append(w.get_gradient())
-
+        
         stacked_updates = torch.stack(updates, 1)
         mu = torch.mean(stacked_updates, 1)
         std = torch.std(stacked_updates, 1)
-
+        
         self._gradient = mu - std * self.z_max
         if self.__fedavg:
             self.state['saved_update'] = self._gradient
-
+    
     def set_gradient(self, gradient) -> None:
         raise NotImplementedError
-
+    
     def apply_gradient(self) -> None:
         raise NotImplementedError
-
+    
     def local_training(self, num_rounds):
         pass
-

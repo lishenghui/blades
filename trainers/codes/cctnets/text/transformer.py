@@ -1,7 +1,8 @@
 import torch.nn as nn
-from ..utils.transformers import MaskedTransformerClassifier
-from ..utils.tokenizer import TextTokenizer
+
 from ..utils.embedder import Embedder
+from ..utils.tokenizer import TextTokenizer
+from ..utils.transformers import MaskedTransformerClassifier
 
 __all__ = [
     'text_transformer_2',
@@ -18,7 +19,7 @@ class TextTransformerLite(nn.Module):
         super(TextTransformerLite, self).__init__()
         self.embedder = Embedder(word_embedding_dim=word_embedding_dim,
                                  *args, **kwargs)
-
+        
         self.classifier = MaskedTransformerClassifier(
             seq_len=seq_len,
             embedding_dim=word_embedding_dim,
@@ -27,7 +28,7 @@ class TextTransformerLite(nn.Module):
             attention_dropout=0.1,
             stochastic_depth=0.1,
             *args, **kwargs)
-
+    
     def forward(self, x, mask=None):
         x, mask = self.embedder(x, mask=mask)
         out = self.classifier(x, mask=mask)

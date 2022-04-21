@@ -1,7 +1,6 @@
-from math import ceil
-
 import numpy as np
 import ray
+from math import ceil
 
 from .fedmodel import FedModel
 

@@ -1,20 +1,16 @@
 import json
+import math
+import numpy as np
 import os
 import pickle
-
-import numpy as np
-import torch
-from scipy.sparse import csr_matrix
-from time import time
-import math
-
 import torch
 import torch.nn as nn
 import torch.optim
 import torch.utils.data
-import torchvision.transforms as transforms
 import torchvision.datasets as datasets
-
+import torchvision.transforms as transforms
+from scipy.sparse import csr_matrix
+from time import time
 
 DATASETS = {
     'cifar10': {
@@ -47,12 +43,12 @@ def batch_data(data, batch_size, seed):
     '''
     data_x = data['x']
     data_y = data['y']
-
+    
     # randomly shuffle data
     np.random.seed(seed)
     rng_state = np.random.get_state()
     np.random.set_state(rng_state)
-
+    
     if not isinstance(data_x, csr_matrix):
         np.random.shuffle(data_x)
         np.random.shuffle(data_y)
@@ -71,7 +67,7 @@ def preprocess_data(data, labels, batch_size, seed=0):
     np.random.seed(seed=seed)
     idx = np.random.permutation(len(labels))
     data, labels = data[idx], labels[idx]
-
+    
     DATASETS = {
         'cifar10': {
             'num_classes': 10,
@@ -83,7 +79,7 @@ def preprocess_data(data, labels, batch_size, seed=0):
     img_mean = DATASETS['cifar10']['mean']
     img_std = DATASETS['cifar10']['std']
     img_size = DATASETS['cifar10']['img_size']
-
+    
     augmentations = []
     # from utils.autoaug import CIFAR10Policy
     # augmentations += [CIFAR10Policy()]
@@ -93,14 +89,14 @@ def preprocess_data(data, labels, batch_size, seed=0):
         # transforms.ToTensor(),
         transforms.Normalize(mean=img_mean, std=img_std)
     ]
-
+    
     augmentations = transforms.Compose(augmentations)
     while True:
         if i * batch_size >= len(labels):
             i = 0
             idx = np.random.permutation(len(labels))
             data, labels = data[idx], labels[idx]
-
+            
             continue
         else:
             X = data[i * batch_size:(i + 1) * batch_size, :]
@@ -114,7 +110,7 @@ def read_dir(data_dir):
     clients = []
     groups = []
     data = {}
-
+    
     files = os.listdir(data_dir)
     files = [f for f in files if f.endswith('.json')]
     for f in files:
@@ -125,7 +121,7 @@ def read_dir(data_dir):
         if 'hierarchies' in cdata:
             groups.extend(cdata['hierarchies'])
         data.update(cdata['user_data'])
-
+    
     return clients, groups, data
 
 
@@ -137,5 +133,5 @@ def read_data(data_path):
     train_groups = []
     
     assert sorted(train_clients) == sorted(test_clients)
-
+    
     return train_clients, train_groups, train_data, test_data
