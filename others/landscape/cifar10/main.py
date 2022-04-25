@@ -246,7 +246,7 @@ if __name__ == '__main__':
         train_loss, train_err = test(trainloader, net, criterion, use_cuda)
         test_loss, test_err = test(testloader, net, criterion, use_cuda)
         status = 'e: %d loss: %.5f train_err: %.3f test_top1: %.3f test_loss %.5f \n' % (
-        0, train_loss, train_err, test_err, test_loss)
+            0, train_loss, train_err, test_err, test_loss)
         print(status)
         f.write(status)
         
@@ -266,7 +266,7 @@ if __name__ == '__main__':
         test_loss, test_err = test(testloader, net, criterion, use_cuda)
         
         status = 'e: %d loss: %.5f train_err: %.3f test_top1: %.3f test_loss %.5f \n' % (
-        epoch, loss, train_err, test_err, test_loss)
+            epoch, loss, train_err, test_err, test_loss)
         print(status)
         f.write(status)
         
