@@ -4,10 +4,9 @@ assumes that the user has already generated .json file(s) containing data
 
 import argparse
 import json
-import os
-
 import matplotlib.pyplot as plt
 import numpy as np
+import os
 from scipy import stats
 
 from constants import DATASETS
