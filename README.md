@@ -1,9 +1,8 @@
-# Byzantine-Robust Aggregation in Federated Learning Empowered Industrial IoT
+# Byzantine-Robust AFederated Learning
 
 This repository contains the code and experiments for the paper:
 
-[Byzantine-Robust Aggregation in Federated Learning Empowered Industrial IoT]
-<!-- (https://arxiv.org/abs/2101.05880) -->
+[An Experimental Study of Byzantine-Robust Aggregation Schemes in Federated Learning](https://www.techrxiv.org/articles/preprint/An_Experimental_Study_of_Byzantine-Robust_Aggregation_Schemes_in_Federated_Learning/19560325)
 
 ## Datasets
 

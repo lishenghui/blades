@@ -1,8 +1,7 @@
 import argparse
+import numpy as np
 import os
 import pickle
-
-import numpy as np
 from sklearn.utils import shuffle
 from tensorflow.keras.datasets import cifar10
 
@@ -41,7 +40,6 @@ def generate_datasets(iid=False, alpha=1.0, num_clients=100):
                 np.random.shuffle(idx_k)
                 proportions = np.random.dirichlet(np.repeat(alpha, num_clients))
                 
-
                 ## Balance
                 proportions = np.array([p * (len(idx_j) < N / num_clients) for p, idx_j in zip(proportions, idx_batch)])
                 proportions = proportions / proportions.sum()
@@ -56,19 +54,19 @@ def generate_datasets(iid=False, alpha=1.0, num_clients=100):
             client_dataidx_map[j] = idx_batch[j]
             x_train_splits.append(x_train[idx_batch[j], :])
             y_train_splits.append(y_train[idx_batch[j], :])
-    
+        
         with open('proportions.npy', 'wb') as f:
             np.save(f, np.array(proportion_list))
     test_dataset = {}
     train_dataset = {}
     for id, index in zip(train_user_ids, range(num_clients)):
-        
         train_dataset[id] = {'x': x_train_splits[index], 'y': y_train_splits[index].flatten()}
         test_dataset[id] = {'x': x_test_splits[index], 'y': y_test_splits[index].flatten()}
-        
-#     os.system('rm -rf ..')
-#     os.system('mkdir -p ../data')
-    with open(os.path.join('..', 'data_cache' + ("_alpha" + str(args.alpha) if not args.iid else "") + '.obj'), 'wb') as f:
+    
+    #     os.system('rm -rf ..')
+    #     os.system('mkdir -p ../data')
+    with open(os.path.join('..', 'data_cache' + ("_alpha" + str(args.alpha) if not args.iid else "") + '.obj'),
+              'wb') as f:
         pickle.dump(train_user_ids, f)
         pickle.dump(train_dataset, f)
         pickle.dump(train_user_ids, f)
