@@ -9,7 +9,7 @@ from typing import Optional, Union, Callable, Any, Tuple
 
 from .worker import TorchWorker
 from .server import TorchServer
-
+import time
 
 class DistributedSimulatorBase(object):
     """Simulate distributed programs with low memory usage.

@@ -1,18 +1,18 @@
 #!/bin/bash
 
 
-cuda=0
+cuda=2
 for seed in 0
 do
     for num_byzantine in 5
     do
-        for attack in IPM_large #"ALIE" "IPM" "LF" "IPM_large" "IPM"  # "ALIE" "IPM" 
+        for attack in "Noise" #"ALIE" "IPM" "LF" "IPM_large" "IPM"  # "ALIE" "IPM" 
         do  
-            for agg in "clippedclustering" "rfa" "tm" "clustering" "cm" "cp" "krum" "autogm" #"clippedclustering" #"krum" "avg" "autogm"  "cp" "tm" "cm" 
+            for agg in "clustering" #"tm" "krum" "cm" "cp" "rfa" "autogm" "clippedclustering" 
             do
                 export CUDA_VISIBLE_DEVICES=$(((cuda)))
                 cuda=$(((cuda + 1) % 4))
-                args="--round 150 --use-cuda --batch_size 32 --seed $seed --agg ${agg} --momentum 0.0 --num_byzantine ${num_byzantine} --attack $attack"
+                args="--round 150 --use-cuda --batch_size 32 --seed $seed --agg ${agg} --momentum 0.9 --num_byzantine ${num_byzantine} --attack $attack"
                 # args="--round 50 --use-cuda --batch_size 32 --seed $seed --agg ${agg} --momentum 0 --num_byzantine ${num_byzantine} --attack $attack --fedavg"
                 echo ${args}
                 arg_str="\""
