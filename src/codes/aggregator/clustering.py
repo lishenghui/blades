@@ -23,9 +23,9 @@ class Clustering():
         dis_max[dis_max == -inf] = -1
         dis_max[dis_max == inf] = 1
         dis_max[np.isnan(dis_max)] = -1
-        # with open('../notebooks/updates_fedavg_iid.npy', 'wb') as f:
+        # with open('../notebooks/updates_fedsgd_ipm.npy', 'wb') as f:
         #     np.save(f, dis_max)
-        clustering = AgglomerativeClustering(linkage='complete', n_clusters=2)
+        clustering = AgglomerativeClustering(affinity='precomputed', linkage='average', n_clusters=2)
         clustering.fit(dis_max)
         flag = 1 if np.sum(clustering.labels_) > num // 2 else 0
         values = torch.vstack(list(model for model, label in zip(inputs, clustering.labels_) if label == flag)).mean(

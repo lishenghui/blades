@@ -16,11 +16,11 @@
         "--seed",
         "0",
         "--agg",
-        "rfa",
+        "clippedclustering",
         "--momentum",
         "0.9",
         "--num_byzantine",
-        "5",
+        "8",
         "--attack",
         "ALIE"
       ]
