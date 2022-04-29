@@ -9,7 +9,4 @@ data/cifar10/cifar-10-batches-py/*
 *.pyc
 *nohup.out
 trainers/outputs/*
-<<<<<<< HEAD
-=======
 others/landscape/cifar10/data/cifar-10-batches-py
->>>>>>> 3f792306f7ecd338c35495f906ca65f9020a2ab8
