@@ -11,33 +11,33 @@ parentdir = os.path.dirname(currentdir)
 sys.path.insert(0, parentdir)
 
 from torch.nn.modules.loss import CrossEntropyLoss
-from codes.args import parse_arguments
-from codes.sampler import DistributedSampler
-from codes.simulators.simulator import (
+from args import parse_arguments
+from sampler import DistributedSampler
+from simulators.simulator import (
     ParallelTrainer,
     DistributedEvaluator,
 )
-from codes.simulators.worker import TorchWorker, WorkerWithMomentum
-from codes.simulators.server import TorchServer
-from codes.tasks.cifar10 import cifar10
-from codes.utils import top1_accuracy, initialize_logger
+from simulators.worker import TorchWorker, WorkerWithMomentum
+from simulators.server import TorchServer
+from tasks.cifar10 import cifar10
+from utils import top1_accuracy, initialize_logger
 
-from codes.attacks.labelflipping import LableFlippingWorker
-from codes.attacks.bitflipping import BitFlippingWorker
-from codes.attacks.ipm import IPMAttack
-from codes.attacks.alittle import ALittleIsEnoughAttack
-from codes.attacks.noise import NoiseAttack
+from attacks.labelflipping import LableFlippingWorker
+from attacks.bitflipping import BitFlippingWorker
+from attacks.ipm import IPMAttack
+from attacks.alittle import ALittleIsEnoughAttack
+from attacks.noise import NoiseAttack
 
-from codes.aggregator.coordinatewise_median import CM
-from codes.aggregator.clipping import Clipping
-from codes.aggregator.clippedclustering import ClusteringClipping
-from codes.aggregator.clustering import Clustering
-from codes.aggregator.rfa import RFA
-from codes.aggregator.trimmed_mean import TM
-from codes.aggregator.krum import Krum
-from codes.aggregator.base import Mean
-from codes.aggregator.autogm import AutoGM
-from codes.cctnets import cct_2_3x2_32
+from aggregator.coordinatewise_median import CM
+from aggregator.clipping import Clipping
+from aggregator.clippedclustering import ClusteringClipping
+from aggregator.clustering import Clustering
+from aggregator.rfa import RFA
+from aggregator.trimmed_mean import TM
+from aggregator.krum import Krum
+from aggregator.base import Mean
+from aggregator.autogm import AutoGM
+from cctnets import cct_2_3x2_32
 
 
 

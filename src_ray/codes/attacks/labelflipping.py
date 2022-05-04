@@ -1,7 +1,16 @@
 import os
 from torchvision import datasets
 from args import GPU_PER_ACTOR
-from ..simulators.worker import ByzantineWorker
+
+import ray
+import inspect
+import os
+import sys
+currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+parentdir = os.path.dirname(currentdir)
+sys.path.insert(0, parentdir)
+
+from simulators.worker import ByzantineWorker
 import ray
 
 class LabelflippingMNIST(datasets.MNIST):

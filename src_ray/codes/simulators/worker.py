@@ -7,6 +7,7 @@ from torch.nn.modules.loss import CrossEntropyLoss
 from typing import Union, Callable, Tuple
 
 import ray
+import inspect
 import os
 currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 parentdir = os.path.dirname(currentdir)
@@ -184,8 +185,9 @@ class TorchWorker(object):
                 layer_gradients.append(param_state["saved_grad"].data.view(-1))
         return torch.cat(layer_gradients)
 
-# @ray.remote(num_gpus=args.gpu_per_actor)
-@ray.remote
+
+# @ray.remote
+@ray.remote(num_gpus=GPU_PER_ACTOR)
 class WorkerWithMomentum(TorchWorker):
     """
     Note that we use `WorkerWithMomentum` instead of using multiple `torch.optim.Optimizer`
