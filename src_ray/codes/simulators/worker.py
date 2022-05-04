@@ -186,6 +186,12 @@ class TorchWorker(object):
         return torch.cat(layer_gradients)
 
 
+
+@ray.remote(num_gpus=GPU_PER_ACTOR)
+class RemoteWorker(TorchWorker):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+    
 # @ray.remote
 @ray.remote(num_gpus=GPU_PER_ACTOR)
 class WorkerWithMomentum(TorchWorker):

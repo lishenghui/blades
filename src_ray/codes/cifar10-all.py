@@ -17,7 +17,7 @@ from simulators.simulator import (
     ParallelTrainer,
     DistributedEvaluator,
 )
-from simulators.worker import TorchWorker, WorkerWithMomentum
+from simulators.worker import TorchWorker, WorkerWithMomentum, RemoteWorker
 from simulators.server import TorchServer
 from tasks.cifar10 import cifar10
 from utils import top1_accuracy, initialize_logger
@@ -208,7 +208,7 @@ def initialize_worker(
         
         raise NotImplementedError(f"No such attack {options.attack}")
     if options.fedavg:
-        return TorchWorker(data_loader=train_loader, model=model, loss_func=loss_func, device=device,
+        return RemoteWorker.remote(data_loader=train_loader, model=model, loss_func=loss_func, device=device,
                            optimizer=optimizer, **kwargs, )
     else:
         return WorkerWithMomentum.remote(momentum=MOMENTUM, data_loader=train_loader, model=model, loss_func=loss_func,

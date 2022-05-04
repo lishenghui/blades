@@ -225,16 +225,16 @@ class ParallelTrainer(DistributedTrainerBase):
     
     def train_fedavg(self, epoch):
         self.debug_logger.info(f"Train epoch {epoch}")
-        self.parallel_call(lambda worker: worker.set_para(self.server.get_model()))
-        self.parallel_call(lambda worker: worker.train_epoch_start())
-        self.parallel_get(lambda w: w.local_training(self.max_batches_per_epoch))
+        self.parallel_call(lambda worker: worker.set_para.remote(self.server.get_model()))
+        self.parallel_call(lambda worker: worker.train_epoch_start.remote())
+        self.parallel_get(lambda w: w.local_training.remote(self.max_batches_per_epoch))
         # self.aggregation_and_update_fedavg()
         
         # If there are Byzantine workers, ask them to craft attacks based on the updated models.
         for omniscient_attacker_callback in self.omniscient_callbacks:
             omniscient_attacker_callback()
         
-        update = self.parallel_get(lambda w: w.get_update())
+        update = self.parallel_get(lambda w: w.get_update.remote())
         aggregated = self.aggregator(update)
         
         self.server.apply_update(aggregated)
