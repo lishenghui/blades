@@ -4,7 +4,15 @@ Aggregators which takes in weights and gradients.
 import logging
 import torch
 
-from ..utils import log, log_dict
+
+import inspect
+import os
+import sys
+currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+parentdir = os.path.dirname(currentdir)
+sys.path.insert(0, parentdir)
+
+from utils import log, log_dict
 
 
 class _BaseAggregator(object):
