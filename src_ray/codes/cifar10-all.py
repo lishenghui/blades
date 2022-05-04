@@ -11,7 +11,7 @@ parentdir = os.path.dirname(currentdir)
 sys.path.insert(0, parentdir)
 
 from torch.nn.modules.loss import CrossEntropyLoss
-from args import parse_arguments
+from args import parse_arguments, NUM_GPUS
 from sampler import DistributedSampler
 from simulators.simulator import (
     ParallelTrainer,
@@ -222,6 +222,7 @@ def main(args):
         print("=> There is no cuda device!!!!")
         device = "cpu"
     else:
+        print("=> There is cuda device!!!!")
         device = torch.device("cuda" if args.use_cuda else "cpu")
     
     kwargs = {"pin_memory": True} if args.use_cuda else {}
@@ -307,5 +308,5 @@ def main(args):
 if __name__ == "__main__":
     if not ray.is_initialized():
         # ray.init(local_mode=True, include_dashboard=True, num_gpus=0)
-        ray.init(include_dashboard=True, num_gpus=0)
+        ray.init(include_dashboard=False, num_gpus=NUM_GPUS)
     main(options)

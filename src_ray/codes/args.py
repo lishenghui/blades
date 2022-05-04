@@ -5,6 +5,7 @@ import torch
 NUM_GPUS = 4
 NUM_WORKERS = 20
 if not torch.cuda.is_available():
+    print('Unfortunaly, we currently do not have any GPU on your machine. ')
     NUM_GPUS = 0
     GPU_PER_ACTOR = 0
 else:
@@ -12,8 +13,8 @@ else:
 
 def parse_arguments():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--use-cuda", action="store_true", default=False)
-    parser.add_argument("--fedavg", action="store_true", default=False)
+    # parser.add_argument("--use-cuda", action="store_true", default=False)
+    parser.add_argument("--fedavg", action="store_true", default=True)
     parser.add_argument("--debug", action="store_true", default=False)
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument("--round", type=int, default=400)
@@ -33,6 +34,7 @@ def parse_arguments():
     options = parser.parse_args()
 
     options.num_workers = NUM_WORKERS
+    options.use_cuda = torch.cuda.is_available()
     # if not torch.cuda.is_available():
     #     options.gpu_per_actor = 0
     #     GPU_PER_ACTOR = 0
