@@ -1,12 +1,18 @@
 import copy
-import logging
-import numpy as np
-import os
 import torch
+import inspect
+import sys
 from collections import defaultdict
 from torch.nn.modules.loss import CrossEntropyLoss
-from typing import Optional, Union, Callable, Any, Tuple
+from typing import Union, Callable, Tuple
+from args import GPU_PER_ACTOR
 import ray
+import os
+currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+parentdir = os.path.dirname(currentdir)
+sys.path.insert(0, parentdir)
+
+
 
 
 class TorchWorker(object):
@@ -177,6 +183,7 @@ class TorchWorker(object):
                 layer_gradients.append(param_state["saved_grad"].data.view(-1))
         return torch.cat(layer_gradients)
 
+# @ray.remote(num_gpus=args.gpu_per_actor)
 @ray.remote
 class WorkerWithMomentum(TorchWorker):
     """
