@@ -45,7 +45,7 @@ options = parse_arguments()
 EXP_ID = os.path.basename(__file__)[:-3]  # the file name only
 ROOT_DIR = os.path.dirname(os.path.abspath(__file__)) + "/../"
 DATA_PATH = os.path.join(ROOT_DIR, "../data/cifar10/data_cache" + (".obj" if options.iid else "_alpha0.1.obj"))
-DATA_DIR = os.path.join(ROOT_DIR, "../data/cifar10/")
+DATA_DIR = os.path.join(ROOT_DIR, "../../data/cifar10/")
 EXP_DIR = os.path.join(ROOT_DIR, f"outputs/{EXP_ID}"
                        + ("_fedavg/" if options.fedavg else "/"))
 # EXP_DIR = os.path.join(ROOT_DIR, f"outputs/{EXP_ID}/")
