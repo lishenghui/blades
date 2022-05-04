@@ -8,7 +8,7 @@ if not torch.cuda.is_available():
     NUM_GPUS = 0
     GPU_PER_ACTOR = 0
 else:
-    GPU_PER_ACTOR = (NUM_GPUS - 0.05) / NUM_WORKERS
+    GPU_PER_ACTOR = (NUM_GPUS - 0.0) / NUM_WORKERS
 
 def parse_arguments():
     parser = argparse.ArgumentParser()
