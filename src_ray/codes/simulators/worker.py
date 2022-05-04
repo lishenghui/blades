@@ -6,14 +6,10 @@ import torch
 from collections import defaultdict
 from torch.nn.modules.loss import CrossEntropyLoss
 from typing import Optional, Union, Callable, Any, Tuple
+import ray
 
 
 class TorchWorker(object):
-    """A worker for distributed training.
-
-    Compute gradients locally and store the gradient.
-    """
-    
     def __init__(
             self,
             data_loader: torch.utils.data.DataLoader,
@@ -181,7 +177,7 @@ class TorchWorker(object):
                 layer_gradients.append(param_state["saved_grad"].data.view(-1))
         return torch.cat(layer_gradients)
 
-
+@ray.remote
 class WorkerWithMomentum(TorchWorker):
     """
     Note that we use `WorkerWithMomentum` instead of using multiple `torch.optim.Optimizer`
@@ -197,6 +193,7 @@ class WorkerWithMomentum(TorchWorker):
             for p in group["params"]:
                 if p.grad is None:
                     continue
+                
                 param_state = self.state[p]
                 if "momentum_buffer" not in param_state:
                     param_state["momentum_buffer"] = torch.clone(p.grad).detach()
@@ -212,6 +209,7 @@ class WorkerWithMomentum(TorchWorker):
         return torch.cat(layer_gradients)
 
 
+# @ray.remote
 class ByzantineWorker(TorchWorker):
     def configure(self, simulator):
         # call configure after defining DistribtuedSimulator

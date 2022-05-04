@@ -2,7 +2,7 @@ import os
 from torchvision import datasets
 
 from ..simulators.worker import ByzantineWorker
-
+import ray
 
 class LabelflippingMNIST(datasets.MNIST):
     def __getitem__(self, index):
@@ -19,6 +19,7 @@ class LabelflippingMNIST(datasets.MNIST):
         return os.path.join(self.root, "MNIST", "processed")
 
 
+
 class LabelflippingCIFAR10(datasets.CIFAR10):
     def __getitem__(self, index):
         img, target = super(LabelflippingCIFAR10, self).__getitem__(index)
@@ -26,6 +27,7 @@ class LabelflippingCIFAR10(datasets.CIFAR10):
         return img, target
 
 
+@ray.remote
 class LableFlippingWorker(ByzantineWorker):
     def __init__(self, revertible_label_transformer, *args, **kwargs):
         """
