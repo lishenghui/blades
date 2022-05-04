@@ -1,19 +1,23 @@
 import copy
-import logging
-import numpy as np
-import os
 import torch
+import inspect
+import sys
 from collections import defaultdict
 from torch.nn.modules.loss import CrossEntropyLoss
-from typing import Optional, Union, Callable, Any, Tuple
+from typing import Union, Callable, Tuple
+
+import ray
+import inspect
+import os
+currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+parentdir = os.path.dirname(currentdir)
+sys.path.insert(0, parentdir)
+
+from args import GPU_PER_ACTOR
+
 
 
 class TorchWorker(object):
-    """A worker for distributed training.
-
-    Compute gradients locally and store the gradient.
-    """
-    
     def __init__(
             self,
             data_loader: torch.utils.data.DataLoader,
@@ -182,6 +186,14 @@ class TorchWorker(object):
         return torch.cat(layer_gradients)
 
 
+
+@ray.remote(num_gpus=GPU_PER_ACTOR)
+class RemoteWorker(TorchWorker):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+    
+# @ray.remote
+@ray.remote(num_gpus=GPU_PER_ACTOR)
 class WorkerWithMomentum(TorchWorker):
     """
     Note that we use `WorkerWithMomentum` instead of using multiple `torch.optim.Optimizer`
@@ -197,6 +209,7 @@ class WorkerWithMomentum(TorchWorker):
             for p in group["params"]:
                 if p.grad is None:
                     continue
+                
                 param_state = self.state[p]
                 if "momentum_buffer" not in param_state:
                     param_state["momentum_buffer"] = torch.clone(p.grad).detach()
@@ -212,6 +225,7 @@ class WorkerWithMomentum(TorchWorker):
         return torch.cat(layer_gradients)
 
 
+# @ray.remote
 class ByzantineWorker(TorchWorker):
     def configure(self, simulator):
         # call configure after defining DistribtuedSimulator

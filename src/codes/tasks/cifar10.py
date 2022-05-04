@@ -8,7 +8,15 @@ from torch.utils.data import TensorDataset, DataLoader
 from .data_utils import read_data
 from .resnet import get_resnet_model
 from .resnet_gn import get_resnet_model_gn
-from ..utils import log_dict
+
+import os
+import sys
+import inspect
+currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+parentdir = os.path.dirname(currentdir)
+sys.path.insert(0, parentdir)
+
+from utils import log_dict
 
 
 class CustomTensorDataset(Dataset):
