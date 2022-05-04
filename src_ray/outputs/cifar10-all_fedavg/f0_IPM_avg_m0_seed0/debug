@@ -1,2 +1,2 @@
-ParallelTrainer(aggregator=Mean, max_batches_per_epoch=50, log_interval=10, metrics=['top1']use_cuda=True, debug=False, )
-DistributedEvaluator(use_cuda=True, debug=False, )
+ParallelTrainer(aggregator=Mean, max_batches_per_epoch=50, log_interval=10, metrics=['top1']use_cuda=False, debug=False, )
+DistributedEvaluator(use_cuda=False, debug=False, )
