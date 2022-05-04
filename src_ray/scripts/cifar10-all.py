@@ -7,6 +7,7 @@ import os
 import sys
 import torch
 from torchvision import datasets
+import ray
 
 currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 parentdir = os.path.dirname(currentdir)
@@ -49,11 +50,11 @@ parser.add_argument("--debug", action="store_true", default=False)
 parser.add_argument("--seed", type=int, default=0)
 parser.add_argument("--round", type=int, default=400)
 parser.add_argument("--batch_size", type=int, default=32)
-parser.add_argument("--num_byzantine", type=int, default=8)
+parser.add_argument("--num_byzantine", type=int, default=5)
 parser.add_argument("--log_interval", type=int, default=10)
 
-parser.add_argument("--attack", type=str, help="Select from BF and LF.")
-parser.add_argument("--agg", type=str, help="Aggregator.")
+parser.add_argument("--attack", type=str, default='IPM', help="Select from BF and LF.")
+parser.add_argument("--agg", type=str, default='avg', help="Aggregator.")
 parser.add_argument("--momentum", type=float, default=0, help="momentum")
 parser.add_argument("--lr", type=float, default=0.1, help="learning rate")
 parser.add_argument("--inner-iterations", type=int, default=1, help="[HP]: number of inner iterations.")
@@ -173,7 +174,7 @@ def initialize_worker(
             )
         
         if args.attack == "IPM":
-            attacker = IPMAttack(
+            attacker = IPMAttack.remote(
                 epsilon=0.5,
                 is_fedavg=is_fedavg,
                 data_loader=train_loader,
@@ -183,7 +184,7 @@ def initialize_worker(
                 optimizer=optimizer,
                 **kwargs,
             )
-            attacker.configure(trainer)
+            attacker.configure.remote(trainer)
             return attacker
         
         if args.attack == "IPM_large":
@@ -233,7 +234,7 @@ def initialize_worker(
         return TorchWorker(data_loader=train_loader, model=model, loss_func=loss_func, device=device,
                            optimizer=optimizer, **kwargs, )
     else:
-        return WorkerWithMomentum(momentum=MOMENTUM, data_loader=train_loader, model=model, loss_func=loss_func,
+        return WorkerWithMomentum.remote(momentum=MOMENTUM, data_loader=train_loader, model=model, loss_func=loss_func,
                                   device=device, optimizer=optimizer, **kwargs, )
 
 
@@ -253,7 +254,6 @@ def main(args):
     
     # model = get_resnet20(use_cuda=args.use_cuda, gn=False).to(device)
     model = cct_2_3x2_32().to(device)
-    # NOTE: no momentum
     optimizer = torch.optim.SGD(model.parameters(), lr=LR)
     loss_func = CrossEntropyLoss().to(device)
     
@@ -312,10 +312,10 @@ def main(args):
         )
         trainer.add_worker(worker)
     
-    if args.fedavg:
-        trainer.parallel_call(lambda worker: worker.detach_model())
+    # if args.fedavg:
+    trainer.parallel_call(lambda worker: worker.detach_model.remote())
     
-    torch.save(model.state_dict(), '../saved_init_model.pt')
+    # torch.save(model.state_dict(), '../saved_init_model.pt')
     for epoch in range(1, EPOCHS + 1):
         if args.fedavg:
             trainer.train_fedavg(epoch)
@@ -325,7 +325,9 @@ def main(args):
         scheduler.step()
         print(f"E={epoch}; Learning rate = {scheduler.get_last_lr()[0]:}")
 
-    torch.save(model.state_dict(), '../saved_final_model.pt')
+    # torch.save(model.state_dict(), '../saved_final_model.pt')
 
 if __name__ == "__main__":
+    if not ray.is_initialized():
+        ray.init(include_dashboard=True, num_gpus=0)
     main(args)

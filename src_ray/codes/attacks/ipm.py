@@ -4,12 +4,13 @@ A better name will be Inner Product Manipulation Attack.
 import os
 import sys
 from pathlib import Path
+import ray
 
 sys.path.append(os.path.dirname(Path(os.path.abspath(__file__)).parent))
 
 from simulators.worker import ByzantineWorker
 
-
+@ray.remote
 class IPMAttack(ByzantineWorker):
     def __init__(self, epsilon, is_fedavg, *args, **kwargs):
         super().__init__(*args, **kwargs)

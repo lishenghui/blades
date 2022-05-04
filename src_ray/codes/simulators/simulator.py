@@ -2,6 +2,8 @@ import copy
 import logging
 import numpy as np
 import os
+
+import ray
 import torch
 from collections import defaultdict
 from typing import Optional, Union, Callable, Any, Tuple
@@ -43,7 +45,7 @@ class DistributedSimulatorBase(object):
         return f"DistributedSimulatorBase(metrics={list(self.metrics.keys())},use_cuda={self.use_cuda}, debug={self.debug})"
     
     def add_worker(self, worker: TorchWorker):
-        worker.add_metrics(self.metrics)
+        worker.add_metrics.remote(self.metrics)
         self.debug_logger.info(f"=> Add worker {worker}")
         self.workers.append(worker)
     
@@ -150,17 +152,19 @@ class ParallelTrainer(DistributedTrainerBase):
         )
     
     def parallel_call(self, f: Callable[[TorchWorker], None]) -> None:
-        for w in self.workers:
-            self.cache_random_state()
-            f(w)
-            self.restore_random_state()
+        self.cache_random_state()
+        # for w in self.workers:
+        _ = [f(worker) for worker in self.workers]
+            # f(w)
+        self.restore_random_state()
     
     def parallel_get(self, f: Callable[[TorchWorker], Any]) -> list:
-        results = []
-        for w in self.workers:
-            self.cache_random_state()
-            results.append(f(w))
-            self.restore_random_state()
+        results = ray.get([f(worker) for worker in self.workers])
+        # results = []
+        # for w in self.workers:
+        #     self.cache_random_state()
+        #     results.append(f(w))
+        #     self.restore_random_state()
         return results
     
     def aggregation_and_update(self, log_var=True):
@@ -191,28 +195,29 @@ class ParallelTrainer(DistributedTrainerBase):
     
     def train(self, epoch):
         self.debug_logger.info(f"Train epoch {epoch}")
-        self.parallel_call(lambda worker: worker.train_epoch_start())
+        self.parallel_call(lambda worker: worker.train_epoch_start.remote())
         
         progress = 0
         for batch_idx in range(self.max_batches_per_epoch):
             try:
+                self.parallel_call(lambda worker: worker.set_para.remote(self.server.get_model()))
                 self._run_pre_batch_hooks(epoch, batch_idx)
-                results = self.parallel_get(lambda w: w.compute_gradient())
+                results = self.parallel_call(lambda w: w.compute_gradient.remote())
                 # self.aggregation_and_update()
                 # If there are Byzantine workers, ask them to craft attacks based on the updated models.
                 for omniscient_attacker_callback in self.omniscient_callbacks:
                     omniscient_attacker_callback()
                 
-                gradients = self.parallel_get(lambda w: w.get_gradient())
+                gradients = self.parallel_get(lambda w: w.get_gradient.remote())
                 aggregated = self.aggregator(gradients)
                 
                 # Assume that the model and optimizers are shared among workers.
                 self.server.set_gradient(aggregated)
                 self.server.apply_gradient()
                 
-                progress += results[0]["length"]
+                # progress += results[0]["length"]
                 if batch_idx % self.log_interval == 0:
-                    self.log_train(progress, batch_idx, epoch, results)
+                    # self.log_train(progress, batch_idx, epoch, results)
                     self.log_variance(epoch, gradients)
                 self._run_post_batch_hooks(epoch, batch_idx)
             except StopIteration:
