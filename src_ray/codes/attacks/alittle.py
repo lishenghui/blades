@@ -1,6 +1,5 @@
 import numpy as np
 import torch
-import torch.distributed as dist
 from scipy.stats import norm
 
 from ..simulators.worker import ByzantineWorker

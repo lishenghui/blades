@@ -1,6 +1,6 @@
 import os
 from torchvision import datasets
-
+from args import GPU_PER_ACTOR
 from ..simulators.worker import ByzantineWorker
 import ray
 
@@ -27,7 +27,7 @@ class LabelflippingCIFAR10(datasets.CIFAR10):
         return img, target
 
 
-@ray.remote
+@ray.remote(num_gpus=GPU_PER_ACTOR)
 class LableFlippingWorker(ByzantineWorker):
     def __init__(self, revertible_label_transformer, *args, **kwargs):
         """

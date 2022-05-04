@@ -1,6 +1,3 @@
-"""
-"""
-import argparse
 import inspect
 import numpy as np
 import os
@@ -14,16 +11,15 @@ parentdir = os.path.dirname(currentdir)
 sys.path.insert(0, parentdir)
 
 from torch.nn.modules.loss import CrossEntropyLoss
+from codes.args import parse_arguments
 from codes.sampler import DistributedSampler
 from codes.simulators.simulator import (
     ParallelTrainer,
     DistributedEvaluator,
 )
-from codes.simulators.worker import TorchWorker, WorkerWithMomentum, ByzantineWorker
+from codes.simulators.worker import TorchWorker, WorkerWithMomentum
 from codes.simulators.server import TorchServer
-
-# from codes.tasks.mnist import mnist, Net
-from codes.tasks.cifar10 import cifar10, get_resnet20
+from codes.tasks.cifar10 import cifar10
 from codes.utils import top1_accuracy, initialize_logger
 
 from codes.attacks.labelflipping import LableFlippingWorker
@@ -41,56 +37,37 @@ from codes.aggregator.trimmed_mean import TM
 from codes.aggregator.krum import Krum
 from codes.aggregator.base import Mean
 from codes.aggregator.autogm import AutoGM
-from codes.cctnets import cct_6_3x1_32, cct_7_3x1_32, cct_2_3x2_32
+from codes.cctnets import cct_2_3x2_32
 
-parser = argparse.ArgumentParser(description="")
-parser.add_argument("--use-cuda", action="store_true", default=False)
-parser.add_argument("--fedavg", action="store_true", default=False)
-parser.add_argument("--debug", action="store_true", default=False)
-parser.add_argument("--seed", type=int, default=0)
-parser.add_argument("--round", type=int, default=400)
-parser.add_argument("--batch_size", type=int, default=32)
-parser.add_argument("--num_byzantine", type=int, default=5)
-parser.add_argument("--log_interval", type=int, default=10)
 
-parser.add_argument("--attack", type=str, default='IPM', help="Select from BF and LF.")
-parser.add_argument("--agg", type=str, default='avg', help="Aggregator.")
-parser.add_argument("--momentum", type=float, default=0, help="momentum")
-parser.add_argument("--lr", type=float, default=0.1, help="learning rate")
-parser.add_argument("--inner-iterations", type=int, default=1, help="[HP]: number of inner iterations.")
 
-flag_parser = parser.add_mutually_exclusive_group(required=False)
-flag_parser.add_argument('--iid', dest='iid', action='store_true')
-flag_parser.add_argument('--noniid', dest='iid', action='store_false')
-parser.set_defaults(iid=True)
-args = parser.parse_args()
-
+options = parse_arguments()
 EXP_ID = os.path.basename(__file__)[:-3]  # the file name only
 ROOT_DIR = os.path.dirname(os.path.abspath(__file__)) + "/../"
-DATA_PATH = os.path.join(ROOT_DIR, "../data/cifar10/data_cache" + (".obj" if args.iid else "_alpha0.1.obj"))
+DATA_PATH = os.path.join(ROOT_DIR, "../data/cifar10/data_cache" + (".obj" if options.iid else "_alpha0.1.obj"))
 DATA_DIR = os.path.join(ROOT_DIR, "../data/cifar10/")
 EXP_DIR = os.path.join(ROOT_DIR, f"outputs/{EXP_ID}"
-                       + ("_fedavg/" if args.fedavg else "/"))
+                       + ("_fedavg/" if options.fedavg else "/"))
 # EXP_DIR = os.path.join(ROOT_DIR, f"outputs/{EXP_ID}/")
 
 
-N_WORKERS = 20
-N_BYZ = args.num_byzantine
-BATCH_SIZE = args.batch_size
+N_WORKERS = options.num_workers
+N_BYZ = options.num_byzantine
+BATCH_SIZE = options.batch_size
 TEST_BATCH_SIZE = 128
 MAX_BATCHES_PER_EPOCH = 50
-EPOCHS = args.round
-LR = args.lr
-MOMENTUM = args.momentum
+EPOCHS = options.round
+LR = options.lr
+MOMENTUM = options.momentum
 
 # LOG_DIR = EXP_DIR + "log"
 LOG_DIR = (
         EXP_DIR
-        + ("debug/" if args.debug else "")
-        + f"f{N_BYZ}_{args.attack}_{args.agg}_m{args.momentum}"
-        + (f"_lr{args.lr}" if args.lr != 0.1 else "")
-        + (f"_bz{args.batch_size}" if args.batch_size != 32 else "")
-        + f"_seed{args.seed}"
+        + ("debug/" if options.debug else "")
+        + f"f{N_BYZ}_{options.attack}_{options.agg}_m{options.momentum}"
+        + (f"_lr{options.lr}" if options.lr != 0.1 else "")
+        + (f"_bz{options.batch_size}" if options.batch_size != 32 else "")
+        + f"_seed{options.seed}"
 )
 
 
@@ -107,33 +84,33 @@ def get_sampler_callback(rank):
 
 
 def _get_aggregator():
-    if args.agg == "avg":
+    if options.agg == "avg":
         return Mean()
     
-    if args.agg == "cm":
+    if options.agg == "cm":
         return CM()
     
-    if args.agg == "cp":
+    if options.agg == "cp":
         return Clipping(tau=100, n_iter=1)
     
-    if args.agg == "rfa":
+    if options.agg == "rfa":
         return RFA()
     
-    if args.agg == "tm":
+    if options.agg == "tm":
         return TM(b=N_BYZ)
     
-    if args.agg == "krum":
+    if options.agg == "krum":
         return Krum(n=N_WORKERS, f=N_BYZ, m=1)
     
-    if args.agg == "clippedclustering":
+    if options.agg == "clippedclustering":
         return ClusteringClipping()
     
-    if args.agg == "clustering":
+    if options.agg == "clustering":
         return Clustering()
     
-    if args.agg == 'autogm':
+    if options.agg == 'autogm':
         return AutoGM()
-    raise NotImplementedError(args.agg)
+    raise NotImplementedError(options.agg)
 
 
 def initialize_worker(
@@ -152,7 +129,7 @@ def initialize_worker(
     )
     # NOTE: The first N_BYZ nodes are Byzantine
     if worker_rank < N_BYZ:
-        if args.attack == "BF":
+        if options.attack == "BF":
             return BitFlippingWorker(
                 data_loader=train_loader,
                 model=model,
@@ -162,7 +139,7 @@ def initialize_worker(
                 **kwargs,
             )
         
-        if args.attack == "LF":
+        if options.attack == "LF":
             return LableFlippingWorker(
                 revertible_label_transformer=lambda target: 9 - target,
                 data_loader=train_loader,
@@ -173,7 +150,7 @@ def initialize_worker(
                 **kwargs,
             )
         
-        if args.attack == "IPM":
+        if options.attack == "IPM":
             attacker = IPMAttack.remote(
                 epsilon=0.5,
                 is_fedavg=is_fedavg,
@@ -187,7 +164,7 @@ def initialize_worker(
             attacker.configure.remote(trainer)
             return attacker
         
-        if args.attack == "IPM_large":
+        if options.attack == "IPM_large":
             attacker = IPMAttack(
                 epsilon=1000.0,
                 is_fedavg=is_fedavg,
@@ -201,7 +178,7 @@ def initialize_worker(
             attacker.configure(trainer)
             return attacker
         
-        if args.attack == "ALIE":
+        if options.attack == "ALIE":
             attacker = ALittleIsEnoughAttack(
                 n=N_WORKERS,
                 m=N_BYZ,
@@ -216,7 +193,7 @@ def initialize_worker(
             attacker.configure(trainer)
             return attacker
         
-        if args.attack == "Noise":
+        if options.attack == "Noise":
             attacker = NoiseAttack(
                 is_fedavg=is_fedavg,
                 data_loader=train_loader,
@@ -229,8 +206,8 @@ def initialize_worker(
             attacker.configure(trainer)
             return attacker
         
-        raise NotImplementedError(f"No such attack {args.attack}")
-    if args.fedavg:
+        raise NotImplementedError(f"No such attack {options.attack}")
+    if options.fedavg:
         return TorchWorker(data_loader=train_loader, model=model, loss_func=loss_func, device=device,
                            optimizer=optimizer, **kwargs, )
     else:
@@ -329,5 +306,6 @@ def main(args):
 
 if __name__ == "__main__":
     if not ray.is_initialized():
+        # ray.init(local_mode=True, include_dashboard=True, num_gpus=0)
         ray.init(include_dashboard=True, num_gpus=0)
-    main(args)
+    main(options)
