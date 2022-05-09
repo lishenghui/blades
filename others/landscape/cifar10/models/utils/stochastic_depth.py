@@ -1,6 +1,3 @@
-# Thanks to rwightman's timm package
-# github.com:rwightman/pytorch-image-models
-
 import torch
 import torch.nn as nn
 
