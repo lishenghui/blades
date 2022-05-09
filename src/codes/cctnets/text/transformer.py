@@ -1,7 +1,6 @@
 import torch.nn as nn
 
 from ..utils.embedder import Embedder
-from ..utils.tokenizer import TextTokenizer
 from ..utils.transformers import MaskedTransformerClassifier
 
 __all__ = [

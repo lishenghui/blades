@@ -5,12 +5,12 @@
 """
 import argparse
 import copy
-import h5py
-import numpy as np
 import os
 import socket
-import sys
 import time
+
+import h5py
+import numpy as np
 import torch
 import torch.nn as nn
 import torchvision

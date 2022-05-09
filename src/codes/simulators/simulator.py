@@ -1,12 +1,10 @@
-import copy
 import logging
-import numpy as np
-import os
+import logging
+from typing import Union, Callable, Any
 
+import numpy as np
 import ray
 import torch
-from collections import defaultdict
-from typing import Optional, Union, Callable, Any, Tuple
 
 from .server import TorchServer
 from .worker import TorchWorker
@@ -155,7 +153,7 @@ class ParallelTrainer(DistributedTrainerBase):
         self.cache_random_state()
         # for w in self.workers:
         _ = [f(worker) for worker in self.workers]
-            # f(w)
+        # f(w)
         self.restore_random_state()
     
     def parallel_get(self, f: Callable[[TorchWorker], Any]) -> list:

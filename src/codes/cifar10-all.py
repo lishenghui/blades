@@ -1,10 +1,11 @@
 import inspect
-import numpy as np
 import os
 import sys
+
+import numpy as np
+import ray
 import torch
 from torchvision import datasets
-import ray
 
 currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 parentdir = os.path.dirname(currentdir)
@@ -17,7 +18,7 @@ from simulators.simulator import (
     ParallelTrainer,
     DistributedEvaluator,
 )
-from simulators.worker import TorchWorker, WorkerWithMomentum, RemoteWorker
+from simulators.worker import WorkerWithMomentum, RemoteWorker
 from simulators.server import TorchServer
 from tasks.cifar10 import cifar10
 from utils import top1_accuracy, initialize_logger
@@ -38,8 +39,6 @@ from aggregator.krum import Krum
 from aggregator.base import Mean
 from aggregator.autogm import AutoGM
 from cctnets import cct_2_3x2_32
-
-
 
 options = parse_arguments()
 EXP_ID = os.path.basename(__file__)[:-3]  # the file name only
@@ -209,10 +208,10 @@ def initialize_worker(
         raise NotImplementedError(f"No such attack {options.attack}")
     if options.fedavg:
         return RemoteWorker.remote(data_loader=train_loader, model=model, loss_func=loss_func, device=device,
-                           optimizer=optimizer, **kwargs, )
+                                   optimizer=optimizer, **kwargs, )
     else:
         return WorkerWithMomentum.remote(momentum=MOMENTUM, data_loader=train_loader, model=model, loss_func=loss_func,
-                                  device=device, optimizer=optimizer, **kwargs, )
+                                         device=device, optimizer=optimizer, **kwargs, )
 
 
 def main(args):
@@ -302,8 +301,9 @@ def main(args):
         evaluator.evaluate(epoch)
         scheduler.step()
         print(f"E={epoch}; Learning rate = {scheduler.get_last_lr()[0]:}")
-
+    
     # torch.save(model.state_dict(), '../saved_final_model.pt')
+
 
 if __name__ == "__main__":
     if not ray.is_initialized():

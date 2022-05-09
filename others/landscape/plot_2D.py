@@ -3,13 +3,14 @@
 """
 
 import argparse
+from os.path import exists
+
 import h5py
 import numpy as np
 import seaborn as sns
 from matplotlib import cm
 from matplotlib import pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
-from os.path import exists
 
 
 def plot_2d_contour(surf_file, surf_name='train_loss', vmin=0.1, vmax=10, vlevel=0.5, show=False):

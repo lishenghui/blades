@@ -1,7 +1,8 @@
 import argparse
-import numpy as np
 import os
 import pickle
+
+import numpy as np
 from sklearn.utils import shuffle
 from tensorflow.keras.datasets import cifar10
 

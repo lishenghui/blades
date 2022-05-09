@@ -1,6 +1,6 @@
 import argparse
-import torch
 
+import torch
 
 NUM_GPUS = 4
 NUM_WORKERS = 20
@@ -10,6 +10,7 @@ if not torch.cuda.is_available():
     GPU_PER_ACTOR = 0
 else:
     GPU_PER_ACTOR = (NUM_GPUS - 0.0) / NUM_WORKERS
+
 
 def parse_arguments():
     parser = argparse.ArgumentParser()
@@ -32,7 +33,7 @@ def parse_arguments():
     flag_parser.add_argument('--noniid', dest='iid', action='store_false')
     parser.set_defaults(iid=True)
     options = parser.parse_args()
-
+    
     options.num_workers = NUM_WORKERS
     options.use_cuda = torch.cuda.is_available()
     # if not torch.cuda.is_available():

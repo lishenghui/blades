@@ -22,8 +22,9 @@
 """
 
 import argparse
-import h5py
 import math
+
+import h5py
 import numpy as np
 from scipy import interpolate
 

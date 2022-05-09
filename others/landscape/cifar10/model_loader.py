@@ -1,10 +1,10 @@
+import os
+
 import cifar10.models.cct as cct
 import cifar10.models.densenet as densenet
 import cifar10.models.resnet as resnet
 import cifar10.models.vgg as vgg
-import os
 import torch
-import torchvision
 
 # map between model name and function
 models = {

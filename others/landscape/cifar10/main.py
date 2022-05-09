@@ -1,9 +1,10 @@
 from __future__ import print_function
 
 import argparse
-import numpy as np
 import os
 import random
+
+import numpy as np
 import torch
 import torch.backends.cudnn as cudnn
 import torch.nn as nn

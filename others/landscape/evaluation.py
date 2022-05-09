@@ -3,7 +3,6 @@
     the loss value, accuracy and eigen values of the hessian matrix
 """
 
-import time
 import torch
 import torch.nn as nn
 import torch.nn.functional as F

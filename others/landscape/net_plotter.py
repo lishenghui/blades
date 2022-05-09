@@ -3,10 +3,11 @@
 """
 
 import copy
-import h5py
 import os
-import torch
 from os.path import exists, commonprefix
+
+import h5py
+import torch
 
 import h5_util
 import model_loader

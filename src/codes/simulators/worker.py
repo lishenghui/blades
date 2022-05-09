@@ -1,20 +1,19 @@
 import copy
-import torch
 import inspect
+import os
 import sys
 from collections import defaultdict
-from torch.nn.modules.loss import CrossEntropyLoss
 from typing import Union, Callable, Tuple
 
 import ray
-import inspect
-import os
+import torch
+from torch.nn.modules.loss import CrossEntropyLoss
+
 currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 parentdir = os.path.dirname(currentdir)
 sys.path.insert(0, parentdir)
 
 from args import GPU_PER_ACTOR
-
 
 
 class TorchWorker(object):
@@ -186,12 +185,12 @@ class TorchWorker(object):
         return torch.cat(layer_gradients)
 
 
-
 @ray.remote(num_gpus=GPU_PER_ACTOR)
 class RemoteWorker(TorchWorker):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-    
+
+
 # @ray.remote
 @ray.remote(num_gpus=GPU_PER_ACTOR)
 class WorkerWithMomentum(TorchWorker):
