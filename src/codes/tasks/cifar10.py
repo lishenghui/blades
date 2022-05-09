@@ -1,17 +1,16 @@
+import inspect
 import os
+import sys
+
 import torch
 import torchvision.datasets as datasets
 import torchvision.transforms as transforms
 from torch.utils.data import Dataset
-from torch.utils.data import TensorDataset, DataLoader
 
 from .data_utils import read_data
 from .resnet import get_resnet_model
 from .resnet_gn import get_resnet_model_gn
 
-import os
-import sys
-import inspect
 currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 parentdir = os.path.dirname(currentdir)
 sys.path.insert(0, parentdir)

@@ -1,17 +1,17 @@
-import os
-from torchvision import datasets
-from args import GPU_PER_ACTOR
-
-import ray
 import inspect
 import os
 import sys
+
+from args import GPU_PER_ACTOR
+from torchvision import datasets
+
 currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 parentdir = os.path.dirname(currentdir)
 sys.path.insert(0, parentdir)
 
 from simulators.worker import ByzantineWorker
 import ray
+
 
 class LabelflippingMNIST(datasets.MNIST):
     def __getitem__(self, index):
@@ -26,7 +26,6 @@ class LabelflippingMNIST(datasets.MNIST):
     @property
     def processed_folder(self):
         return os.path.join(self.root, "MNIST", "processed")
-
 
 
 class LabelflippingCIFAR10(datasets.CIFAR10):

@@ -1,6 +1,7 @@
 import logging
-import torch
 import types
+
+import torch
 
 from .base import _BaseAggregator
 from .base import _BaseAsyncAggregator

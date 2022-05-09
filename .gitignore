@@ -4,8 +4,6 @@ data/cifar10/cifar-10-batches-py/*
 /outputs/*
 *.ipynb_checkpoints*
 *.idea*
-
-data/cifar10/cifar-10-batches-py/*
 *.pyc
 *nohup.out
 trainers/outputs/*
@@ -13,3 +11,4 @@ others/landscape/cifar10/data/cifar-10-batches-py
 /src/outputs/cifar10-all/
 src_ray/outputs/*
 src/outputs/*
+/half_seminar/build/*

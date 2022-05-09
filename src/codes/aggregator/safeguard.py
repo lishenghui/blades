@@ -3,6 +3,7 @@ Allen-Zhu Z, Ebrahimian F, Li J, et al. Byzantine-Resilient Non-Convex Stochasti
     arXiv preprint arXiv:2012.14368, 2020.
 """
 import random
+
 import torch
 
 from .base import _BaseAggregator

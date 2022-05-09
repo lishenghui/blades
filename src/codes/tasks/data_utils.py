@@ -1,16 +1,13 @@
 import json
-import math
-import numpy as np
 import os
 import pickle
+
+import numpy as np
 import torch
-import torch.nn as nn
 import torch.optim
 import torch.utils.data
-import torchvision.datasets as datasets
 import torchvision.transforms as transforms
 from scipy.sparse import csr_matrix
-from time import time
 
 DATASETS = {
     'cifar10': {
