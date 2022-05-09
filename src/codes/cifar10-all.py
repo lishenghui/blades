@@ -7,17 +7,14 @@ import ray
 import torch
 from torchvision import datasets
 
-currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
-parentdir = os.path.dirname(currentdir)
-sys.path.insert(0, parentdir)
+current_dir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+parent_dir = os.path.dirname(current_dir)
+sys.path.insert(0, parent_dir)
 
 from torch.nn.modules.loss import CrossEntropyLoss
 from args import parse_arguments, NUM_GPUS
 from sampler import DistributedSampler
-from simulators.simulator import (
-    ParallelTrainer,
-    DistributedEvaluator,
-)
+from simulators.simulator import (ParallelTrainer, DistributedEvaluator)
 from simulators.worker import WorkerWithMomentum, RemoteWorker
 from simulators.server import TorchServer
 from tasks.cifar10 import cifar10

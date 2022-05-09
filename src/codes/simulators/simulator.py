@@ -1,5 +1,4 @@
 import logging
-import logging
 from typing import Union, Callable, Any
 
 import numpy as np

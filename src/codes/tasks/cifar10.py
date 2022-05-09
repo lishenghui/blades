@@ -11,9 +11,9 @@ from .data_utils import read_data
 from .resnet import get_resnet_model
 from .resnet_gn import get_resnet_model_gn
 
-currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
-parentdir = os.path.dirname(currentdir)
-sys.path.insert(0, parentdir)
+current_dir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+parent_dir = os.path.dirname(current_dir)
+sys.path.insert(0, parent_dir)
 
 from utils import log_dict
 

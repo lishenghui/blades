@@ -3,12 +3,17 @@ import os
 import pickle
 
 import numpy as np
+import torchvision
 from sklearn.utils import shuffle
-from tensorflow.keras.datasets import cifar10
 
 
 def generate_datasets(iid=False, alpha=1.0, num_clients=100):
-    (x_train, y_train), (x_test, y_test) = cifar10.load_data()
+    train_set = torchvision.datasets.CIFAR10(train=True, download=True, root="./")
+    test_set = torchvision.datasets.CIFAR10(train=False, download=True, root="./")
+    x_test, y_test = test_set.data, np.array(test_set.targets)
+    x_train, y_train = train_set.data, np.array(train_set.targets)
+    
+    # (x_train, y_train), (x_test, y_test) = cifar10.load_data()
     x_train = x_train.astype('float32') / 255.0
     x_train = np.transpose(x_train, (0, 3, 1, 2))
     x_test = x_test.astype('float32') / 255.0
