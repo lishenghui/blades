@@ -18,7 +18,7 @@ from simulators.simulator import (ParallelTrainer, DistributedEvaluator)
 from simulators.worker import WorkerWithMomentum, RemoteWorker
 from simulators.server import TorchServer
 from tasks.cifar10 import cifar10
-from utils import top1_accuracy, initialize_logger
+from .utils import top1_accuracy, initialize_logger
 
 from attacks.labelflipping import LableFlippingWorker
 from attacks.bitflipping import BitFlippingWorker

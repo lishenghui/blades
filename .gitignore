@@ -14,3 +14,4 @@ src/outputs/*
 /half_seminar/build/*
 /data/cifar10/preprocess/cifar-10-batches-py
 /data/cifar10/preprocess/cifar-10-python.tar.gz
+/build
