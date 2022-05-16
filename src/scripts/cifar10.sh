@@ -1,6 +1,8 @@
 #!/bin/bash
 
 
+pushd ../codes
+
 cuda=2
 for seed in 0
 do
@@ -12,7 +14,7 @@ do
             do
                 export CUDA_VISIBLE_DEVICES=$(((cuda)))
                 cuda=$(((cuda + 1) % 4))
-                args="--round 2 --use-cuda --batch_size 32 --seed $seed --agg ${agg} --momentum 0.0 --num_byzantine ${num_byzantine} --attack $attack"
+                args="--round 2 --use-cuda --batch_size 32 --seed $seed --agg ${agg} --momentum 0.0 --num_byzantine ${num_byzantine} --attack $attack --fedavg"
                 # args="--round 50 --use-cuda --batch_size 32 --seed $seed --agg ${agg} --momentum 0 --num_byzantine ${num_byzantine} --attack $attack --fedavg"
                 echo ${args}
                 arg_str="\""
@@ -23,7 +25,8 @@ do
                 # echo ${arg_str}
                 # echo ${cuda}
                 # python cifar10-all.py ${args}
-                nohup python cifar10-all.py ${args} &
+                python cifar10-all.py ${args}
+                # nohup python cifar10-all.py ${args} &
             done
         done
     done
@@ -34,3 +37,6 @@ do
     done
     unset pids
 done
+
+
+pophd
