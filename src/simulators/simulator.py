@@ -150,9 +150,7 @@ class ParallelTrainer(DistributedTrainerBase):
     
     def parallel_call(self, f: Callable[[TorchWorker], None]) -> None:
         self.cache_random_state()
-        # for w in self.workers:
         _ = [f(worker) for worker in self.workers]
-        # f(w)
         self.restore_random_state()
     
     def parallel_get(self, f: Callable[[TorchWorker], Any]) -> list:
@@ -225,19 +223,13 @@ class ParallelTrainer(DistributedTrainerBase):
         self.parallel_call(lambda worker: worker.set_para.remote(self.server.get_model()))
         self.parallel_call(lambda worker: worker.train_epoch_start.remote())
         self.parallel_get(lambda w: w.local_training.remote(self.max_batches_per_epoch))
-
         self.parallel_call(lambda worker: worker.omniscient_callback.remote(self))
-        # self.aggregation_and_update_fedavg()
-        
-        # If there are Byzantine workers, ask them to craft attackers based on the updated models.
-        # for omniscient_attacker_callback in self.omniscient_callbacks:
-        #     omniscient_attacker_callback()
         
         update = self.parallel_get(lambda w: w.get_update.remote())
         aggregated = self.aggregator(update)
         
         self.server.apply_update(aggregated)
-        
+
         self.log_variance(epoch, update)
     
     def _run_pre_batch_hooks(self, epoch, batch_idx):

@@ -94,7 +94,6 @@ def main(args):
         
     trainer.parallel_call(lambda worker: worker.detach_model.remote())
     
-    # torch.save(model.state_dict(), '../saved_init_model.pt')
     for epoch in range(1, options.round + 1):
         if args.fedavg:
             trainer.train_fedavg(epoch)
@@ -103,9 +102,6 @@ def main(args):
         evaluator.evaluate(epoch)
         scheduler.step()
         print(f"E={epoch}; Learning rate = {scheduler.get_last_lr()[0]:}")
-    
-    # torch.save(model.state_dict(), '../saved_final_model.pt')
-
 
 if __name__ == "__main__":
     if not ray.is_initialized():
