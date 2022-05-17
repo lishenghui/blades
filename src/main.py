@@ -100,7 +100,7 @@ def main(args):
             trainer.train_fedavg(epoch)
         else:
             trainer.train(epoch)
-        # evaluator.evaluate(epoch)
+        evaluator.evaluate(epoch)
         scheduler.step()
         print(f"E={epoch}; Learning rate = {scheduler.get_last_lr()[0]:}")
     
