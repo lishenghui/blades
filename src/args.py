@@ -9,7 +9,7 @@ from tasks.data_utils import read_data
 def parse_arguments():
     parser = argparse.ArgumentParser()
     # parser.add_argument("--use-cuda", action="store_true", default=False)
-    parser.add_argument("--fedavg", action="store_true", default=True)
+    parser.add_argument("--fedavg", action="store_true", default=False)
     parser.add_argument("--debug", action="store_true", default=False)
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument("--round", type=int, default=400)
