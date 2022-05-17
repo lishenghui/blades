@@ -61,8 +61,6 @@ def generate_datasets(iid=False, alpha=1.0, num_clients=100):
             x_train_splits.append(x_train[idx_batch[j], :])
             y_train_splits.append(y_train[idx_batch[j], :])
         
-        with open('proportions.npy', 'wb') as f:
-            np.save(f, np.array(proportion_list))
     test_dataset = {}
     train_dataset = {}
     for id, index in zip(train_user_ids, range(num_clients)):
