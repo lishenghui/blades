@@ -26,7 +26,7 @@ def parse_arguments():
     parser.add_argument("--inner-iterations", type=int, default=1, help="[HP]: number of inner iterations.")
     # parser.add_argument("--num_workers", type=int, default=4, help="Number of workers.")
     parser.add_argument("--num_actor", type=int, default=4)
-    parser.add_argument("--num_byzantine", type=int, default=1)
+    parser.add_argument("--num_byzantine", type=int, default=0)
     parser.add_argument("--num_gpus", type=int, default=4)
     flag_parser = parser.add_mutually_exclusive_group(required=False)
     flag_parser.add_argument('--iid', dest='iid', action='store_true')
