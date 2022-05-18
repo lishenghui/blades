@@ -60,7 +60,7 @@ def generate_datasets(iid=False, alpha=1.0, num_clients=100):
             client_dataidx_map[j] = idx_batch[j]
             x_train_splits.append(x_train[idx_batch[j], :])
             y_train_splits.append(y_train[idx_batch[j], :])
-        
+    
     test_dataset = {}
     train_dataset = {}
     for id, index in zip(train_user_ids, range(num_clients)):
@@ -69,7 +69,7 @@ def generate_datasets(iid=False, alpha=1.0, num_clients=100):
     
     #     os.system('rm -rf ..')
     #     os.system('mkdir -p ../data')
-    with open(os.path.join('..', 'data_cache' + ("_alpha" + str(args.alpha) if not args.iid else "") + '.obj'),
+    with open(os.path.join('../../../../data/cifar10', 'data_cache' + ("_alpha" + str(args.alpha) if not args.iid else "") + '.obj'),
               'wb') as f:
         pickle.dump(train_user_ids, f)
         pickle.dump(train_dataset, f)

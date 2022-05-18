@@ -1,19 +1,25 @@
-import importlib
-import numpy as np
+
+import os
+import sys
 import ray
 import torch
-from simulators.clientbuilder import ClientBuilder
+import inspect
+import importlib
+import numpy as np
 from torch.nn.modules.loss import CrossEntropyLoss
-from tasks.cifar10 import cifar10
+
 from args import parse_arguments
-
+current_dir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+parent_dir = os.path.dirname(current_dir)
+sys.path.insert(0, parent_dir)
+# from models.cifar10.cctnets import cct_2_3x2_32
+from tasks.cifar10.cct import Net
+from simulators.clientbuilder import ClientBuilder
 from simulators.server import TorchServer
+from settings.cifar10 import cifar10
 from utils import top1_accuracy, initialize_logger
-from cctnets import cct_2_3x2_32
-
 
 options = parse_arguments()
-
 if options.use_actor:
     from simulators.simulator import (ParallelTrainer, DistributedEvaluator)
 else:
@@ -21,6 +27,7 @@ else:
 
 agg_path = importlib.import_module('aggregators.%s' % options.agg)
 agg_scheme = getattr(agg_path, options.agg.capitalize())
+
 
 def main(args):
     initialize_logger(options.log_dir)
@@ -32,7 +39,7 @@ def main(args):
     np.random.seed(args.seed)
     
     # model = get_resnet20(use_cuda=args.use_cuda, gn=False).to(device)
-    model = cct_2_3x2_32().to(device)
+    model = Net().to(device)
     optimizer = torch.optim.SGD(model.parameters(), lr=options.lr)
     loss_func = CrossEntropyLoss().to(device)
     
@@ -77,7 +84,7 @@ def main(args):
         use_cuda=args.use_cuda,
         debug=False,
     )
-
+    
     client_builder = ClientBuilder(options=options)
     for worker_rank in range(options.num_clients):
         worker = client_builder.initialize_client(
@@ -106,6 +113,7 @@ def main(args):
         evaluator.evaluate(epoch)
         scheduler.step()
         print(f"E={epoch}; Learning rate = {scheduler.get_last_lr()[0]:}")
+
 
 if __name__ == "__main__":
     if not ray.is_initialized():

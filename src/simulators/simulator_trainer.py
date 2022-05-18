@@ -1,15 +1,16 @@
 import logging
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from threading import Thread
 from typing import Union, Callable, Any
 
 import numpy as np
-import ray
 import torch
 from ray.train import Trainer
-import time
-from threading import Thread
-from .server import TorchServer
+
 from .client import TorchClient
-from concurrent.futures import ThreadPoolExecutor, as_completed
+from .server import TorchServer
+
+
 # from .simulator import DistributedSimulatorBase, ParallelTrainer, DistributedTrainerBase
 
 
@@ -20,35 +21,38 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 #     # config['client'].local_training(config['local_round'])
 #     print('training complete')
 #     return config['client'].get_update()
-    
+
 class RayTrainer(Trainer):
     def __int__(self, backend="torch", num_workers=1, use_gpu=False):
         super().__init__(backend="torch", num_workers=num_workers, use_gpu=use_gpu)
     
     # def run(self, *args, **kwargs):
     #     return super().run(train_function, **kwargs)
-        
+
+
 class TrainerPool(ThreadPoolExecutor):
     def __init__(self, server, num_worker=4):
         super().__init__(max_workers=num_worker)
         self.ray_trainers = [Trainer(backend="torch", num_workers=1, use_gpu=False) for _ in range(num_worker)]
         [trainer.start() for trainer in self.ray_trainers]
         self.server = server
-        self.clients =None
+        self.clients = None
         self._return = None
-
+    
     def set_clients(self, clients):
         self.clients = clients
-        
+    
     def run(self):
         self._return = []
         for client in self.clients:
-            update = self.ray_trainer.run(train_function, config= {'client' : client, 'model' : self.server.get_model(), 'local_round' : 50})
+            update = self.ray_trainer.run(train_function, config={'client': client, 'model': self.server.get_model(),
+                                                                  'local_round': 50})
             self._return.extend(update)
-
+    
     def join(self):
         Thread.join(self)
         return self._return
+
 
 class DistributedSimulatorBase(object):
     """Simulate distributed programs with low memory usage.
@@ -147,6 +151,7 @@ class DistributedTrainerBase(DistributedSimulatorBase):
 
 class ParallelTrainer(DistributedTrainerBase):
     """Synchronous and parallel training with specified aggregators."""
+    
     def __init__(
             self,
             server: TorchServer,
@@ -179,7 +184,7 @@ class ParallelTrainer(DistributedTrainerBase):
         self.executor = ThreadPoolExecutor(max_workers=4)
         self.ray_trainers = [RayTrainer(backend="torch", num_workers=1, use_gpu=False) for _ in range(4)]
         [trainer.start() for trainer in self.ray_trainers]
-        
+    
     def parallel_call(self, f: Callable[[TorchClient], None]) -> None:
         self.cache_random_state()
         _ = [f(worker) for worker in self.clients]
@@ -195,7 +200,7 @@ class ParallelTrainer(DistributedTrainerBase):
         return results
     
     def aggregation_and_update(self, log_var=True):
-        # If there are Byzantine workers, ask them to craft attackers based on the updated models.
+        # If there are Byzantine workers, ask them to craft attackers based on the updated settings.
         for omniscient_attacker_callback in self.omniscient_callbacks:
             omniscient_attacker_callback()
         
@@ -210,7 +215,7 @@ class ParallelTrainer(DistributedTrainerBase):
         self.server.apply_gradient()
     
     def aggregation_and_update_fedavg(self):
-        # If there are Byzantine workers, ask them to craft attackers based on the updated models.
+        # If there are Byzantine workers, ask them to craft attackers based on the updated settings.
         for omniscient_attacker_callback in self.omniscient_callbacks:
             omniscient_attacker_callback()
         
@@ -231,7 +236,7 @@ class ParallelTrainer(DistributedTrainerBase):
                 self._run_pre_batch_hooks(epoch, batch_idx)
                 results = self.parallel_call(lambda w: w.compute_gradient.remote())
                 # self.aggregation_and_update()
-                # If there are Byzantine workers, ask them to craft attackers based on the updated models.
+                # If there are Byzantine workers, ask them to craft attackers based on the updated settings.
                 for omniscient_attacker_callback in self.omniscient_callbacks:
                     omniscient_attacker_callback()
                 
@@ -253,7 +258,7 @@ class ParallelTrainer(DistributedTrainerBase):
     def train_fedavg(self, epoch):
         self.debug_logger.info(f"Train epoch {epoch}")
         update = []
-
+        
         def local_training(config):
             config['client'].set_para(config['model'])
             config['client'].train_epoch_start()
@@ -266,8 +271,8 @@ class ParallelTrainer(DistributedTrainerBase):
             client.set_para(model)
             client.train_epoch_start()
             return trainer.run(local_training, config=
-                            {'client' : client, 'trainer': trainer, 'model' : self.server.get_model(), 'local_round' : 50})
-            
+            {'client': client, 'trainer': trainer, 'model': self.server.get_model(), 'local_round': 50})
+        
         # all_tasks = [self.executor.submit(train_function, config=
         #                     {'client' : client, 'trainer': trainer, 'model' : self.server.get_model(), 'local_round' : 50})
         #             for client, trainer in zip(self.clients, self.ray_trainers)]

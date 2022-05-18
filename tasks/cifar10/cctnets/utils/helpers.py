@@ -9,7 +9,7 @@ _logger = logging.getLogger('train')
 
 def resize_pos_embed(posemb, posemb_new, num_tokens=1):
     # Copied from `timm` by Ross Wightman:
-    # github.com/rwightman/pytorch-image-models
+    # github.com/rwightman/pytorch-image-settings
     # Rescale the grid of position embeddings when loading from state_dict. Adapted from
     # https://github.com/google-research/vision_transformer/blob/00883dd691c63a6830751563748663526e811cee/vit_jax/checkpoint.py#L224
     ntok_new = posemb_new.shape[1]

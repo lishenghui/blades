@@ -1,23 +1,25 @@
 import importlib
+
+from torchvision import datasets
+
 from attackers.alieclient import AlieClient
 from attackers.bitflippingclient import BitflippingClient
 from attackers.ipmclient import IpmClient
 from attackers.labelflippingclient import LableflippingClient
 from attackers.noiseclient import NoiseClient
 from simulators.client import WorkerWithMomentum, TorchClient, RemoteWorker
-from tasks.cifar10 import cifar10
-from torchvision import datasets
+from settings.cifar10 import cifar10
 
 
 class ClientBuilder(object):
     def __init__(self, options, *args, **kwargs):
         self.options = options
-
+        
         attacker_path = importlib.import_module('attackers.%sclient' % options.attack)
         attack_client = getattr(attacker_path, options.attack.capitalize() + 'Client')
-        
     
-    def initialize_client(self, trainer, worker_rank, model, optimizer, loss_func, device, use_actor=False, is_fedavg=False, kwargs=None):
+    def initialize_client(self, trainer, worker_rank, model, optimizer, loss_func, device, use_actor=False,
+                          is_fedavg=False, kwargs=None):
         train_loader = cifar10(
             data_dir=self.options.data_dir,
             data_path=self.options.data_path,
@@ -112,9 +114,11 @@ class ClientBuilder(object):
             raise NotImplementedError(f"No such attack {self.options.attack}")
         if self.options.fedavg:
             if use_actor:
-                return RemoteWorker.options(num_gpus=self.options.gpu_per_actor).remote(data_loader=train_loader, model=model,
-                                                                               loss_func=loss_func, device=device,
-                                                                               optimizer=optimizer, **kwargs, )
+                return RemoteWorker.options(num_gpus=self.options.gpu_per_actor).remote(data_loader=train_loader,
+                                                                                        model=model,
+                                                                                        loss_func=loss_func,
+                                                                                        device=device,
+                                                                                        optimizer=optimizer, **kwargs, )
             else:
                 return TorchClient(data_loader=train_loader,
                                    model=model,

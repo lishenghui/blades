@@ -5,8 +5,8 @@ import numpy as np
 import ray
 import torch
 
-from .server import TorchServer
 from .client import TorchClient
+from .server import TorchServer
 
 
 class DistributedSimulatorBase(object):
@@ -163,7 +163,7 @@ class ParallelTrainer(DistributedTrainerBase):
         return results
     
     def aggregation_and_update(self, log_var=True):
-        # If there are Byzantine workers, ask them to craft attackers based on the updated models.
+        # If there are Byzantine workers, ask them to craft attackers based on the updated settings.
         for omniscient_attacker_callback in self.omniscient_callbacks:
             omniscient_attacker_callback()
         
@@ -178,7 +178,7 @@ class ParallelTrainer(DistributedTrainerBase):
         self.server.apply_gradient()
     
     def aggregation_and_update_fedavg(self):
-        # If there are Byzantine workers, ask them to craft attackers based on the updated models.
+        # If there are Byzantine workers, ask them to craft attackers based on the updated settings.
         for omniscient_attacker_callback in self.omniscient_callbacks:
             omniscient_attacker_callback()
         
@@ -199,7 +199,7 @@ class ParallelTrainer(DistributedTrainerBase):
                 self._run_pre_batch_hooks(epoch, batch_idx)
                 results = self.parallel_call(lambda w: w.compute_gradient.remote())
                 # self.aggregation_and_update()
-                # If there are Byzantine workers, ask them to craft attackers based on the updated models.
+                # If there are Byzantine workers, ask them to craft attackers based on the updated settings.
                 for omniscient_attacker_callback in self.omniscient_callbacks:
                     omniscient_attacker_callback()
                 
@@ -229,7 +229,7 @@ class ParallelTrainer(DistributedTrainerBase):
         aggregated = self.aggregator(update)
         
         self.server.apply_update(aggregated)
-
+        
         self.log_variance(epoch, update)
     
     def _run_pre_batch_hooks(self, epoch, batch_idx):

@@ -3,13 +3,15 @@ import os
 import sys
 
 import numpy as np
+import ray
 import torch
 from scipy.stats import norm
-import ray
+
 currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 parentdir = os.path.dirname(currentdir)
 sys.path.insert(0, parentdir)
 from simulators.client import ByzantineWorker
+
 
 @ray.remote
 class AlieClient(ByzantineWorker):
@@ -31,7 +33,7 @@ class AlieClient(ByzantineWorker):
             self.z_max = norm.ppf(cdf_value)
         self.n_good = n - m
         self.__is_byzantine = True
-
+    
     def get_is_byzantine(self):
         return self.__is_byzantine
     

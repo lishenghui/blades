@@ -3,12 +3,14 @@ A better name will be Inner Product Manipulation Attack.
 """
 import os
 import sys
-import ray
 from pathlib import Path
+
+import ray
 
 sys.path.append(os.path.dirname(Path(os.path.abspath(__file__)).parent))
 import torch
 from simulators.client import ByzantineWorker
+
 
 @ray.remote
 class NoiseClient(ByzantineWorker):
