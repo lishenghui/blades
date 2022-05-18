@@ -6,7 +6,7 @@ import ray
 import torch
 
 from .server import TorchServer
-from .worker import TorchWorker
+from .client import TorchClient
 
 
 class DistributedSimulatorBase(object):
@@ -29,7 +29,7 @@ class DistributedSimulatorBase(object):
         self.metrics = metrics
         self.use_cuda = use_cuda
         self.debug = debug
-        self.workers = []
+        self.clients = []
         # NOTE: omniscient_callbacks are called before aggregation or gossip
         self.omniscient_callbacks = []
         self.random_states = {}
@@ -41,16 +41,16 @@ class DistributedSimulatorBase(object):
     def __str__(self):
         return f"DistributedSimulatorBase(metrics={list(self.metrics.keys())},use_cuda={self.use_cuda}, debug={self.debug})"
     
-    def add_worker(self, worker: TorchWorker):
-        worker.add_metrics.remote(self.metrics)
-        self.debug_logger.info(f"=> Add worker {worker}")
-        self.workers.append(worker)
+    def add_client(self, client: TorchClient):
+        client.add_metrics.remote(self.metrics)
+        self.debug_logger.info(f"=> Add worker {client}")
+        self.clients.append(client)
     
-    def any_call(self, f: Callable[[TorchWorker], None]) -> None:
-        f(self.workers[0])
+    def any_call(self, f: Callable[[TorchClient], None]) -> None:
+        f(self.clients[0])
     
-    def any_get(self, f: Callable[[TorchWorker], Any]) -> list:
-        return f(self.workers[0])
+    def any_get(self, f: Callable[[TorchClient], Any]) -> list:
+        return f(self.clients[0])
     
     def cache_random_state(self) -> None:
         if self.use_cuda:
@@ -148,13 +148,13 @@ class ParallelTrainer(DistributedTrainerBase):
             ")"
         )
     
-    def parallel_call(self, f: Callable[[TorchWorker], None]) -> None:
+    def parallel_call(self, f: Callable[[TorchClient], None]) -> None:
         self.cache_random_state()
-        _ = [f(worker) for worker in self.workers]
+        _ = [f(worker) for worker in self.clients]
         self.restore_random_state()
     
-    def parallel_get(self, f: Callable[[TorchWorker], Any]) -> list:
-        results = ray.get([f(worker) for worker in self.workers])
+    def parallel_get(self, f: Callable[[TorchClient], Any]) -> list:
+        results = ray.get([f(worker) for worker in self.clients])
         # results = []
         # for w in self.workers:
         #     self.cache_random_state()
@@ -271,7 +271,7 @@ class ParallelTrainer(DistributedTrainerBase):
             )
         
         # Output to console
-        total = len(self.workers[0].data_loader.dataset)
+        total = len(self.clients[0].data_loader.dataset)
         pct = 100 * progress / total
         self.debug_logger.info(
             f"[E{r['E']:2}B{r['B']:<3}| {progress:6}/{total} ({pct:3.0f}%) ] Loss: {r['Loss']:.4f} "

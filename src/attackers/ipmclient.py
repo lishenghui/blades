@@ -9,7 +9,7 @@ import ray
 
 sys.path.append(os.path.dirname(Path(os.path.abspath(__file__)).parent))
 
-from simulators.worker import ByzantineWorker
+from simulators.client import ByzantineWorker
 
 
 @ray.remote
@@ -31,7 +31,7 @@ class IpmClient(ByzantineWorker):
     def omniscient_callback(self, simulator):
         # Loop over good workers and accumulate their gradients
         update = []
-        for w in simulator.workers:
+        for w in simulator.clients:
             is_byzantine = ray.get(w.get_is_byzantine.remote())
             # is_byzantine = ray.get(w.getattr.remote('__is_byzantine'))
             if not is_byzantine:

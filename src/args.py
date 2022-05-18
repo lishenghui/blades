@@ -1,5 +1,5 @@
-import argparse
 import os
+import argparse
 
 import torch
 
@@ -10,6 +10,7 @@ def parse_arguments():
     parser = argparse.ArgumentParser()
     # parser.add_argument("--use-cuda", action="store_true", default=False)
     parser.add_argument("--fedavg", action="store_true", default=True)
+    parser.add_argument("--use_actor", action="store_true", default=False)
     parser.add_argument("--debug", action="store_true", default=False)
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument("--round", type=int, default=400)
@@ -26,6 +27,7 @@ def parse_arguments():
     parser.add_argument("--inner-iterations", type=int, default=1, help="[HP]: number of inner iterations.")
     # parser.add_argument("--num_workers", type=int, default=4, help="Number of workers.")
     parser.add_argument("--num_actor", type=int, default=4)
+    parser.add_argument("--num_trainer", type=int, default=4)
     parser.add_argument("--num_byzantine", type=int, default=0)
     parser.add_argument("--num_gpus", type=int, default=4)
     flag_parser = parser.add_mutually_exclusive_group(required=False)
@@ -41,22 +43,13 @@ def parse_arguments():
     else:
         options.gpu_per_actor = (options.num_gpus - 0.05) / options.num_gpus
     options.use_cuda = torch.cuda.is_available()
-    # if not torch.cuda.is_available():
-    #     options.gpu_per_actor = 0
-    #     GPU_PER_ACTOR = 0
-    # else:
-    #     options.gpu_per_actor = (options.num_gpus - 0.05) / options.num_workers
-    #     GPU_PER_ACTOR = (options.num_gpus - 0.05) / options.num_workers
     
-    EXP_ID = os.path.basename(__file__)[:-3]  # the file name only
     ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
     options.data_path = os.path.join(ROOT_DIR, "../data/cifar10/data_cache" + (".obj" if options.iid else "_alpha0.1.obj"))
     options.data_dir = os.path.join(ROOT_DIR, "../data/cifar10/")
     EXP_DIR = os.path.join(ROOT_DIR, f"outputs/{options.dataset}"
                            + ("_fedavg/" if options.fedavg else "/"))
-    # EXP_DIR = os.path.join(ROOT_DIR, f"outputs/{EXP_ID}/")
-
-    # LOG_DIR = EXP_DIR + "log"
+    
     options.log_dir = (
             EXP_DIR
             + ("debug/" if options.debug else "")

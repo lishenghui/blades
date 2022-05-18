@@ -8,7 +8,7 @@ from pathlib import Path
 
 sys.path.append(os.path.dirname(Path(os.path.abspath(__file__)).parent))
 import torch
-from simulators.worker import ByzantineWorker
+from simulators.client import ByzantineWorker
 
 @ray.remote
 class NoiseClient(ByzantineWorker):

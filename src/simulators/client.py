@@ -14,7 +14,7 @@ parentdir = os.path.dirname(currentdir)
 sys.path.insert(0, parentdir)
 
 
-class TorchWorker(object):
+class TorchClient(object):
     def __init__(
             self,
             data_loader: torch.utils.data.DataLoader,
@@ -195,13 +195,13 @@ class TorchWorker(object):
 
 
 @ray.remote
-class RemoteWorker(TorchWorker):
+class RemoteWorker(TorchClient):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
 
 @ray.remote
-class WorkerWithMomentum(TorchWorker):
+class WorkerWithMomentum(TorchClient):
     """
     Note that we use `WorkerWithMomentum` instead of using multiple `torch.optim.Optimizer`
     because we need to explicitly update the `momentum_buffer`.
@@ -233,7 +233,7 @@ class WorkerWithMomentum(TorchWorker):
 
 
 # @ray.remote
-class ByzantineWorker(TorchWorker):
+class ByzantineWorker(TorchClient):
     def __int__(self,*args, **kwargs):
         super(ByzantineWorker).__init__(*args, **kwargs)
         
