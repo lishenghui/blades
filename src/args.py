@@ -1,9 +1,9 @@
-import os
 import argparse
+import os
 
 import torch
 
-from tasks.data_utils import read_data
+from settings.data_utils import read_data
 
 
 def parse_arguments():
@@ -35,7 +35,7 @@ def parse_arguments():
     flag_parser.add_argument('--noniid', dest='iid', action='store_false')
     parser.set_defaults(iid=True)
     options = parser.parse_args()
-
+    
     if not torch.cuda.is_available():
         print('Unfortunaly, we currently do not have any GPU on your machine. ')
         options.num_gpus = 0
@@ -45,8 +45,10 @@ def parse_arguments():
     options.use_cuda = torch.cuda.is_available()
     
     ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
-    options.data_path = os.path.join(ROOT_DIR, "../data/cifar10/data_cache" + (".obj" if options.iid else "_alpha0.1.obj"))
-    options.data_dir = os.path.join(ROOT_DIR, "../data/cifar10/")
+    options.data_dir = os.path.join(ROOT_DIR, f"../tasks/{options.dataset}/data/")
+    options.data_path = os.path.join(options.data_dir,
+                                     f"data_cache" + (".obj" if options.iid else "_alpha0.1.obj"))
+    
     EXP_DIR = os.path.join(ROOT_DIR, f"outputs/{options.dataset}"
                            + ("_fedavg/" if options.fedavg else "/"))
     

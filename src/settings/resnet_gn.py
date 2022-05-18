@@ -8,12 +8,14 @@ has already implemented.
 * ResNet-50
 * ResNet-101
 * ResNet-152
-for image net. Here we only implemented the remaining models
+for image net. Here we only implemented the remaining settings
 * ResNet-20
 * ResNet-32
 * ResNet-44
 * ResNet-56
 for CIFAR-10 dataset. Besides, their implementation uses projection shortcut by default.
+
+Note: Replace batch norm with group norm
 """
 import torch
 import torch.nn as nn
@@ -43,21 +45,17 @@ def convert_dtype(dtype, obj):
 _DEFAULT_RESNETCIFAR_VERSION = 1
 
 
-def batch_norm(num_features):
-    """Create a batch normalization layer.
-    See the Disclaimers in Kaiming's
-    `repository <https://github.com/KaimingHe/deep-residual-networks/tree/a7026cb6d478e131b765b898c312e25f9f6dc031>`_.
-    * compute the mean and variance on a sufficiently large traing batch instead of moving average;
-    * learn gamma and beta in affine function.
-    :param num_features: number of features passed to batch normalization
-    :type num_features: int
+def group_norm(num_channels):
+    """Create a group normalization layer.
+
+    :param num_channels: number of channels passed to group normalization
+    :type num_channels: int
     """
-    return nn.BatchNorm2d(
-        num_features=num_features,
+    return nn.GroupNorm(
+        num_groups=num_channels // 2,
+        num_channels=num_channels,
         eps=1e-05,
-        momentum=0.1,
         affine=True,
-        track_running_stats=True,
     )
 
 
@@ -74,7 +72,7 @@ class BasicBlockV1(nn.Module):
     .. note::
         This class is similar to `BasicBlock` in
         `resnet <https://github.com/pytorch/vision/blob/master/torchvision/models/resnet.py>`_.
-        but with different nn.BatchNorm2d configuration.
+        but with different nn.GroupNorm configuration.
     """
     
     def __init__(self, in_channels, out_channels, stride=1, downsample=None):
@@ -91,10 +89,10 @@ class BasicBlockV1(nn.Module):
         super(BasicBlockV1, self).__init__()
         
         self.conv1 = conv3x3(in_channels, out_channels, stride)
-        self.bn1 = batch_norm(out_channels)
+        self.bn1 = group_norm(out_channels)
         self.relu = nn.ReLU(inplace=True)
         self.conv2 = conv3x3(out_channels, out_channels)
-        self.bn2 = batch_norm(out_channels)
+        self.bn2 = group_norm(out_channels)
         self.downsample = downsample
         self.stride = stride
     
@@ -131,10 +129,10 @@ class BasicBlockV2(nn.Module):
         """
         super(BasicBlockV2, self).__init__()
         
-        self.bn1 = batch_norm(in_channels)
+        self.bn1 = group_norm(in_channels)
         self.relu = nn.ReLU(inplace=True)
         self.conv1 = conv3x3(in_channels, out_channels, stride)
-        self.bn2 = batch_norm(out_channels)
+        self.bn2 = group_norm(out_channels)
         self.conv2 = conv3x3(out_channels, out_channels)
         self.downsample = downsample
         self.stride = stride
@@ -204,7 +202,7 @@ class ResNetCIFAR(nn.Module):
         if version == 1 or version == 2:
             self.prep = nn.Sequential(
                 conv3x3(in_channels=3, out_channels=16, stride=1),
-                batch_norm(num_features=16),
+                group_norm(num_channels=16),
                 nn.ReLU(),
             )
         else:
@@ -231,7 +229,7 @@ class ResNetCIFAR(nn.Module):
         for m in self.modules():
             if isinstance(m, nn.Conv2d):
                 nn.init.kaiming_normal_(m.weight, mode="fan_out", nonlinearity="relu")
-            elif isinstance(m, nn.BatchNorm2d):
+            elif isinstance(m, nn.GroupNorm):
                 nn.init.constant_(m.weight, 1)
                 nn.init.constant_(m.bias, 0)
     
@@ -257,7 +255,7 @@ class ResNetCIFAR(nn.Module):
                     stride=init_stride,
                     bias=False,
                 ),
-                batch_norm(num_features=out_channels),
+                group_norm(num_channels=out_channels),
             )
         
         # Maybe use downsample in the first block.
@@ -291,7 +289,7 @@ class PreActBlock(nn.Module):
     def __init__(self, in_channels, out_channels, stride=1):
         super(PreActBlock, self).__init__()
         
-        self.bn1 = nn.BatchNorm2d(in_channels)
+        self.bn1 = nn.GroupNorm(in_channels)
         self.conv1 = nn.Conv2d(
             in_channels,
             out_channels,
@@ -300,7 +298,7 @@ class PreActBlock(nn.Module):
             padding=1,
             bias=False,
         )
-        self.bn2 = nn.BatchNorm2d(out_channels)
+        self.bn2 = nn.GroupNorm(out_channels)
         self.conv2 = nn.Conv2d(
             out_channels, out_channels, kernel_size=3, stride=1, padding=1, bias=False
         )
@@ -334,7 +332,7 @@ class ResNet18CIFAR10(nn.Module):
         super(ResNet18CIFAR10, self).__init__()
         self.prep = nn.Sequential(
             nn.Conv2d(3, 64, kernel_size=3, stride=1, padding=1, bias=False),
-            nn.BatchNorm2d(64),
+            nn.GroupNorm(64),
             nn.ReLU(),
         )
         
@@ -391,7 +389,7 @@ def resnet18_bkj(num_classes):
     return model
 
 
-def get_resnet_model(model, version, dtype, num_classes=1000, use_cuda=False):
+def get_resnet_model_gn(model, version, dtype, num_classes=1000, use_cuda=False):
     """Create a resnet model
     Args:
         model (str): The name of the model, e.g. `resnet18`

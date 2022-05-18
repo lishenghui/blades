@@ -1,5 +1,5 @@
-data/cifar10/cifar-10-batches-py/*
-/data/cifar10/cifar-10-python.tar.gz
+tasks/cifar10/data/cifar-10-batches-py/*
+/tasks/cifar10/data/cifar-10-python.tar.gz
 *obj
 /outputs/*
 *.ipynb_checkpoints*
@@ -12,6 +12,6 @@ others/landscape/cifar10/data/cifar-10-batches-py
 src_ray/outputs/*
 src/outputs/*
 /half_seminar/build/*
-/data/cifar10/preprocess/cifar-10-batches-py
-/data/cifar10/preprocess/cifar-10-python.tar.gz
+/tasks/cifar10/data/preprocess/cifar-10-batches-py
+/tasks/cifar10/data/preprocess/cifar-10-python.tar.gz
 /build

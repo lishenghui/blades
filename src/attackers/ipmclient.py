@@ -21,7 +21,6 @@ class IpmClient(ByzantineWorker):
         self._gradient = None
         self.__is_byzantine = True
     
-    
     def get_is_byzantine(self):
         return self.__is_byzantine
     

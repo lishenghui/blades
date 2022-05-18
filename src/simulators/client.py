@@ -38,7 +38,7 @@ class TorchClient(object):
         self.model = copy.deepcopy(self.model)
         self.optimizer = torch.optim.SGD(self.model.parameters(), lr=self.optimizer.param_groups[0]['lr'])
         self.loss_func = CrossEntropyLoss().to(self.device)
-
+    
     def getattr(self, attr):
         return getattr(self, attr)
     
@@ -47,7 +47,6 @@ class TorchClient(object):
     
     def omniscient_callback(self, simulator):
         pass
-    
     
     def set_para(self, model):
         self.model.load_state_dict(model.state_dict())
@@ -234,10 +233,9 @@ class WorkerWithMomentum(TorchClient):
 
 # @ray.remote
 class ByzantineWorker(TorchClient):
-    def __int__(self,*args, **kwargs):
+    def __int__(self, *args, **kwargs):
         super(ByzantineWorker).__init__(*args, **kwargs)
-        
-        
+    
     def configure(self, simulator):
         # call configure after defining DistribtuedSimulator
         self.simulator = simulator

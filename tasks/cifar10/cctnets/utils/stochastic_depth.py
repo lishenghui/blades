@@ -1,5 +1,5 @@
 # Thanks to rwightman's timm package
-# github.com:rwightman/pytorch-image-models
+# github.com:rwightman/pytorch-image-settings
 
 import torch
 import torch.nn as nn
@@ -7,7 +7,7 @@ import torch.nn as nn
 
 def drop_path(x, drop_prob: float = 0., training: bool = False):
     """
-    Obtained from: github.com:rwightman/pytorch-image-models
+    Obtained from: github.com:rwightman/pytorch-image-settings
     Drop paths (Stochastic Depth) per sample (when applied in main path of residual blocks).
     This is the same as the DropConnect impl I created for EfficientNet, etc networks, however,
     the original name is misleading as 'Drop Connect' is a different form of dropout in a separate paper...
@@ -27,7 +27,7 @@ def drop_path(x, drop_prob: float = 0., training: bool = False):
 
 class DropPath(nn.Module):
     """
-    Obtained from: github.com:rwightman/pytorch-image-models
+    Obtained from: github.com:rwightman/pytorch-image-settings
     Drop paths (Stochastic Depth) per sample  (when applied in main path of residual blocks).
     """
     

@@ -7,7 +7,7 @@ from .stochastic_depth import DropPath
 
 class Attention(Module):
     """
-    Obtained from timm: github.com:rwightman/pytorch-image-models
+    Obtained from timm: github.com:rwightman/pytorch-image-settings
     """
     
     def __init__(self, dim, num_heads=8, attention_dropout=0.1, projection_dropout=0.1):
