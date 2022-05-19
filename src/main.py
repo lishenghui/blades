@@ -12,7 +12,6 @@ from args import parse_arguments
 current_dir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 parent_dir = os.path.dirname(current_dir)
 sys.path.insert(0, parent_dir)
-# from models.cifar10.cctnets import cct_2_3x2_32
 from tasks.cifar10.cct import Net
 from simulators.clientbuilder import ClientBuilder
 from simulators.server import TorchServer
@@ -37,9 +36,10 @@ def main(args):
     
     torch.manual_seed(args.seed)
     np.random.seed(args.seed)
-    
-    # model = get_resnet20(use_cuda=args.use_cuda, gn=False).to(device)
-    model = Net().to(device)
+
+    opt = importlib.import_module(options.model_path)
+    Model = getattr(opt, "Net")
+    model = Model().to(device)
     optimizer = torch.optim.SGD(model.parameters(), lr=options.lr)
     loss_func = CrossEntropyLoss().to(device)
     
