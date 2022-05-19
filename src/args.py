@@ -20,6 +20,7 @@ def parse_arguments():
     parser.add_argument("--log_interval", type=int, default=10)
     parser.add_argument("--attack", type=str, default='noise', help="Select attack types.")
     parser.add_argument("--dataset", type=str, default='cifar10', help="Dataset")
+    parser.add_argument("--model", type=str, default='cct', help="Model")
     parser.add_argument("--agg", type=str, default='clippedclustering', help="Aggregator.")
     parser.add_argument("--momentum", type=float, default=0, help="momentum")
     parser.add_argument("--clipping_tau", type=float, default=100, help="Threshold for clipping")
@@ -45,9 +46,9 @@ def parse_arguments():
     options.use_cuda = torch.cuda.is_available()
     
     ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
-    options.data_dir = os.path.join(ROOT_DIR, f"../tasks/{options.dataset}/data/")
-    options.data_path = os.path.join(options.data_dir,
-                                     f"data_cache" + (".obj" if options.iid else "_alpha0.1.obj"))
+    options.task_dir = os.path.join(ROOT_DIR, f"tasks/{options.dataset}/")
+    options.data_dir = os.path.join(options.task_dir, "data")
+    options.data_path = os.path.join(options.data_dir, f"data_cache" + (".obj" if options.iid else "_alpha0.1.obj"))
     
     EXP_DIR = os.path.join(ROOT_DIR, f"outputs/{options.dataset}"
                            + ("_fedavg/" if options.fedavg else "/"))
@@ -60,7 +61,10 @@ def parse_arguments():
             + (f"_bz{options.batch_size}" if options.batch_size != 32 else "")
             + f"_seed{options.seed}"
     )
+    print(options.task_dir)
     _, _, train_data, _ = read_data(data_path=options.data_path)
     options.num_clients = len(list(train_data.keys()))
+    options.model_path = '%s.%s.%s' % ('tasks', options.dataset, options.model)
+    # options.model_path = os.path.join(options.task_dir, 'model')
     
     return options
