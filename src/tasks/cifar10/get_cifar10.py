@@ -8,8 +8,8 @@ from sklearn.utils import shuffle
 
 
 def generate_datasets(iid=False, alpha=1.0, num_clients=100):
-    train_set = torchvision.datasets.CIFAR10(train=True, download=True, root="./")
-    test_set = torchvision.datasets.CIFAR10(train=False, download=True, root="./")
+    train_set = torchvision.datasets.CIFAR10(train=True, download=True, root="./data")
+    test_set = torchvision.datasets.CIFAR10(train=False, download=True, root="./data")
     x_test, y_test = test_set.data, np.array(test_set.targets)
     x_train, y_train = train_set.data, np.array(train_set.targets)
     
@@ -69,7 +69,7 @@ def generate_datasets(iid=False, alpha=1.0, num_clients=100):
     
     #     os.system('rm -rf ..')
     #     os.system('mkdir -p ../data')
-    with open(os.path.join('../../../../data/cifar10', 'data_cache' + ("_alpha" + str(args.alpha) if not args.iid else "") + '.obj'),
+    with open(os.path.join('./data', 'data_cache' + ("_alpha" + str(args.alpha) if not args.iid else "") + '.obj'),
               'wb') as f:
         pickle.dump(train_user_ids, f)
         pickle.dump(train_dataset, f)
