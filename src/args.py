@@ -27,7 +27,7 @@ def parse_arguments():
     parser.add_argument("--lr", type=float, default=0.1, help="learning rate")
     parser.add_argument("--inner-iterations", type=int, default=1, help="[HP]: number of inner iterations.")
     # parser.add_argument("--num_workers", type=int, default=4, help="Number of workers.")
-    parser.add_argument("--num_actor", type=int, default=4)
+    parser.add_argument("--num_actors", type=int, default=4)
     parser.add_argument("--num_trainer", type=int, default=4)
     parser.add_argument("--num_byzantine", type=int, default=0)
     parser.add_argument("--num_gpus", type=int, default=4)
@@ -36,14 +36,6 @@ def parse_arguments():
     flag_parser.add_argument('--noniid', dest='iid', action='store_false')
     parser.set_defaults(iid=True)
     options = parser.parse_args()
-    
-    if not torch.cuda.is_available():
-        print('Unfortunaly, we currently do not have any GPU on your machine. ')
-        options.num_gpus = 0
-        options.gpu_per_actor = 0
-    else:
-        options.gpu_per_actor = (options.num_gpus - 0.05) / options.num_gpus
-    options.use_cuda = torch.cuda.is_available()
     
     ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
     options.task_dir = os.path.join(ROOT_DIR, f"tasks/{options.dataset}/")
@@ -67,4 +59,12 @@ def parse_arguments():
     options.model_path = '%s.%s.%s' % ('tasks', options.dataset, options.model)
     # options.model_path = os.path.join(options.task_dir, 'model')
     
+
+    if not torch.cuda.is_available():
+        print('Unfortunaly, we currently do not have any GPU on your machine. ')
+        options.num_gpus = 0
+        options.gpu_per_actor = 0
+    else:
+        options.gpu_per_actor = (options.num_gpus - 0.05) / options.num_clients
+    options.use_cuda = torch.cuda.is_available()
     return options
