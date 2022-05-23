@@ -1,4 +1,3 @@
-
 import os
 import sys
 import ray
@@ -12,12 +11,11 @@ from args import parse_arguments
 current_dir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 parent_dir = os.path.dirname(current_dir)
 sys.path.insert(0, parent_dir)
-from tasks.cifar10.cct import Net
 from simulators.clientbuilder import ClientBuilder
 from simulators.server import TorchServer
 from settings.cifar10 import cifar10
 from utils import top1_accuracy, initialize_logger
-
+from simulators.datamanager import DataManager
 options = parse_arguments()
 if options.use_actor:
     from simulators.simulator import (ParallelTrainer, DistributedEvaluator)
@@ -47,10 +45,11 @@ def main(args):
     
     server_opt = torch.optim.SGD(model.parameters(), lr=options.lr)
     server = TorchServer(server_opt, model=model)
-    
+    data_mgr = DataManager(options.data_path, options.batch_size)
     trainer = ParallelTrainer(
         server=server,
         aggregator=agg_scheme(options),
+        data_manager=data_mgr,
         pre_batch_hooks=[],
         post_batch_hooks=[],
         max_batches_per_epoch=options.local_round,
@@ -84,22 +83,26 @@ def main(args):
         use_cuda=args.use_cuda,
         debug=False,
     )
+    # users, _, train_data, test_data = read_data(data_path=options.data_path)
+    # client_builder = ClientBuilder(options=options)
+    # data_manager = DataManager(data_path=options.data_path, batch_size=options.batch_size)
+    # for worker_rank in range(options.num_clients):
+    # for worker_rank, u_id in enumerate(data_manager.clients):
+    #     worker = client_builder.initialize_client(
+    #         # train_data=train_data[u_id], test_data=test_data[u_id],
+    #         trainer=trainer,
+    #         worker_rank=worker_rank,
+    #         model=model,
+    #         optimizer=optimizer,
+    #         loss_func=loss_func,
+    #         device=device,
+    #         use_actor=args.use_actor,
+    #         is_fedavg=args.fedavg,
+    #         kwargs={},
+    #     )
+    #     trainer.add_client(worker)
     
-    client_builder = ClientBuilder(options=options)
-    for worker_rank in range(options.num_clients):
-        worker = client_builder.initialize_client(
-            trainer=trainer,
-            worker_rank=worker_rank,
-            model=model,
-            optimizer=optimizer,
-            loss_func=loss_func,
-            device=device,
-            use_actor=args.use_actor,
-            is_fedavg=args.fedavg,
-            kwargs={},
-        )
-        trainer.add_client(worker)
-    
+    trainer.setup_clients(options.data_path, model, loss_func, device, optimizer)
     if args.use_actor:
         trainer.parallel_call(lambda worker: worker.detach_model.remote())
     else:
@@ -107,7 +110,8 @@ def main(args):
     
     for epoch in range(1, options.round + 1):
         if args.fedavg:
-            trainer.train_fedavg(epoch)
+            trainer.train_fedavg_v1(epoch, options.local_round)
+            # trainer.train_fedavg(epoch)
         else:
             trainer.train(epoch)
         evaluator.evaluate(epoch)

@@ -2,25 +2,18 @@ import logging
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from threading import Thread
 from typing import Union, Callable, Any
-
+import os
 import numpy as np
+import ray
 import torch
 from ray.train import Trainer
-
+from .actor import RayActor
 from .client import TorchClient
 from .server import TorchServer
-
-
+import pickle
 # from .simulator import DistributedSimulatorBase, ParallelTrainer, DistributedTrainerBase
 
 
-# def train_function(config):
-#     config['client'].set_para(config['model'])
-#     config['client'].train_epoch_start()
-#     config['trainer'].run(config['client'].local_training, config)
-#     # config['client'].local_training(config['local_round'])
-#     print('training complete')
-#     return config['client'].get_update()
 
 class RayTrainer(Trainer):
     def __int__(self, backend="torch", num_workers=1, use_gpu=False):
@@ -86,6 +79,18 @@ class DistributedSimulatorBase(object):
     def __str__(self):
         return f"DistributedSimulatorBase(metrics={list(self.metrics.keys())},use_cuda={self.use_cuda}, debug={self.debug})"
     
+    
+    def setup_clients(self, data_path, model, loss_func, device, optimizer, **kwargs):
+        assert os.path.isfile(data_path)
+        with open(data_path, 'rb') as f:
+            (users, train_data, test_clients, test_data) = [pickle.load(f) for _ in range(4)]
+        print(users)
+        self.clients = []
+        for i, u in enumerate(users):
+            client = TorchClient(u, train_data[u], test_data[u],
+                                 model=model, loss_func=loss_func, device=device, optimizer=optimizer, **kwargs)
+            self.clients.append(client)
+            
     def add_client(self, client: TorchClient):
         client.add_metrics(self.metrics)
         self.debug_logger.info(f"=> Add worker {client}")
@@ -155,6 +160,7 @@ class ParallelTrainer(DistributedTrainerBase):
     def __init__(
             self,
             server: TorchServer,
+            data_manager,
             aggregator: Callable[[list], torch.Tensor],
             pre_batch_hooks: list,
             post_batch_hooks: list,
@@ -177,6 +183,7 @@ class ParallelTrainer(DistributedTrainerBase):
         """
         self.aggregator = aggregator
         self.server = server
+        self.data_manager = data_manager
         self.pre_batch_hooks = pre_batch_hooks or []
         self.post_batch_hooks = post_batch_hooks or []
         super().__init__(max_batches_per_epoch, log_interval, metrics, use_cuda, debug)
@@ -255,31 +262,35 @@ class ParallelTrainer(DistributedTrainerBase):
             except StopIteration:
                 continue
     
-    def train_fedavg(self, epoch):
+    def train_fedavg_v2(self, local_round):
+        self.actors = [RayActor.options(num_gpus=0).remote() for _ in range(1)]
+        self.clients = ray.get(self.actors[0].train.remote(self.clients,
+                                                           self.server.get_model(),
+                                                           data=self.data_manager.get_data(self.data_manager.clients[0], local_round),
+                                                           local_round=local_round))
+        update = self.parallel_get(lambda client: client.get_update())
+        print('training is done')
+        
+    def train_fedavg_v1(self, epoch, num_rounds):
         self.debug_logger.info(f"Train epoch {epoch}")
-        update = []
         
         def local_training(config):
             config['client'].set_para(config['model'])
             config['client'].train_epoch_start()
-            config['client'].local_training()
-            # config['client'].local_training(config['local_round'])
-            print('training complete')
+            config['client'].local_training(config['local_round'], config['data'])
+            
             return config['client'].get_update()
         
-        def train_function(client, trainer, model, round):
-            client.set_para(model)
-            client.train_epoch_start()
+        def train_function(client, trainer, model, num_rounds):
+            data = self.data_manager.get_data(client.id, num_rounds)
             return trainer.run(local_training, config=
-            {'client': client, 'trainer': trainer, 'model': self.server.get_model(), 'local_round': 50})
+            {'client': client, 'data': data, 'model': model, 'local_round': num_rounds})
         
-        # all_tasks = [self.executor.submit(train_function, config=
-        #                     {'client' : client, 'trainer': trainer, 'model' : self.server.get_model(), 'local_round' : 50})
-        #             for client, trainer in zip(self.clients, self.ray_trainers)]
-        all_tasks = [self.executor.submit(train_function, client, trainer, self.server.get_model(), 50)
+        
+        all_tasks = [self.executor.submit(train_function, client, trainer, self.server.get_model(), num_rounds)
                      for client, trainer in zip(self.clients, self.ray_trainers)]
         
-        update = [task.result() for task in as_completed(all_tasks)]
+        update = [task.result()[0] for task in as_completed(all_tasks)]
         
         # for trainer, client in zip(self.trainers, self.clients):
         #     trainer.set_clients([client])

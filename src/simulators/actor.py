@@ -4,30 +4,26 @@ import os
 import sys
 from collections import defaultdict
 from typing import Union, Callable, Tuple
-from torch.utils.data import TensorDataset, DataLoader
+
 import ray
 import torch
-import numpy as np
+from torch.nn.modules.loss import CrossEntropyLoss
+
 currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 parentdir = os.path.dirname(currentdir)
 sys.path.insert(0, parentdir)
-
-from torch.nn.modules.loss import CrossEntropyLoss
-from settings.data_utils import  preprocess_data, init_dataset
 
 
 class TorchClient(object):
     def __init__(
             self,
-            client_id, train_data, test_data,
+            data_loader: torch.utils.data.DataLoader,
             model: torch.nn.Module,
             optimizer: torch.optim.Optimizer,
             loss_func: torch.nn.modules.loss._Loss,
             device: Union[torch.device, str],
     ):
-        self.id = client_id
-        self.raw_train_data = train_data
-        self.raw_test_data = test_data
+        self.data_loader = data_loader
         self.model = model
         self.optimizer = optimizer
         self.loss_func = loss_func
@@ -42,8 +38,6 @@ class TorchClient(object):
         self.model = copy.deepcopy(self.model)
         self.optimizer = torch.optim.SGD(self.model.parameters(), lr=self.optimizer.param_groups[0]['lr'])
         self.loss_func = CrossEntropyLoss().to(self.device)
-
-    
     
     def getattr(self, attr):
         return getattr(self, attr)
@@ -71,7 +65,7 @@ class TorchClient(object):
         return "TorchWorker"
     
     def train_epoch_start(self) -> None:
-        # self.running["train_loader_iterator"] = iter(self.data_loader)
+        self.running["train_loader_iterator"] = iter(self.data_loader)
         self.model.train()
     
     def reset_data_loader(self):
@@ -101,34 +95,6 @@ class TorchClient(object):
             results["metrics"][name] = metric(output, target)
         return results
     
-    # def local_training(self, num_rounds) -> Tuple[float, int]:
-    #     self._save_para()
-    #     results = {}
-    #     for _ in range(num_rounds):
-    #         try:
-    #             data, target = self.running["train_loader_iterator"].__next__()
-    #         except StopIteration:
-    #             self.reset_data_loader()
-    #             data, target = self.running["train_loader_iterator"].__next__()
-    #         data, target = data.to(self.device), target.to(self.device)
-    #         self.optimizer.zero_grad()
-    #         output = self.model(data)
-    #         loss = self.loss_func(output, target)
-    #         loss.backward()
-    #         self.apply_gradient()
-    #
-    #     self._save_update()
-    #
-    #     self.running["data"] = data
-    #     self.running["target"] = target
-    #
-    #     results["loss"] = loss.item()
-    #     results["length"] = len(target)
-    #     results["metrics"] = {}
-    #     for name, metric in self.metrics.items():
-    #         results["metrics"][name] = metric(output, target)
-    #     return results
-
     def local_training(self, num_rounds, data_batches) -> Tuple[float, int]:
         self._save_para()
         results = {}
@@ -145,19 +111,18 @@ class TorchClient(object):
             loss = self.loss_func(output, target)
             loss.backward()
             self.apply_gradient()
-    
+        
         self._save_update()
-    
+        
         self.running["data"] = data
         self.running["target"] = target
-    
+        
         results["loss"] = loss.item()
         results["length"] = len(target)
         results["metrics"] = {}
         for name, metric in self.metrics.items():
             results["metrics"][name] = metric(output, target)
         return results
-    
     
     def get_gradient(self) -> torch.Tensor:
         return self._get_saved_grad()
@@ -267,27 +232,17 @@ class WorkerWithMomentum(TorchClient):
         return torch.cat(layer_gradients)
 
 
-# @ray.remote
-class ByzantineWorker(TorchClient):
-    def __int__(self, *args, **kwargs):
-        super(ByzantineWorker).__init__(*args, **kwargs)
+@ray.remote
+class RayActor(object):
+    def __init__(self, *args, **kwargs):
+        pass
     
-    def configure(self, simulator):
-        # call configure after defining DistribtuedSimulator
-        self.simulator = simulator
-        simulator.register_omniscient_callback(self.omniscient_callback)
+    def train(self, clients, model, data, local_round):
+        for client in clients:
+            client.set_para(model)
+            client.train_epoch_start()
+            client.local_training(local_round, data)
+        return clients
     
-    def compute_gradient(self) -> Tuple[float, int]:
-        # Use self.simulator to get all other workers
-        # Note that the byzantine worker does not modify the states directly.
-        return super().compute_gradient()
     
-    def get_gradient(self) -> torch.Tensor:
-        # Use self.simulator to get all other workers
-        return super().get_gradient()
     
-    # def omniscient_callback(self):
-    #     raise NotImplementedError
-    
-    def __str__(self) -> str:
-        return "ByzantineWorker"

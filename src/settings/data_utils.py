@@ -8,6 +8,8 @@ import torch.optim
 import torch.utils.data
 import torchvision.transforms as transforms
 from scipy.sparse import csr_matrix
+from torch.utils.data import TensorDataset, DataLoader
+
 
 DATASETS = {
     'cifar10': {
@@ -58,6 +60,21 @@ def batch_data(data, batch_size, seed):
         batched_y = data_y[i:i + batch_size]
         yield (batched_x, batched_y)
 
+def init_dataset(raw_train_data, raw_test_data, batch_size=32):
+    train_data = preprocess_data(np.array(raw_train_data['x']), np.array(raw_train_data['y']),
+                                      batch_size=batch_size)
+    test_data = load_data(raw_test_data)
+    return train_data, test_data
+
+
+def load_data(data, batch_size=32):
+    tensor_x = torch.Tensor(data['x'])  # transform to torch tensor
+    tensor_y = torch.LongTensor(data['y'])
+
+    dataset = TensorDataset(tensor_x, tensor_y)  # create your datset
+    dataloader = DataLoader(dataset, batch_size=batch_size)  # create your dataloader
+    return dataloader
+    
 
 def preprocess_data(data, labels, batch_size, seed=0):
     i = 0
@@ -122,13 +139,4 @@ def read_dir(data_dir):
     return clients, groups, data
 
 
-def read_data(data_path):
-    cache_path = data_path
-    assert os.path.isfile(cache_path)
-    with open(cache_path, 'rb') as f:
-        (train_clients, train_data, test_clients, test_data) = [pickle.load(f) for _ in range(4)]
-    train_groups = []
-    
-    assert sorted(train_clients) == sorted(test_clients)
-    
-    return train_clients, train_groups, train_data, test_data
+
