@@ -12,12 +12,12 @@ from .client import TorchClient
 from .server import TorchServer
 import pickle
 # from .simulator import DistributedSimulatorBase, ParallelTrainer, DistributedTrainerBase
-
+import torch
 
 
 class RayTrainer(Trainer):
     def __int__(self, backend="torch", num_workers=1, use_gpu=False):
-        super().__init__(backend="torch", num_workers=num_workers, use_gpu=use_gpu)
+        super().__init__(backend="torch", num_workers=num_workers, use_gpu=use_gpu, resources_per_worker={'GPU': 0.5})
     
     # def run(self, *args, **kwargs):
     #     return super().run(train_function, **kwargs)
@@ -189,7 +189,7 @@ class ParallelTrainer(DistributedTrainerBase):
         super().__init__(max_batches_per_epoch, log_interval, metrics, use_cuda, debug)
         # self.trainers = [ClientThread(server) for i in range(4)]
         self.executor = ThreadPoolExecutor(max_workers=4)
-        self.ray_trainers = [RayTrainer(backend="torch", num_workers=1, use_gpu=False) for _ in range(4)]
+        self.ray_trainers = [RayTrainer(backend="torch", num_workers=1, use_gpu=True) for _ in range(4)]
         [trainer.start() for trainer in self.ray_trainers]
     
     def parallel_call(self, f: Callable[[TorchClient], None]) -> None:
@@ -275,6 +275,9 @@ class ParallelTrainer(DistributedTrainerBase):
         self.debug_logger.info(f"Train epoch {epoch}")
         
         def local_training(config):
+            import torch
+
+            print('Torch: ', torch.cuda.is_available())
             config['client'].set_para(config['model'])
             config['client'].train_epoch_start()
             config['client'].local_training(config['local_round'], config['data'])
@@ -282,6 +285,9 @@ class ParallelTrainer(DistributedTrainerBase):
             return config['client'].get_update()
         
         def train_function(client, trainer, model, num_rounds):
+            import torch
+
+            print('Torch: ', torch.cuda.is_available())
             data = self.data_manager.get_data(client.id, num_rounds)
             return trainer.run(local_training, config=
             {'client': client, 'data': data, 'model': model, 'local_round': num_rounds})
