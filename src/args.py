@@ -65,6 +65,6 @@ def parse_arguments():
         options.num_gpus = 0
         options.gpu_per_actor = 0
     else:
-        options.gpu_per_actor = (options.num_gpus - 0.05) / options.num_clients
+        options.gpu_per_actor = (options.num_gpus - 0.05) / options.num_actors
     options.use_cuda = torch.cuda.is_available()
     return options
