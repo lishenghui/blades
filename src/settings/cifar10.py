@@ -7,7 +7,7 @@ import torchvision.datasets as datasets
 import torchvision.transforms as transforms
 from torch.utils.data import Dataset
 
-from .data_utils import read_data
+# from .data_utils import read_data
 from .resnet import get_resnet_model
 from .resnet_gn import get_resnet_model_gn
 

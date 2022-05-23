@@ -12,7 +12,6 @@ class TorchServer(object):
     def apply_gradient(self) -> None:
         self.optimizer.step()
     
-    # def get_mdoel(self):
     def apply_update(self, update: torch.Tensor) -> None:
         beg = 0
         for group in self.optimizer.param_groups:

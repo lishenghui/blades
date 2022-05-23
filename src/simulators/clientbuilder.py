@@ -20,18 +20,18 @@ class ClientBuilder(object):
     
     def initialize_client(self, trainer, worker_rank, model, optimizer, loss_func, device, use_actor=False,
                           is_fedavg=False, kwargs=None):
-        train_loader = cifar10(
-            data_dir=self.options.data_dir,
-            data_path=self.options.data_path,
-            train=True,
-            download=True,
-            batch_size=self.options.batch_size,
-            # sampler_callback=get_sampler_callback(worker_rank),
-            dataset_cls=datasets.CIFAR10,
-            drop_last=True,  # Exclude the influence of non-full batch.
-            worker_rank=worker_rank,
-            **kwargs,
-        )
+        # train_loader = cifar10(
+        #     data_dir=self.options.data_dir,
+        #     data_path=self.options.data_path,
+        #     train=True,
+        #     download=True,
+        #     batch_size=self.options.batch_size,
+        #     # sampler_callback=get_sampler_callback(worker_rank),
+        #     dataset_cls=datasets.CIFAR10,
+        #     drop_last=True,  # Exclude the influence of non-full batch.
+        #     worker_rank=worker_rank,
+        #     **kwargs,
+        # )
         # NOTE: The first options.num_byzantine nodes are Byzantine
         if worker_rank < self.options.num_byzantine:
             if self.options.attack == "BF":
@@ -120,7 +120,7 @@ class ClientBuilder(object):
                                                                                         device=device,
                                                                                         optimizer=optimizer, **kwargs, )
             else:
-                return TorchClient(data_loader=train_loader,
+                return TorchClient(
                                    model=model,
                                    loss_func=loss_func,
                                    device=device,

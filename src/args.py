@@ -3,7 +3,7 @@ import os
 
 import torch
 
-from settings.data_utils import read_data
+# from settings.data_utils import read_data
 
 
 def parse_arguments():
@@ -62,8 +62,8 @@ def parse_arguments():
             + f"_seed{options.seed}"
     )
     print(options.task_dir)
-    _, _, train_data, _ = read_data(data_path=options.data_path)
-    options.num_clients = len(list(train_data.keys()))
+    # _, _, train_data, _ = read_data(data_path=options.data_path)
+    # options.num_clients = len(list(train_data.keys()))
     options.model_path = '%s.%s.%s' % ('tasks', options.dataset, options.model)
     # options.model_path = os.path.join(options.task_dir, 'model')
     
