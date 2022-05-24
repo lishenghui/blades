@@ -2,7 +2,10 @@ import importlib
 import inspect
 import os
 import sys
-
+from time import time
+import torch
+import inspect
+import importlib
 import numpy as np
 import torch
 from torch.nn.modules.loss import CrossEntropyLoss
@@ -19,7 +22,8 @@ from simulators.datamanager import DataManager
 
 options = parse_arguments()
 if options.use_actor:
-    from simulators.simulator import (ParallelTrainer, DistributedEvaluator)
+    from simulators.simulator_trainer import (ParallelTrainer, DistributedEvaluator)
+    # from simulators.simulator import (ParallelTrainer, DistributedEvaluator)
 else:
     from simulators.simulator_trainer import (ParallelTrainer, DistributedEvaluator)
 
@@ -58,6 +62,10 @@ def main(args):
         metrics=metrics,
         use_cuda=args.use_cuda,
         debug=False,
+        num_trainers=args.num_trainers,
+        gpu_per_actor=args.gpu_per_actor, 
+        num_actors=args.num_actors,
+        use_actor=args.use_actor
     )
     
     test_loader = cifar10(
@@ -87,18 +95,23 @@ def main(args):
     
     trainer.setup_clients(options.data_path, model, loss_func, device, optimizer)
     if args.use_actor:
-        trainer.parallel_call(lambda worker: worker.detach_model.remote())
+        # trainer.parallel_call(lambda worker: worker.detach_model.remote())
+        trainer.parallel_call(lambda worker: worker.detach_model())
     else:
         trainer.parallel_call(lambda worker: worker.detach_model())
     
+    time_start = time()
     for epoch in range(1, options.round + 1):
         if args.fedavg:
-            trainer.train_fedavg(epoch, options.local_round)
+            if args.use_actor:
+                trainer.train_fedavg_actor(epoch, options.local_round)
+            else:
+                trainer.train_fedavg(epoch, options.local_round)
         else:
             trainer.train(epoch)
-        
+        # evaluator.evaluate(epoch)
         scheduler.step()
-        print(f"E={epoch}; Learning rate = {scheduler.get_last_lr()[0]:}")
+        print(f"E={epoch}; Learning rate = {scheduler.get_last_lr()[0]:}; Time cost = {time() - time_start}")
     evaluator.evaluate(epoch)
 
 
