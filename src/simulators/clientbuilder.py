@@ -1,14 +1,11 @@
 import importlib
 
-from torchvision import datasets
-
 from attackers.alieclient import AlieClient
 from attackers.bitflippingclient import BitflippingClient
 from attackers.ipmclient import IpmClient
 from attackers.labelflippingclient import LableflippingClient
 from attackers.noiseclient import NoiseClient
 from simulators.client import WorkerWithMomentum, TorchClient, RemoteWorker
-from settings.cifar10 import cifar10
 
 
 class ClientBuilder(object):
@@ -121,10 +118,10 @@ class ClientBuilder(object):
                                                                                         optimizer=optimizer, **kwargs, )
             else:
                 return TorchClient(
-                                   model=model,
-                                   loss_func=loss_func,
-                                   device=device,
-                                   optimizer=optimizer, **kwargs, )
+                    model=model,
+                    loss_func=loss_func,
+                    device=device,
+                    optimizer=optimizer, **kwargs, )
         else:
             return WorkerWithMomentum.remote(momentum=self.options.momentum,
                                              data_loader=train_loader,

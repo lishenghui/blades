@@ -1,20 +1,22 @@
+import importlib
+import inspect
 import os
 import sys
-import torch
-import inspect
-import importlib
+
 import numpy as np
+import torch
 from torch.nn.modules.loss import CrossEntropyLoss
 
 from args import parse_arguments
+
 current_dir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 parent_dir = os.path.dirname(current_dir)
 sys.path.insert(0, parent_dir)
-from simulators.clientbuilder import ClientBuilder
 from simulators.server import TorchServer
 from settings.cifar10 import cifar10
 from utils import top1_accuracy, initialize_logger
 from simulators.datamanager import DataManager
+
 options = parse_arguments()
 if options.use_actor:
     from simulators.simulator import (ParallelTrainer, DistributedEvaluator)
@@ -26,7 +28,6 @@ agg_scheme = getattr(agg_path, options.agg.capitalize())
 
 
 def main(args):
-    
     initialize_logger(options.log_dir)
     device = torch.device("cuda" if args.use_cuda else "cpu")
     
@@ -34,7 +35,7 @@ def main(args):
     
     torch.manual_seed(args.seed)
     np.random.seed(args.seed)
-
+    
     opt = importlib.import_module(options.model_path)
     Model = getattr(opt, "Net")
     model = Model().to(device)
@@ -100,8 +101,10 @@ def main(args):
         print(f"E={epoch}; Learning rate = {scheduler.get_last_lr()[0]:}")
     evaluator.evaluate(epoch)
 
+
 if __name__ == "__main__":
     import ray
+    
     if not ray.is_initialized():
         # ray.init(local_mode=True, include_dashboard=True, num_gpus=options.num_gpus)
         ray.init(include_dashboard=True, num_gpus=options.num_gpus)

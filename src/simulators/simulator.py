@@ -1,13 +1,16 @@
 import logging
-from typing import Union, Callable, Any
+import os
 import pickle
+from typing import Union, Callable, Any
+
 import numpy as np
 import ray
 import torch
-import os
+
 from .client import TorchClient
 from .server import TorchServer
-from actor import RayActor
+
+
 # from settings.data_utils import read_data
 
 
@@ -219,7 +222,7 @@ class ParallelTrainer(DistributedTrainerBase):
                 self._run_post_batch_hooks(epoch, batch_idx)
             except StopIteration:
                 continue
-
+    
     def setup_clients(self, data_path, model, loss_func, device, optimizer, **kwargs):
         assert os.path.isfile(data_path)
         with open(data_path, 'rb') as f:
@@ -230,7 +233,7 @@ class ParallelTrainer(DistributedTrainerBase):
             client = TorchClient(u, train_data[u], test_data[u],
                                  model=model, loss_func=loss_func, device=device, optimizer=optimizer, **kwargs)
             self.clients.append(client)
-            
+    
     def train_fedavg(self, epoch):
         self.debug_logger.info(f"Train epoch {epoch}")
         self.parallel_call(lambda worker: worker.set_para.remote(self.server.get_model()))

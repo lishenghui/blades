@@ -1,19 +1,17 @@
 import logging
+import os
+import pickle
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from threading import Thread
 from typing import Union, Callable, Any
-import os
-import ray.train as train
+
 import numpy as np
-import ray
-import torch
-from ray.train import Trainer
-from .actor import RayActor
-from .client import TorchClient
-from .server import TorchServer
-import pickle
 # from .simulator import DistributedSimulatorBase, ParallelTrainer, DistributedTrainerBase
 import torch
+from ray.train import Trainer
+
+from .client import TorchClient
+from .server import TorchServer
 
 
 class RayTrainer(Trainer):
@@ -81,7 +79,6 @@ class DistributedSimulatorBase(object):
     def __str__(self):
         return f"DistributedSimulatorBase(metrics={list(self.metrics.keys())},use_cuda={self.use_cuda}, debug={self.debug})"
     
-    
     def setup_clients(self, data_path, model, loss_func, device, optimizer, **kwargs):
         assert os.path.isfile(data_path)
         with open(data_path, 'rb') as f:
@@ -92,7 +89,7 @@ class DistributedSimulatorBase(object):
             client = TorchClient(u, train_data[u], test_data[u],
                                  model=model, loss_func=loss_func, device=device, optimizer=optimizer, **kwargs)
             self.clients.append(client)
-            
+    
     def add_client(self, client: TorchClient):
         client.add_metrics(self.metrics)
         self.debug_logger.info(f"=> Add worker {client}")
@@ -191,7 +188,8 @@ class ParallelTrainer(DistributedTrainerBase):
         super().__init__(max_batches_per_epoch, log_interval, metrics, use_cuda, debug)
         # self.trainers = [ClientThread(server) for i in range(4)]
         self.executor = ThreadPoolExecutor(max_workers=4)
-        self.ray_trainers = [RayTrainer(backend="torch", num_workers=4, use_gpu=True, resources_per_worker={'GPU': 1}) for _ in range(1)]
+        self.ray_trainers = [RayTrainer(backend="torch", num_workers=4, use_gpu=True, resources_per_worker={'GPU': 1})
+                             for _ in range(1)]
         [trainer.start() for trainer in self.ray_trainers]
     
     def parallel_call(self, f: Callable[[TorchClient], None]) -> None:
@@ -264,7 +262,6 @@ class ParallelTrainer(DistributedTrainerBase):
             except StopIteration:
                 continue
     
-        
     def train_fedavg(self, epoch, num_rounds):
         self.debug_logger.info(f"Train epoch {epoch}")
         
@@ -279,11 +276,13 @@ class ParallelTrainer(DistributedTrainerBase):
         
         def train_function(clients, trainer, model, num_rounds):
             data = [self.data_manager.get_data(client.id, num_rounds) for client in clients]
-
-            return trainer.run(local_training, config= {'client': clients, 'data': data, 'model': model, 'local_round': num_rounds})
+            
+            return trainer.run(local_training,
+                               config={'client': clients, 'data': data, 'model': model, 'local_round': num_rounds})
         
-        
-        all_tasks = [self.executor.submit(train_function, self.clients, self.ray_trainers[0], self.server.get_model().to('cpu'), num_rounds)]
+        all_tasks = [
+            self.executor.submit(train_function, self.clients, self.ray_trainers[0], self.server.get_model().to('cpu'),
+                                 num_rounds)]
         
         update = []
         for task in as_completed(all_tasks):

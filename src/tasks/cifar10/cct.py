@@ -1,7 +1,7 @@
-import torch
 import torch.nn as nn
-import torch.nn.functional as F
+
 from .cctnets import cct_2_3x2_32
+
 
 class Net(nn.Module):
     def __init__(self):

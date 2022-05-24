@@ -3,6 +3,7 @@ import os
 
 import torch
 
+
 # from settings.data_utils import read_data
 
 
@@ -59,7 +60,6 @@ def parse_arguments():
     options.model_path = '%s.%s.%s' % ('tasks', options.dataset, options.model)
     # options.model_path = os.path.join(options.task_dir, 'model')
     
-
     if not torch.cuda.is_available():
         print('Unfortunaly, we currently do not have any GPU on your machine. ')
         options.num_gpus = 0
