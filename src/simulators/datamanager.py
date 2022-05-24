@@ -4,8 +4,30 @@ import pickle
 import numpy as np
 import torch
 from torch.utils.data import TensorDataset
-
+from torch.utils.data import Dataset
 from settings.data_utils import preprocess_data
+import torchvision.transforms as transforms
+
+class CustomTensorDataset(Dataset):
+    def __init__(self, data_X, data_y, transform_list=None):
+        # X_tensor, y_tensor = torch.tensor(data_X), torch.LongTensor(data_y)
+        tensors = (data_X, data_y)
+        # assert all(tensors[0].size(0) == tensor.size(0) for tensor in tensors)
+        self.tensors = tensors
+        self.transforms = transform_list
+    
+    def __getitem__(self, index):
+        x = self.tensors[0][index]
+        
+        if self.transforms:
+            x = self.transforms(x)
+        
+        y = self.tensors[1][index]
+        
+        return x, y
+    
+    def __len__(self):
+        return self.tensors[1].size(0)
 
 
 class DataManager(object):
@@ -27,7 +49,14 @@ class DataManager(object):
         tensor_x = torch.Tensor(data['x'])  # transform to torch tensor
         tensor_y = torch.LongTensor(data['y'])
         
-        dataset = TensorDataset(tensor_x, tensor_y)  # create your dataset
+        cifar10_stats = {
+            "mean": (0.4914, 0.4822, 0.4465),
+            "std": (0.2023, 0.1994, 0.2010),
+        }
+        transform = transforms.Compose([
+            transforms.Normalize(cifar10_stats["mean"], cifar10_stats["std"]),
+        ])
+        dataset = CustomTensorDataset(tensor_x, tensor_y, transform_list=transform)  # create your dataset
         return dataset
     
     def get_train_data(self, u_id, num_batchs):

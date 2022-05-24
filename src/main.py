@@ -60,29 +60,8 @@ def main(args):
         use_actor=args.use_actor
     )
     
-    test_loader = cifar10(
-        data_dir=options.data_dir,
-        data_path=options.data_path,
-        train=False,
-        download=True,
-        batch_size=options.test_batch_size,
-        shuffle=False,
-        worker_rank=None,
-        **kwargs,
-    )
-    
     scheduler = torch.optim.lr_scheduler.MultiStepLR(
         server_opt, milestones=[75, 100], gamma=0.5
-    )
-    
-    evaluator = DistributedEvaluator(
-        model=model,
-        data_loader=test_loader,
-        loss_func=loss_func,
-        device=device,
-        metrics=metrics,
-        use_cuda=args.use_cuda,
-        debug=False,
     )
     
     trainer.setup_clients(options.data_path, model, loss_func, device, optimizer)
@@ -103,10 +82,8 @@ def main(args):
             trainer.train(round)
         if args.use_actor:
             trainer.test_actor(global_round=round, batch_size=options.test_batch_size)
-        # evaluator.evaluate(epoch)
         scheduler.step()
         print(f"E={round}; Learning rate = {scheduler.get_last_lr()[0]:}; Time cost = {time() - time_start}")
-    # evaluator.evaluate(epoch)
 
 
 if __name__ == "__main__":

@@ -10,6 +10,7 @@ import ray
 import ray.train as train
 import torch
 from torch.utils.data import DataLoader
+import torchvision.transforms as transforms
 
 currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 parentdir = os.path.dirname(currentdir)
@@ -104,6 +105,14 @@ class TorchClient(object):
         return results
     
     def evaluate(self, round_number, test_set, batch_size, use_actor=True):
+        cifar10_stats = {
+            "mean": (0.4914, 0.4822, 0.4465),
+            "std": (0.2023, 0.1994, 0.2010),
+        }
+        transform = transforms.Compose([
+            transforms.ToTensor(),
+            transforms.Normalize(cifar10_stats["mean"], cifar10_stats["std"]),
+        ])
         dataloader = DataLoader(dataset=test_set, batch_size=batch_size)
         self.model.eval()
         r = {

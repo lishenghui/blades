@@ -271,8 +271,6 @@ class ParallelTrainer(DistributedTrainerBase):
         self.log_variance(global_round, update)
     
     def test_actor(self, global_round, batch_size):
-        self.debug_logger.info(f"Train global round {global_round}")
-        
         def test_function(clients, actor, model, batch_size):
             data = [self.data_manager.get_all_test_data(client.id) for client in clients]
             return actor.evaluate.remote(clients, model, data, round_number=global_round, batch_size=batch_size,
@@ -285,8 +283,11 @@ class ParallelTrainer(DistributedTrainerBase):
         
         metrics = [item for actor_return in ray.get(all_tasks) for item in actor_return]
         
-        print('test done')
-    
+        loss, top1 = self.log_validate(metrics)
+        
+        self.debug_logger.info(f"Test global round {global_round}, loss: {loss}, top1: {top1}")
+
+
     def train_fedavg(self, epoch, num_rounds):
         self.debug_logger.info(f"Train epoch {epoch}")
         
@@ -342,6 +343,19 @@ class ParallelTrainer(DistributedTrainerBase):
         # Output to file
         self.json_logger.info(r)
     
+    def log_validate(self, metrics):
+        top1 = np.average([metric['top1'] for metric in metrics], weights=[metric['Length'] for metric in metrics])
+        loss = np.average([metric['Loss'] for metric in metrics], weights=[metric['Length'] for metric in metrics])
+        r = {
+            "_meta": {"type": "test"},
+            "E": metrics[0]['E'],
+            "top1": top1,
+            "Length":np.sum([metric['Length'] for metric in metrics]),
+            "Loss": loss,
+        }
+        self.json_logger.info(r)
+        return loss, top1
+
     def log_train(self, progress, batch_idx, epoch, results):
         length = sum(res["length"] for res in results)
         
