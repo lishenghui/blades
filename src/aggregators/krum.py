@@ -1,4 +1,4 @@
-from .base import _BaseAggregator
+from .mean import _BaseAggregator
 
 
 def _compute_scores(distances, i, n, f):

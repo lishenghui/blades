@@ -92,6 +92,10 @@ def cifar10(
         
         dataset = CustomTensorDataset(tensor_x, tensor_y, transform_list=transform)  # create your datset
     else:
+        cifar10_stats = {
+            "mean": (0.4914, 0.4822, 0.4465),
+            "std": (0.2023, 0.1994, 0.2010),
+        }
         transform = transforms.Compose([
             transforms.ToTensor(),
             transforms.Normalize(cifar10_stats["mean"], cifar10_stats["std"]),
