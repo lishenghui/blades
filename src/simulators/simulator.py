@@ -2,11 +2,10 @@ import logging
 import os
 import pickle
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from threading import Thread
 from typing import Union, Callable, Any
 
 import numpy as np
-# from .simulator import DistributedSimulatorBase, ParallelTrainer, DistributedTrainerBase
+import ray
 import torch
 from ray.train import Trainer
 
@@ -19,38 +18,23 @@ class RayActor(object):
     def __int__(*args, **kwargs):
         super().__init__()
     
-    def local_training(self, config):
-            update = []
-            for i in range(len(config['client'])):
-                config['client'][i].set_para(config['model'])
-                config['client'][i].train_epoch_start()
-                config['client'][i].local_training(config['local_round'], config['use_actor'], config['data'][i])
-                update.append(config['client'][i].get_update())
-            return update
-
-
-class TrainerPool(ThreadPoolExecutor):
-    def __init__(self, server, num_worker=4):
-        super().__init__(max_workers=num_worker)
-        self.ray_trainers = [Trainer(backend="torch", num_workers=1, use_gpu=False) for _ in range(num_worker)]
-        [trainer.start() for trainer in self.ray_trainers]
-        self.server = server
-        self.clients = None
-        self._return = None
+    def local_training(self, clients, model, data, local_round, use_actor=False):
+        update = []
+        for i in range(len(clients)):
+            clients[i].set_para(model)
+            clients[i].train_epoch_start()
+            clients[i].local_training(local_round, use_actor, data[i])
+            update.append(clients[i].get_update())
+        return update
     
-    def set_clients(self, clients):
-        self.clients = clients
-    
-    def run(self):
-        self._return = []
-        for client in self.clients:
-            update = self.ray_trainer.run(train_function, config={'client': client, 'model': self.server.get_model(),
-                                                                  'local_round': 50})
-            self._return.extend(update)
-    
-    def join(self):
-        Thread.join(self)
-        return self._return
+    def evaluate(self, clients, model, data, round_number, batch_size, use_actor=False):
+        update = []
+        for i in range(len(clients)):
+            clients[i].set_para(model)
+            result = clients[i].evaluate(round_number=round_number, test_set=data[i], batch_size=batch_size,
+                                         use_actor=use_actor)
+            update.append(result)
+        return update
 
 
 class DistributedSimulatorBase(object):
@@ -92,7 +76,7 @@ class DistributedSimulatorBase(object):
         print(users)
         self.clients = []
         for i, u in enumerate(users):
-            client = TorchClient(u, train_data[u], test_data[u],
+            client = TorchClient(u, metrics=self.metrics,
                                  model=model, loss_func=loss_func, device=device, optimizer=optimizer, **kwargs)
             self.clients.append(client)
     
@@ -134,15 +118,6 @@ class DistributedTrainerBase(DistributedSimulatorBase):
             use_cuda: bool,
             debug: bool,
     ):
-        """
-        Args:
-            max_batches_per_epoch (int): Set the maximum number of batches in an epoch.
-                Usually used for debugging.
-            log_interval (int): Control the frequency of logging training batches
-            metrics (dict): dict of metric names and their functions
-            use_cuda (bool): Use cuda or not
-            debug (bool):
-        """
         self.log_interval = log_interval
         self.max_batches_per_epoch = max_batches_per_epoch
         super().__init__(metrics, use_cuda, debug)
@@ -167,13 +142,13 @@ class ParallelTrainer(DistributedTrainerBase):
             server: TorchServer,
             data_manager,
             aggregator: Callable[[list], torch.Tensor],
-            pre_batch_hooks: list,
-            post_batch_hooks: list,
             max_batches_per_epoch: int,
             log_interval: int,
             metrics: dict,
             use_cuda: bool,
             debug: bool,
+            pre_batch_hooks=None,
+            post_batch_hooks=None,
             **kwargs
     ):
         """
@@ -197,13 +172,13 @@ class ParallelTrainer(DistributedTrainerBase):
         self.pre_batch_hooks = pre_batch_hooks or []
         self.post_batch_hooks = post_batch_hooks or []
         super().__init__(max_batches_per_epoch, log_interval, metrics, use_cuda, debug)
-
+        
         if self.use_actor:
             self.ray_actors = [RayActor.options(num_gpus=gpu_per_actor).remote() for _ in range(num_actors)]
         else:
             self.executor = ThreadPoolExecutor(max_workers=num_trainers)
-            self.ray_trainers = [Trainer(backend="torch", num_workers=num_actors//num_trainers, use_gpu=True, 
-                                    resources_per_worker={'GPU': gpu_per_actor}) for _ in range(num_trainers)]
+            self.ray_trainers = [Trainer(backend="torch", num_workers=num_actors // num_trainers, use_gpu=use_cuda,
+                                         resources_per_worker={'GPU': gpu_per_actor}) for _ in range(num_trainers)]
             [trainer.start() for trainer in self.ray_trainers]
     
     def parallel_call(self, f: Callable[[TorchClient], None]) -> None:
@@ -250,7 +225,6 @@ class ParallelTrainer(DistributedTrainerBase):
         self.debug_logger.info(f"Train epoch {epoch}")
         self.parallel_call(lambda worker: worker.train_epoch_start.remote())
         
-        progress = 0
         for batch_idx in range(self.max_batches_per_epoch):
             try:
                 self.parallel_call(lambda worker: worker.set_para.remote(self.server.get_model()))
@@ -276,25 +250,43 @@ class ParallelTrainer(DistributedTrainerBase):
             except StopIteration:
                 continue
     
-    def train_fedavg_actor(self, epoch, num_rounds):
-        self.debug_logger.info(f"Train epoch {epoch}")
-
+    def train_fedavg_actor(self, global_round, num_rounds):
+        self.debug_logger.info(f"Train global round {global_round}")
+        
         def train_function(clients, actor, model, num_rounds):
-            data = [self.data_manager.get_data(client.id, num_rounds) for client in clients]
-            return actor.local_training.remote(config= {'client': clients, 'data': data, 'model': model, 'use_actor': self.use_actor, 'local_round': num_rounds})
+            data = [self.data_manager.get_train_data(client.id, num_rounds) for client in clients]
+            return actor.local_training.remote(clients, model, data, num_rounds, use_actor=self.use_actor)
         
         client_per_trainer = len(self.clients) // len(self.ray_actors)
-        all_tasks = [train_function(self.clients[i*client_per_trainer:(i+1)*client_per_trainer], self.ray_actors[i], 
-                                            self.server.get_model().to('cpu'), num_rounds) for i in range(len(self.ray_actors))]
+        all_tasks = [
+            train_function(self.clients[i * client_per_trainer:(i + 1) * client_per_trainer], self.ray_actors[i],
+                           self.server.get_model().to('cpu'), num_rounds) for i in range(len(self.ray_actors))]
         
         update = [item for actor_return in ray.get(all_tasks) for item in actor_return]
-       
+        
         aggregated = self.aggregator(update)
         
         self.server.apply_update(aggregated)
         
-        self.log_variance(epoch, update)
+        self.log_variance(global_round, update)
+    
+    def test_actor(self, global_round, batch_size):
+        self.debug_logger.info(f"Train global round {global_round}")
         
+        def test_function(clients, actor, model, batch_size):
+            data = [self.data_manager.get_all_test_data(client.id) for client in clients]
+            return actor.evaluate.remote(clients, model, data, round_number=global_round, batch_size=batch_size,
+                                         use_actor=self.use_actor)
+        
+        client_per_trainer = len(self.clients) // len(self.ray_actors)
+        all_tasks = [
+            test_function(self.clients[i * client_per_trainer:(i + 1) * client_per_trainer], self.ray_actors[i],
+                          self.server.get_model().to('cpu'), batch_size) for i in range(len(self.ray_actors))]
+        
+        metrics = [item for actor_return in ray.get(all_tasks) for item in actor_return]
+        
+        print('test done')
+    
     def train_fedavg(self, epoch, num_rounds):
         self.debug_logger.info(f"Train epoch {epoch}")
         
@@ -303,22 +295,26 @@ class ParallelTrainer(DistributedTrainerBase):
             for i in range(len(config['client'])):
                 config['client'][i].set_para(config['model'])
                 config['client'][i].train_epoch_start()
-                config['client'][i].local_training(config['local_round'], config['use_actor'],  config['data'][i])
+                config['client'][i].local_training(config['local_round'], config['use_actor'], config['data'][i])
                 update.append(config['client'][i].get_update())
             return update
         
         def train_function(clients, trainer, model, num_rounds):
-            data = [self.data_manager.get_data(client.id, num_rounds) for client in clients]
-            return trainer.run(local_training, config= {'client': clients, 'data': data, 'model': model,  'use_actor': self.use_actor, 'local_round': num_rounds})
+            data = [self.data_manager.get_train_data(client.id, num_rounds) for client in clients]
+            return trainer.run(local_training,
+                               config={'client': clients, 'data': data, 'model': model, 'use_actor': self.use_actor,
+                                       'local_round': num_rounds})
         
         client_per_trainer = len(self.clients) // len(self.ray_trainers)
-        all_tasks = [self.executor.submit(train_function, self.clients[i*client_per_trainer:(i+1)*client_per_trainer], self.ray_trainers[i], 
-                                            self.server.get_model().to('cpu'), num_rounds) for i in range(len(self.ray_trainers))]
+        all_tasks = [
+            self.executor.submit(train_function, self.clients[i * client_per_trainer:(i + 1) * client_per_trainer],
+                                 self.ray_trainers[i],
+                                 self.server.get_model().to('cpu'), num_rounds) for i in range(len(self.ray_trainers))]
         
         update = []
         for task in as_completed(all_tasks):
             update.extend(task.result()[0])
-       
+        
         aggregated = self.aggregator(update)
         
         self.server.apply_update(aggregated)

@@ -22,7 +22,7 @@ def parse_arguments():
     parser.add_argument("--attack", type=str, default='noise', help="Select attack types.")
     parser.add_argument("--dataset", type=str, default='cifar10', help="Dataset")
     parser.add_argument("--model", type=str, default='cct', help="Model")
-    parser.add_argument("--agg", type=str, default='clippedclustering', help="Aggregator.")
+    parser.add_argument("--agg", type=str, default='mean', help="Aggregator.")
     parser.add_argument("--momentum", type=float, default=0, help="momentum")
     parser.add_argument("--clipping_tau", type=float, default=100, help="Threshold for clipping")
     parser.add_argument("--lr", type=float, default=0.1, help="learning rate")
@@ -67,6 +67,6 @@ def parse_arguments():
     else:
         options.gpu_per_actor = (options.num_gpus - 0.05) / options.num_actors
     if not options.use_actor:
-        options.batch_size = int(options.batch_size // (options.num_actors /  options.num_trainers))
+        options.batch_size = int(options.batch_size // (options.num_actors / options.num_trainers))
     options.use_cuda = torch.cuda.is_available()
     return options

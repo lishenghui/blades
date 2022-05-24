@@ -3,9 +3,7 @@ import inspect
 import os
 import sys
 from time import time
-import torch
-import inspect
-import importlib
+
 import numpy as np
 import torch
 from torch.nn.modules.loss import CrossEntropyLoss
@@ -19,13 +17,9 @@ from simulators.server import TorchServer
 from settings.cifar10 import cifar10
 from utils import top1_accuracy, initialize_logger
 from simulators.datamanager import DataManager
+from simulators.simulator import (ParallelTrainer, DistributedEvaluator)
 
 options = parse_arguments()
-if options.use_actor:
-    from simulators.simulator_trainer import (ParallelTrainer, DistributedEvaluator)
-    # from simulators.simulator import (ParallelTrainer, DistributedEvaluator)
-else:
-    from simulators.simulator_trainer import (ParallelTrainer, DistributedEvaluator)
 
 agg_path = importlib.import_module('aggregators.%s' % options.agg)
 agg_scheme = getattr(agg_path, options.agg.capitalize())
@@ -50,20 +44,18 @@ def main(args):
     
     server_opt = torch.optim.SGD(model.parameters(), lr=options.lr)
     server = TorchServer(server_opt, model=model)
-    data_mgr = DataManager(options.data_path, options.batch_size)
+    data_mgr = DataManager(data_path=options.data_path, train_bs=options.batch_size, test_bs=options.test_batch_size)
     trainer = ParallelTrainer(
         server=server,
         aggregator=agg_scheme(options),
         data_manager=data_mgr,
-        pre_batch_hooks=[],
-        post_batch_hooks=[],
         max_batches_per_epoch=options.local_round,
         log_interval=args.log_interval,
         metrics=metrics,
         use_cuda=args.use_cuda,
         debug=False,
         num_trainers=args.num_trainers,
-        gpu_per_actor=args.gpu_per_actor, 
+        gpu_per_actor=args.gpu_per_actor,
         num_actors=args.num_actors,
         use_actor=args.use_actor
     )
@@ -101,18 +93,20 @@ def main(args):
         trainer.parallel_call(lambda worker: worker.detach_model())
     
     time_start = time()
-    for epoch in range(1, options.round + 1):
+    for round in range(1, options.round + 1):
         if args.fedavg:
             if args.use_actor:
-                trainer.train_fedavg_actor(epoch, options.local_round)
+                trainer.train_fedavg_actor(round, options.local_round)
             else:
-                trainer.train_fedavg(epoch, options.local_round)
+                trainer.train_fedavg(round, options.local_round)
         else:
-            trainer.train(epoch)
+            trainer.train(round)
+        if args.use_actor:
+            trainer.test_actor(global_round=round, batch_size=options.test_batch_size)
         # evaluator.evaluate(epoch)
         scheduler.step()
-        print(f"E={epoch}; Learning rate = {scheduler.get_last_lr()[0]:}; Time cost = {time() - time_start}")
-    evaluator.evaluate(epoch)
+        print(f"E={round}; Learning rate = {scheduler.get_last_lr()[0]:}; Time cost = {time() - time_start}")
+    # evaluator.evaluate(epoch)
 
 
 if __name__ == "__main__":

@@ -7,7 +7,7 @@ import torch.optim
 import torch.utils.data
 import torchvision.transforms as transforms
 from scipy.sparse import csr_matrix
-from torch.utils.data import TensorDataset, DataLoader
+from torch.utils.data import TensorDataset
 
 DATASETS = {
     'cifar10': {
@@ -59,20 +59,12 @@ def batch_data(data, batch_size, seed):
         yield (batched_x, batched_y)
 
 
-def init_dataset(raw_train_data, raw_test_data, batch_size=32):
-    train_data = preprocess_data(np.array(raw_train_data['x']), np.array(raw_train_data['y']),
-                                 batch_size=batch_size)
-    test_data = load_data(raw_test_data)
-    return train_data, test_data
-
-
-def load_data(data, batch_size=32):
+def load_dataset(data):
     tensor_x = torch.Tensor(data['x'])  # transform to torch tensor
     tensor_y = torch.LongTensor(data['y'])
     
     dataset = TensorDataset(tensor_x, tensor_y)  # create your datset
-    dataloader = DataLoader(dataset, batch_size=batch_size)  # create your dataloader
-    return dataloader
+    return dataset
 
 
 def preprocess_data(data, labels, batch_size, seed=0):
@@ -94,12 +86,8 @@ def preprocess_data(data, labels, batch_size, seed=0):
     img_size = DATASETS['cifar10']['img_size']
     
     augmentations = []
-    # from utils.autoaug import CIFAR10Policy
-    # augmentations += [CIFAR10Policy()]
     augmentations += [
-        # transforms.RandomCrop(img_size, padding=4),
         transforms.RandomHorizontalFlip(),
-        # transforms.ToTensor(),
         transforms.Normalize(mean=img_mean, std=img_std)
     ]
     

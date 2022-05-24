@@ -1,7 +1,7 @@
 import numpy as np
 import torch
 
-from .base import _BaseAggregator
+from .mean import _BaseAggregator
 
 
 def _compute_euclidean_distance(v1, v2):

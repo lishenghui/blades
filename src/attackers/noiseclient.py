@@ -1,6 +1,3 @@
-"""
-A better name will be Inner Product Manipulation Attack.
-"""
 import os
 import sys
 from pathlib import Path

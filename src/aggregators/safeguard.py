@@ -6,7 +6,7 @@ import random
 
 import torch
 
-from .base import _BaseAggregator
+from .mean import _BaseAggregator
 from ..utils import log
 
 

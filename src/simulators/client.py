@@ -1,5 +1,6 @@
 import copy
 import inspect
+import logging
 import os
 import sys
 from collections import defaultdict
@@ -8,6 +9,7 @@ from typing import Union, Callable, Tuple
 import ray
 import ray.train as train
 import torch
+from torch.utils.data import DataLoader
 
 currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 parentdir = os.path.dirname(currentdir)
@@ -19,15 +21,13 @@ from torch.nn.modules.loss import CrossEntropyLoss
 class TorchClient(object):
     def __init__(
             self,
-            client_id, train_data, test_data,
+            client_id, metrics,
             model: torch.nn.Module,
             optimizer: torch.optim.Optimizer,
             loss_func: torch.nn.modules.loss._Loss,
             device: Union[torch.device, str],
     ):
         self.id = client_id
-        self.raw_train_data = train_data
-        self.raw_test_data = test_data
         self.model = model.to('cpu')
         self.optimizer = optimizer
         self.loss_func = loss_func
@@ -37,6 +37,9 @@ class TorchClient(object):
         self.running = {}
         self.metrics = {}
         self.state = defaultdict(dict)
+        self.metrics = metrics
+        self.json_logger = logging.getLogger("stats")
+        self.debug_logger = logging.getLogger("debug")
     
     def detach_model(self):
         self.model = copy.deepcopy(self.model)
@@ -100,34 +103,40 @@ class TorchClient(object):
             results["metrics"][name] = metric(output, target)
         return results
     
-    # def local_training(self, num_rounds) -> Tuple[float, int]:
-    #     self._save_para()
-    #     results = {}
-    #     for _ in range(num_rounds):
-    #         try:
-    #             data, target = self.running["train_loader_iterator"].__next__()
-    #         except StopIteration:
-    #             self.reset_data_loader()
-    #             data, target = self.running["train_loader_iterator"].__next__()
-    #         data, target = data.to(self.device), target.to(self.device)
-    #         self.optimizer.zero_grad()
-    #         output = self.model(data)
-    #         loss = self.loss_func(output, target)
-    #         loss.backward()
-    #         self.apply_gradient()
-    #
-    #     self._save_update()
-    #
-    #     self.running["data"] = data
-    #     self.running["target"] = target
-    #
-    #     results["loss"] = loss.item()
-    #     results["length"] = len(target)
-    #     results["metrics"] = {}
-    #     for name, metric in self.metrics.items():
-    #         results["metrics"][name] = metric(output, target)
-    #     return results
-
+    def evaluate(self, round_number, test_set, batch_size, use_actor=True):
+        dataloader = DataLoader(dataset=test_set, batch_size=batch_size)
+        self.model.eval()
+        r = {
+            "_meta": {"type": "client_validation"},
+            "E": round_number,
+            "Length": 0,
+            "Loss": 0,
+        }
+        for name in self.metrics:
+            r[name] = 0
+        
+        with torch.no_grad():
+            for _, (data, target) in enumerate(dataloader):
+                data, target = data.to(self.device), target.to(self.device)
+                output = self.model.to(self.device)(data)
+                r["Loss"] += self.loss_func(output, target).item() * len(target)
+                r["Length"] += len(target)
+                
+                for name, metric in self.metrics.items():
+                    r[name] += metric(output, target) * len(target)
+        
+        for name in self.metrics:
+            r[name] /= r["Length"]
+        r["Loss"] /= r["Length"]
+        
+        self.json_logger.info(r)
+        self.debug_logger.info(
+            f"\n=> Eval Loss={r['Loss']:.4f} "
+            + " ".join(name + "=" + "{:>8.4f}".format(r[name]) for name in self.metrics)
+            + "\n"
+        )
+        return r
+    
     def local_training(self, num_rounds, use_actor, data_batches) -> Tuple[float, int]:
         self._save_para()
         results = {}
@@ -236,12 +245,6 @@ class TorchClient(object):
 
 
 @ray.remote
-class RemoteWorker(TorchClient):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-
-@ray.remote
 class WorkerWithMomentum(TorchClient):
     """
     Note that we use `WorkerWithMomentum` instead of using multiple `torch.optim.Optimizer`
@@ -273,7 +276,6 @@ class WorkerWithMomentum(TorchClient):
         return torch.cat(layer_gradients)
 
 
-# @ray.remote
 class ByzantineWorker(TorchClient):
     def __int__(self, *args, **kwargs):
         super(ByzantineWorker).__init__(*args, **kwargs)
@@ -291,9 +293,3 @@ class ByzantineWorker(TorchClient):
     def get_gradient(self) -> torch.Tensor:
         # Use self.simulator to get all other workers
         return super().get_gradient()
-    
-    # def omniscient_callback(self):
-    #     raise NotImplementedError
-    
-    def __str__(self) -> str:
-        return "ByzantineWorker"

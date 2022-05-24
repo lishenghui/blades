@@ -2,7 +2,7 @@ import statistics
 
 import torch
 
-from .base import _BaseAggregator
+from .mean import _BaseAggregator
 
 
 def _get_vectorized_parameters(optimizer):

@@ -3,8 +3,8 @@ import types
 
 import torch
 
-from .base import _BaseAggregator
-from .base import _BaseAsyncAggregator
+from .mean import _BaseAggregator
+from .mean import _BaseAsyncAggregator
 
 debug_logger = logging.getLogger("debug")
 
