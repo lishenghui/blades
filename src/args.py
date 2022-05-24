@@ -14,8 +14,8 @@ def parse_arguments():
     parser.add_argument("--use_actor", action="store_true", default=False)
     parser.add_argument("--debug", action="store_true", default=False)
     parser.add_argument("--seed", type=int, default=0)
-    parser.add_argument("--round", type=int, default=400)
-    parser.add_argument("--local_round", type=int, default=5)
+    parser.add_argument("--round", type=int, default=100)
+    parser.add_argument("--local_round", type=int, default=50)
     parser.add_argument("--batch_size", type=int, default=32)
     parser.add_argument("--test_batch_size", type=int, default=128)
     parser.add_argument("--log_interval", type=int, default=10)
@@ -29,7 +29,7 @@ def parse_arguments():
     parser.add_argument("--inner-iterations", type=int, default=1, help="[HP]: number of inner iterations.")
     # parser.add_argument("--num_workers", type=int, default=4, help="Number of workers.")
     parser.add_argument("--num_actors", type=int, default=4)
-    parser.add_argument("--num_trainer", type=int, default=4)
+    parser.add_argument("--num_trainers", type=int, default=4)
     parser.add_argument("--num_byzantine", type=int, default=0)
     parser.add_argument("--num_gpus", type=int, default=4)
     flag_parser = parser.add_mutually_exclusive_group(required=False)
@@ -66,5 +66,7 @@ def parse_arguments():
         options.gpu_per_actor = 0
     else:
         options.gpu_per_actor = (options.num_gpus - 0.05) / options.num_actors
+    if not options.use_actor:
+        options.batch_size = int(options.batch_size // (options.num_actors /  options.num_trainers))
     options.use_cuda = torch.cuda.is_available()
     return options
