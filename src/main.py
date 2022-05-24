@@ -95,10 +95,10 @@ def main(args):
             trainer.train_fedavg(epoch, options.local_round)
         else:
             trainer.train(epoch)
-        evaluator.evaluate(epoch)
+        
         scheduler.step()
         print(f"E={epoch}; Learning rate = {scheduler.get_last_lr()[0]:}")
-
+    evaluator.evaluate(epoch)
 
 if __name__ == "__main__":
     import ray
