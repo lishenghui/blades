@@ -243,6 +243,3 @@ class RayActor(object):
             client.train_epoch_start()
             client.local_training(local_round, data)
         return clients
-    
-    
-    

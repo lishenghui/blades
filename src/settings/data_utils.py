@@ -1,6 +1,5 @@
 import json
 import os
-import pickle
 
 import numpy as np
 import torch
@@ -9,7 +8,6 @@ import torch.utils.data
 import torchvision.transforms as transforms
 from scipy.sparse import csr_matrix
 from torch.utils.data import TensorDataset, DataLoader
-
 
 DATASETS = {
     'cifar10': {
@@ -60,9 +58,10 @@ def batch_data(data, batch_size, seed):
         batched_y = data_y[i:i + batch_size]
         yield (batched_x, batched_y)
 
+
 def init_dataset(raw_train_data, raw_test_data, batch_size=32):
     train_data = preprocess_data(np.array(raw_train_data['x']), np.array(raw_train_data['y']),
-                                      batch_size=batch_size)
+                                 batch_size=batch_size)
     test_data = load_data(raw_test_data)
     return train_data, test_data
 
@@ -70,11 +69,11 @@ def init_dataset(raw_train_data, raw_test_data, batch_size=32):
 def load_data(data, batch_size=32):
     tensor_x = torch.Tensor(data['x'])  # transform to torch tensor
     tensor_y = torch.LongTensor(data['y'])
-
+    
     dataset = TensorDataset(tensor_x, tensor_y)  # create your datset
     dataloader = DataLoader(dataset, batch_size=batch_size)  # create your dataloader
     return dataloader
-    
+
 
 def preprocess_data(data, labels, batch_size, seed=0):
     i = 0
@@ -137,6 +136,3 @@ def read_dir(data_dir):
         data.update(cdata['user_data'])
     
     return clients, groups, data
-
-
-

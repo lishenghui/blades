@@ -4,17 +4,16 @@ import os
 import sys
 from collections import defaultdict
 from typing import Union, Callable, Tuple
-from torch.utils.data import TensorDataset, DataLoader
+
 import ray
-import torch
 import ray.train as train
-import numpy as np
+import torch
+
 currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 parentdir = os.path.dirname(currentdir)
 sys.path.insert(0, parentdir)
 
 from torch.nn.modules.loss import CrossEntropyLoss
-from settings.data_utils import  preprocess_data, init_dataset
 
 
 class TorchClient(object):
@@ -43,8 +42,6 @@ class TorchClient(object):
         self.model = copy.deepcopy(self.model)
         self.optimizer = torch.optim.SGD(self.model.parameters(), lr=self.optimizer.param_groups[0]['lr'])
         self.loss_func = CrossEntropyLoss().to(self.device)
-
-    
     
     def getattr(self, attr):
         return getattr(self, attr)
@@ -56,7 +53,7 @@ class TorchClient(object):
         pass
     
     def set_para(self, model):
-        self.model.load_state_dict(model.state_dict())#.to(self.device)
+        self.model.load_state_dict(model.state_dict())  # .to(self.device)
     
     def add_metric(self, name: str, callback: Callable[[torch.Tensor, torch.Tensor], float]):
         if name in self.metrics or name in ["loss", "length"]:
@@ -130,7 +127,7 @@ class TorchClient(object):
     #     for name, metric in self.metrics.items():
     #         results["metrics"][name] = metric(output, target)
     #     return results
-
+    
     def local_training(self, num_rounds, data_batches) -> Tuple[float, int]:
         self._save_para()
         results = {}
@@ -151,20 +148,19 @@ class TorchClient(object):
             loss = self.loss_func(output, target)
             loss.backward()
             self.apply_gradient()
-
+        
         self.model = model
         self._save_update()
-    
+        
         self.running["data"] = data
         self.running["target"] = target
-    
+        
         results["loss"] = loss.item()
         results["length"] = len(target)
         results["metrics"] = {}
         for name, metric in self.metrics.items():
             results["metrics"][name] = metric(output, target)
         return results
-    
     
     def get_gradient(self) -> torch.Tensor:
         return self._get_saved_grad()
