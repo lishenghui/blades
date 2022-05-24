@@ -7,6 +7,7 @@ from typing import Union, Callable, Tuple
 from torch.utils.data import TensorDataset, DataLoader
 import ray
 import torch
+import ray.train as train
 import numpy as np
 currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 parentdir = os.path.dirname(currentdir)
@@ -28,7 +29,7 @@ class TorchClient(object):
         self.id = client_id
         self.raw_train_data = train_data
         self.raw_test_data = test_data
-        self.model = model
+        self.model = model.to('cpu')
         self.optimizer = optimizer
         self.loss_func = loss_func
         self.device = device
@@ -55,7 +56,7 @@ class TorchClient(object):
         pass
     
     def set_para(self, model):
-        self.model.load_state_dict(model.state_dict())
+        self.model.load_state_dict(model.state_dict())#.to(self.device)
     
     def add_metric(self, name: str, callback: Callable[[torch.Tensor, torch.Tensor], float]):
         if name in self.metrics or name in ["loss", "length"]:
@@ -72,6 +73,7 @@ class TorchClient(object):
     
     def train_epoch_start(self) -> None:
         # self.running["train_loader_iterator"] = iter(self.data_loader)
+        self.model = self.model.to(self.device)
         self.model.train()
     
     def reset_data_loader(self):
@@ -132,6 +134,8 @@ class TorchClient(object):
     def local_training(self, num_rounds, data_batches) -> Tuple[float, int]:
         self._save_para()
         results = {}
+        model = train.torch.prepare_model(self.model)
+        model = self.model
         # for _ in range(num_rounds):
         for data, target in data_batches:
             # try:
@@ -141,11 +145,14 @@ class TorchClient(object):
             #     data, target = self.running["train_loader_iterator"].__next__()
             data, target = data.to(self.device), target.to(self.device)
             self.optimizer.zero_grad()
-            output = self.model(data)
+            
+            output = model(data)
+            # output = self.model(data)
             loss = self.loss_func(output, target)
             loss.backward()
             self.apply_gradient()
-    
+
+        self.model = model
         self._save_update()
     
         self.running["data"] = data
@@ -218,7 +225,7 @@ class TorchClient(object):
                 else:
                     param_state = self.state[p]
                     layer_parameters.append(param_state["saved_para"].data.view(-1))
-        return torch.cat(layer_parameters)
+        return torch.cat(layer_parameters).to('cpu')
     
     def _get_saved_grad(self) -> torch.Tensor:
         layer_gradients = []
