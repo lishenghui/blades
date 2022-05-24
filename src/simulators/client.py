@@ -131,11 +131,14 @@ class TorchClient(object):
     #         results["metrics"][name] = metric(output, target)
     #     return results
 
-    def local_training(self, num_rounds, data_batches) -> Tuple[float, int]:
+    def local_training(self, num_rounds, use_actor, data_batches) -> Tuple[float, int]:
         self._save_para()
         results = {}
-        model = train.torch.prepare_model(self.model)
-        model = self.model
+        if use_actor:
+            model = self.model
+        else:
+            model = train.torch.prepare_model(self.model)
+        
         # for _ in range(num_rounds):
         for data, target in data_batches:
             # try:

@@ -16,13 +16,19 @@ import pickle
 import torch
 
 
-class RayTrainer(Trainer):
-    def __int__(self, backend="torch", num_workers=2, use_gpu=False, resources_per_worker={}):
-        super().__init__(backend=backend, num_workers=num_workers, use_gpu=use_gpu)
-        # super().__init__(backend=backend, num_workers=num_workers, use_gpu=use_gpu, resources_per_worker=resources_per_worker)
+@ray.remote
+class RayActor(object):
+    def __int__(*args, **kwargs):
+        super().__init__()
     
-    # def run(self, *args, **kwargs):
-    #     return super().run(train_function, **kwargs)
+    def local_training(self, config):
+            update = []
+            for i in range(len(config['client'])):
+                config['client'][i].set_para(config['model'])
+                config['client'][i].train_epoch_start()
+                config['client'][i].local_training(config['local_round'], config['use_actor'], config['data'][i])
+                update.append(config['client'][i].get_update())
+            return update
 
 
 class TrainerPool(ThreadPoolExecutor):
@@ -171,6 +177,7 @@ class ParallelTrainer(DistributedTrainerBase):
             metrics: dict,
             use_cuda: bool,
             debug: bool,
+            **kwargs
     ):
         """
         Args:
@@ -183,16 +190,24 @@ class ParallelTrainer(DistributedTrainerBase):
             use_cuda (bool): Use cuda or not
             debug (bool):
         """
+        num_trainers = kwargs["num_trainers"] if "num_trainers" in kwargs else 1
+        num_actors = kwargs["num_actors"] if "num_actors" in kwargs else 1
+        gpu_per_actor = kwargs["gpu_per_actor"] if "gpu_per_actor" in kwargs else 0
+        self.use_actor = kwargs["use_actor"] if "use_actor" in kwargs else 0
         self.aggregator = aggregator
         self.server = server
         self.data_manager = data_manager
         self.pre_batch_hooks = pre_batch_hooks or []
         self.post_batch_hooks = post_batch_hooks or []
         super().__init__(max_batches_per_epoch, log_interval, metrics, use_cuda, debug)
-        # self.trainers = [ClientThread(server) for i in range(4)]
-        self.executor = ThreadPoolExecutor(max_workers=4)
-        self.ray_trainers = [RayTrainer(backend="torch", num_workers=4, use_gpu=True, resources_per_worker={'GPU': 1}) for _ in range(1)]
-        [trainer.start() for trainer in self.ray_trainers]
+
+        if self.use_actor:
+            self.ray_actors = [RayActor.options(num_gpus=gpu_per_actor).remote() for _ in range(num_actors)]
+        else:
+            self.executor = ThreadPoolExecutor(max_workers=num_trainers)
+            self.ray_trainers = [Trainer(backend="torch", num_workers=num_actors//num_trainers, use_gpu=True, 
+                                    resources_per_worker={'GPU': gpu_per_actor}) for _ in range(num_trainers)]
+            [trainer.start() for trainer in self.ray_trainers]
     
     def parallel_call(self, f: Callable[[TorchClient], None]) -> None:
         self.cache_random_state()
@@ -264,6 +279,24 @@ class ParallelTrainer(DistributedTrainerBase):
             except StopIteration:
                 continue
     
+    def train_fedavg_actor(self, epoch, num_rounds):
+        self.debug_logger.info(f"Train epoch {epoch}")
+
+        def train_function(clients, actor, model, num_rounds):
+            data = [self.data_manager.get_data(client.id, num_rounds) for client in clients]
+            return actor.local_training.remote(config= {'client': clients, 'data': data, 'model': model, 'use_actor': self.use_actor, 'local_round': num_rounds})
+        
+        client_per_trainer = len(self.clients) // len(self.ray_actors)
+        all_tasks = [train_function(self.clients[i*client_per_trainer:(i+1)*client_per_trainer], self.ray_actors[i], 
+                                            self.server.get_model().to('cpu'), num_rounds) for i in range(len(self.ray_actors))]
+        
+        update = [item for actor_return in ray.get(all_tasks) for item in actor_return]
+       
+        aggregated = self.aggregator(update)
+        
+        self.server.apply_update(aggregated)
+        
+        self.log_variance(epoch, update)
         
     def train_fedavg(self, epoch, num_rounds):
         self.debug_logger.info(f"Train epoch {epoch}")
@@ -273,33 +306,22 @@ class ParallelTrainer(DistributedTrainerBase):
             for i in range(len(config['client'])):
                 config['client'][i].set_para(config['model'])
                 config['client'][i].train_epoch_start()
-                config['client'][i].local_training(config['local_round'], config['data'][i])
+                config['client'][i].local_training(config['local_round'], config['use_actor'],  config['data'][i])
                 update.append(config['client'][i].get_update())
             return update
         
         def train_function(clients, trainer, model, num_rounds):
             data = [self.data_manager.get_data(client.id, num_rounds) for client in clients]
-
-            return trainer.run(local_training, config= {'client': clients, 'data': data, 'model': model, 'local_round': num_rounds})
+            return trainer.run(local_training, config= {'client': clients, 'data': data, 'model': model,  'use_actor': self.use_actor, 'local_round': num_rounds})
         
-        
-        all_tasks = [self.executor.submit(train_function, self.clients, self.ray_trainers[0], self.server.get_model().to('cpu'), num_rounds)]
+        client_per_trainer = len(self.clients) // len(self.ray_trainers)
+        all_tasks = [self.executor.submit(train_function, self.clients[i*client_per_trainer:(i+1)*client_per_trainer], self.ray_trainers[i], 
+                                            self.server.get_model().to('cpu'), num_rounds) for i in range(len(self.ray_trainers))]
         
         update = []
         for task in as_completed(all_tasks):
             update.extend(task.result()[0])
-        # update = [task.result()[0] for task in as_completed(all_tasks)]
-        
-        # for trainer, client in zip(self.trainers, self.clients):
-        #     trainer.set_clients([client])
-        #
-        # for trainer in self.trainers:
-        #     trainer.start()
-        #
-        # for trainer in self.trainers:
-        #     update.extend(trainer.join())
-        
-        # update = self.parallel_get(lambda w: w.get_update())
+       
         aggregated = self.aggregator(update)
         
         self.server.apply_update(aggregated)
