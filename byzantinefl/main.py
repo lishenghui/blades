@@ -6,9 +6,6 @@ from torch.nn.modules.loss import CrossEntropyLoss
 
 from args import parse_arguments
 from simulator.datasets import CIFAR10
-# current_dir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
-# parent_dir = os.path.dirname(current_dir)
-# sys.path.insert(0, parent_dir)
 from simulator.server import TorchServer
 from simulator.simulator import Simulator
 from simulator.utils import top1_accuracy, initialize_logger
@@ -44,7 +41,6 @@ def main(args):
         aggregator=agg_scheme(options),
         model=model,
         dataset=dataset,
-        max_batches_per_epoch=options.local_round,
         log_interval=args.log_interval,
         metrics=metrics,
         use_cuda=args.use_cuda,
@@ -52,7 +48,7 @@ def main(args):
         num_trainers=args.num_trainers,
         gpu_per_actor=args.gpu_per_actor,
         num_actors=args.num_actors,
-        use_actor=args.use_actor
+        mode='actor'
     )
     
     trainer.setup_clients(model, loss_func, device, optimizer)

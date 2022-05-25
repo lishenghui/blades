@@ -39,7 +39,7 @@ def parse_arguments():
     options = parser.parse_args()
     
     ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
-    options.task_dir = os.path.join(ROOT_DIR, f"tasks/{options.dataset}/")
+    options.task_dir = os.path.join(ROOT_DIR, f"models/{options.dataset}/")
     options.data_dir = os.path.join(options.task_dir, "data")
     options.data_path = os.path.join(options.data_dir, f"data_cache" + (".obj" if options.iid else "_alpha0.1.obj"))
     
@@ -57,7 +57,7 @@ def parse_arguments():
     print(options.task_dir)
     # _, _, train_data, _ = read_data(data_path=options.data_path)
     # options.num_clients = len(list(train_data.keys()))
-    options.model_path = '%s.%s.%s' % ('tasks', options.dataset, options.model)
+    options.model_path = '%s.%s.%s' % ('models', options.dataset, options.model)
     # options.model_path = os.path.join(options.task_dir, 'model')
     
     if not torch.cuda.is_available():
