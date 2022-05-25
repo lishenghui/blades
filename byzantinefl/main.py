@@ -28,16 +28,12 @@ def main(args):
     opt = importlib.import_module(options.model_path)
     Model = getattr(opt, "Net")
     model = Model().to(device)
-    optimizer = torch.optim.SGD(model.parameters(), lr=options.lr)
     loss_func = CrossEntropyLoss().to(device)
     
     metrics = {"top1": top1_accuracy}
     
-    server_opt = torch.optim.SGD(model.parameters(), lr=options.lr)
-    server = TorchServer(server_opt, model=model)
     dataset = CIFAR10(data_root=options.data_dir, train_bs=options.batch_size)
     trainer = Simulator(
-        server=server,
         aggregator=agg_scheme(options),
         model=model,
         loss_func=loss_func,
@@ -53,7 +49,6 @@ def main(args):
         mode='actor'
     )
     
-    # trainer.setup_clients(model, loss_func, device, optimizer)
     trainer.train(round=100, local_round=options.local_round)
 
 

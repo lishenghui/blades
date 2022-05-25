@@ -43,7 +43,6 @@ class Simulator(object):
     
     def __init__(
             self,
-            server: TorchServer,
             dataset: FLDataset,
             aggregator: Callable[[list], torch.Tensor],
             model=None,
@@ -56,7 +55,7 @@ class Simulator(object):
             pre_batch_hooks=None,
             post_batch_hooks=None,
             lr: Optional[float]=0.1,
-            device: Optional[str]='cpu',
+            device: Optional[torch.device]='cpu',
             **kwargs
     ):
         """
@@ -73,7 +72,6 @@ class Simulator(object):
         gpu_per_actor = kwargs["gpu_per_actor"] if "gpu_per_actor" in kwargs else 0
         self.use_actor = True if mode == 'actor' else False
         self.aggregator = aggregator
-        self.server = server
         self.server_opt = torch.optim.SGD(model.parameters(), lr=lr)
         self.server = TorchServer(self.server_opt, model=model)
         self.data_manager = dataset
