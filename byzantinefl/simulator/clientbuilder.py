@@ -5,7 +5,7 @@ from attackers.bitflippingclient import BitflippingClient
 from attackers.ipmclient import IpmClient
 from attackers.labelflippingclient import LableflippingClient
 from attackers.noiseclient import NoiseClient
-from simulators.client import WorkerWithMomentum, TorchClient, RemoteWorker
+from simulator.client import WorkerWithMomentum, TorchClient, RemoteWorker
 
 
 class ClientBuilder(object):

@@ -10,7 +10,7 @@ from scipy.stats import norm
 currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 parentdir = os.path.dirname(currentdir)
 sys.path.insert(0, parentdir)
-from simulators.client import ByzantineWorker
+from simulator.client import ByzantineWorker
 
 
 @ray.remote

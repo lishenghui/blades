@@ -9,7 +9,7 @@ import ray
 
 sys.path.append(os.path.dirname(Path(os.path.abspath(__file__)).parent))
 
-from simulators.client import ByzantineWorker
+from simulator.client import ByzantineWorker
 
 
 @ray.remote

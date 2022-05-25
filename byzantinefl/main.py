@@ -13,11 +13,10 @@ from args import parse_arguments
 current_dir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 parent_dir = os.path.dirname(current_dir)
 sys.path.insert(0, parent_dir)
-from simulators.server import TorchServer
-from settings.cifar10 import cifar10
+from simulator.server import TorchServer
 from utils import top1_accuracy, initialize_logger
-from simulators.datamanager import DataManager
-from simulators.simulator import (ParallelTrainer, DistributedEvaluator)
+from simulator.datamanager import DataManager
+from simulator.simulator import ParallelTrainer
 
 options = parse_arguments()
 
