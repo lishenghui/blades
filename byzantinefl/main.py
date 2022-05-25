@@ -1,22 +1,17 @@
 import importlib
-import inspect
-import os
-import sys
-
 
 import numpy as np
 import torch
 from torch.nn.modules.loss import CrossEntropyLoss
 
 from args import parse_arguments
-
-current_dir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
-parent_dir = os.path.dirname(current_dir)
-sys.path.insert(0, parent_dir)
-from simulator.server import TorchServer
-from simulator.utils import top1_accuracy, initialize_logger
 from simulator.datasets import CIFAR10
+# current_dir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+# parent_dir = os.path.dirname(current_dir)
+# sys.path.insert(0, parent_dir)
+from simulator.server import TorchServer
 from simulator.simulator import Simulator
+from simulator.utils import top1_accuracy, initialize_logger
 
 options = parse_arguments()
 
@@ -62,7 +57,8 @@ def main(args):
     
     trainer.setup_clients(model, loss_func, device, optimizer)
     trainer.train(round=100, local_round=options.local_round)
-    
+
+
 if __name__ == "__main__":
     import ray
     
