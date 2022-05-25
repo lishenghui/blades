@@ -15,7 +15,7 @@ parent_dir = os.path.dirname(current_dir)
 sys.path.insert(0, parent_dir)
 from simulator.server import TorchServer
 from simulator.utils import top1_accuracy, initialize_logger
-from simulator.datasets import DatasetBase, CIFAR10
+from simulator.datasets import FLDataset, CIFAR10
 from simulator.simulator import Simulator
 
 options = parse_arguments()
@@ -43,11 +43,11 @@ def main(args):
     
     server_opt = torch.optim.SGD(model.parameters(), lr=options.lr)
     server = TorchServer(server_opt, model=model)
-    data_mgr = CIFAR10(data_path=options.data_path, train_bs=options.batch_size)
+    dataset = CIFAR10(data_root=options.data_dir, train_bs=options.batch_size)
     trainer = Simulator(
         server=server,
         aggregator=agg_scheme(options),
-        data_manager=data_mgr,
+        dataset=dataset,
         max_batches_per_epoch=options.local_round,
         log_interval=args.log_interval,
         metrics=metrics,
@@ -63,7 +63,7 @@ def main(args):
         server_opt, milestones=[75, 100], gamma=0.5
     )
     
-    trainer.setup_clients(options.data_path, model, loss_func, device, optimizer)
+    trainer.setup_clients(model, loss_func, device, optimizer)
     trainer.parallel_call(lambda client: client.detach_model())
     
     time_start = time()

@@ -11,7 +11,7 @@ from typing import Any, Callable, Optional
 from .utils import top1_accuracy
 from .client import TorchClient
 from .server import TorchServer
-
+from datasets import FLDataset
 
 @ray.remote
 class RayActor(object):
@@ -48,7 +48,6 @@ class DistributedSimulatorBase(object):
         self.metrics = metrics
         self.use_cuda = use_cuda
         self.debug = debug
-        self.clients = []
         # NOTE: omniscient_callbacks are called before aggregation or gossip
         self.omniscient_callbacks = []
         self.random_states = {}
@@ -56,17 +55,6 @@ class DistributedSimulatorBase(object):
         self.json_logger = logging.getLogger("stats")
         self.debug_logger = logging.getLogger("debug")
         self.debug_logger.info(self.__str__())
-    
-    def setup_clients(self, data_path, model, loss_func, device, optimizer, **kwargs):
-        assert os.path.isfile(data_path)
-        with open(data_path, 'rb') as f:
-            (users, train_data, test_clients, test_data) = [pickle.load(f) for _ in range(4)]
-        print(users)
-        self.clients = []
-        for i, u in enumerate(users):
-            client = TorchClient(u, metrics=self.metrics,
-                                 model=model, loss_func=loss_func, device=device, optimizer=optimizer, **kwargs)
-            self.clients.append(client)
     
     def add_client(self, client: TorchClient):
         client.add_metrics(self.metrics)
@@ -95,7 +83,7 @@ class Simulator(DistributedSimulatorBase):
     def __init__(
             self,
             server: TorchServer,
-            data_manager,
+            dataset: FLDataset,
             aggregator: Callable[[list], torch.Tensor],
             log_interval: Optional[int]=None,
             metrics: Optional[dict]=None,
@@ -120,7 +108,7 @@ class Simulator(DistributedSimulatorBase):
         self.use_actor = kwargs["use_actor"] if "use_actor" in kwargs else 0
         self.aggregator = aggregator
         self.server = server
-        self.data_manager = data_manager
+        self.data_manager = dataset
         self.pre_batch_hooks = pre_batch_hooks or []
         self.post_batch_hooks = post_batch_hooks or []
         self.log_interval = log_interval
@@ -138,6 +126,15 @@ class Simulator(DistributedSimulatorBase):
                                          resources_per_worker={'GPU': gpu_per_actor}) for _ in range(num_trainers)]
             [trainer.start() for trainer in self.ray_trainers]
     
+    
+    def setup_clients(self, model, loss_func, device, optimizer, **kwargs):
+        users = self.data_manager.get_clients()
+        self.clients = []
+        for i, u in enumerate(users):
+            client = TorchClient(u, metrics=self.metrics,
+                                 model=model, loss_func=loss_func, device=device, optimizer=optimizer, **kwargs)
+            self.clients.append(client)
+            
     def parallel_call(self, f: Callable[[TorchClient], None]) -> None:
         self.cache_random_state()
         _ = [f(worker) for worker in self.clients]
