@@ -1,17 +1,18 @@
 import logging
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from time import time
 from typing import Any, Callable, Optional
 
 import numpy as np
 import ray
 import torch
 from ray.train import Trainer
-from time import time
+
 from .client import TorchClient
 from .datasets import FLDataset
 from .server import TorchServer
 from .utils import top1_accuracy
-from torch.optim.lr_scheduler import MultiStepLR
+
 
 @ray.remote
 class RayActor(object):
@@ -36,9 +37,9 @@ class RayActor(object):
             update.append(result)
         return update
 
+
 class Simulator(object):
     """Synchronous and parallel training with specified aggregators."""
-
     
     def __init__(
             self,
@@ -78,11 +79,11 @@ class Simulator(object):
         self.debug = debug
         self.omniscient_callbacks = []
         self.random_states = {}
-
+        
         self.json_logger = logging.getLogger("stats")
         self.debug_logger = logging.getLogger("debug")
         self.debug_logger.info(self.__str__())
-
+        
         self.scheduler = torch.optim.lr_scheduler.MultiStepLR(
             self.server.get_opt(), milestones=[75, 100], gamma=0.5
         )
@@ -96,22 +97,22 @@ class Simulator(object):
             self.ray_trainers = [Trainer(backend="torch", num_workers=num_actors // num_trainers, use_gpu=use_cuda,
                                          resources_per_worker={'GPU': gpu_per_actor}) for _ in range(num_trainers)]
             [trainer.start() for trainer in self.ray_trainers]
-
+    
     def cache_random_state(self) -> None:
         if self.use_cuda:
             self.random_states["torch_cuda"] = torch.cuda.get_rng_state()
         self.random_states["torch"] = torch.get_rng_state()
         self.random_states["numpy"] = np.random.get_state()
-
+    
     def restore_random_state(self) -> None:
         if self.use_cuda:
             torch.cuda.set_rng_state(self.random_states["torch_cuda"])
         torch.set_rng_state(self.random_states["torch"])
         np.random.set_state(self.random_states["numpy"])
-
+    
     def register_omniscient_callback(self, callback):
         self.omniscient_callbacks.append(callback)
-        
+    
     def setup_clients(self, model, loss_func, device, optimizer, **kwargs):
         users = self.data_manager.get_clients()
         self.clients = []
@@ -229,11 +230,11 @@ class Simulator(object):
         self.debug_logger.info(f"Test global round {global_round}, loss: {loss}, top1: {top1}")
     
     def train(
-        self,
-        round: Optional[int] = 1,
-        fedavg: Optional[bool] = True,
-        local_round: Optional[int] = 1,
-        test_batch_size: Optional[int] = 64,
+            self,
+            round: Optional[int] = 1,
+            fedavg: Optional[bool] = True,
+            local_round: Optional[int] = 1,
+            test_batch_size: Optional[int] = 64,
     ):
         time_start = time()
         for round in range(1, round + 1):
@@ -247,11 +248,11 @@ class Simulator(object):
                 # trainer.train(round)
             if self.use_actor:
                 self.test_actor(global_round=round, batch_size=test_batch_size)
-
+            
             self.parallel_call(lambda client: client.detach_model())
             self.scheduler.step()
             print(f"E={round}; Learning rate = {self.scheduler.get_last_lr()[0]:}; Time cost = {time() - time_start}")
-            
+    
     def train_fedavg(self, epoch, num_rounds):
         self.debug_logger.info(f"Train epoch {epoch}")
         
