@@ -9,8 +9,8 @@ from typing import Union, Callable, Tuple
 import ray
 import ray.train as train
 import torch
-from torch.utils.data import DataLoader
 import torchvision.transforms as transforms
+from torch.utils.data import DataLoader
 
 currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 parentdir = os.path.dirname(currentdir)

@@ -15,7 +15,7 @@ parent_dir = os.path.dirname(current_dir)
 sys.path.insert(0, parent_dir)
 from simulator.server import TorchServer
 from simulator.utils import top1_accuracy, initialize_logger
-from simulator.datasets import FLDataset, CIFAR10
+from simulator.datasets import CIFAR10
 from simulator.simulator import Simulator
 
 options = parse_arguments()
@@ -76,7 +76,6 @@ def main(args):
         else:
             trainer.train(round)
         if args.use_actor:
-            # pass
             trainer.test_actor(global_round=round, batch_size=options.test_batch_size)
         scheduler.step()
         print(f"E={round}; Learning rate = {scheduler.get_last_lr()[0]:}; Time cost = {time() - time_start}")

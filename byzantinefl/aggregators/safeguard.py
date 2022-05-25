@@ -6,8 +6,8 @@ import random
 
 import torch
 
-from .mean import _BaseAggregator
 from simulator.utils import log
+from .mean import _BaseAggregator
 
 
 class Safeguard(_BaseAggregator):

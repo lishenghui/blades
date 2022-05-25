@@ -1,17 +1,17 @@
 import logging
-import os
-import pickle
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from typing import Any, Callable, Optional
 
 import numpy as np
 import ray
 import torch
 from ray.train import Trainer
-from typing import Any, Callable, Optional
-from .utils import top1_accuracy
+
 from .client import TorchClient
-from .server import TorchServer
 from .datasets import FLDataset
+from .server import TorchServer
+from .utils import top1_accuracy
+
 
 @ray.remote
 class RayActor(object):
@@ -36,48 +36,7 @@ class RayActor(object):
             update.append(result)
         return update
 
-class DistributedSimulatorBase(object):
-    
-    def __init__(self, metrics: dict, use_cuda: bool, debug: bool):
-        """
-        Args:
-            metrics (dict): dict of metric names and their functions
-            use_cuda (bool): Use cuda or not
-            debug (bool):
-        """
-        self.metrics = metrics
-        self.use_cuda = use_cuda
-        self.debug = debug
-        # NOTE: omniscient_callbacks are called before aggregation or gossip
-        self.omniscient_callbacks = []
-        self.random_states = {}
-        
-        self.json_logger = logging.getLogger("stats")
-        self.debug_logger = logging.getLogger("debug")
-        self.debug_logger.info(self.__str__())
-    
-    def add_client(self, client: TorchClient):
-        client.add_metrics(self.metrics)
-        self.debug_logger.info(f"=> Add worker {client}")
-        self.clients.append(client)
-    
-    def cache_random_state(self) -> None:
-        if self.use_cuda:
-            self.random_states["torch_cuda"] = torch.cuda.get_rng_state()
-        self.random_states["torch"] = torch.get_rng_state()
-        self.random_states["numpy"] = np.random.get_state()
-    
-    def restore_random_state(self) -> None:
-        if self.use_cuda:
-            torch.cuda.set_rng_state(self.random_states["torch_cuda"])
-        torch.set_rng_state(self.random_states["torch"])
-        np.random.set_state(self.random_states["numpy"])
-    
-    def register_omniscient_callback(self, callback):
-        self.omniscient_callbacks.append(callback)
-
-
-class Simulator(DistributedSimulatorBase):
+class Simulator(object):
     """Synchronous and parallel training with specified aggregators."""
     
     def __init__(
@@ -85,10 +44,10 @@ class Simulator(DistributedSimulatorBase):
             server: TorchServer,
             dataset: FLDataset,
             aggregator: Callable[[list], torch.Tensor],
-            log_interval: Optional[int]=None,
-            metrics: Optional[dict]=None,
-            use_cuda: Optional[bool]=False,
-            debug: Optional[bool]=False,
+            log_interval: Optional[int] = None,
+            metrics: Optional[dict] = None,
+            use_cuda: Optional[bool] = False,
+            debug: Optional[bool] = False,
             pre_batch_hooks=None,
             post_batch_hooks=None,
             **kwargs
@@ -112,11 +71,18 @@ class Simulator(DistributedSimulatorBase):
         self.pre_batch_hooks = pre_batch_hooks or []
         self.post_batch_hooks = post_batch_hooks or []
         self.log_interval = log_interval
+        self.metrics = metrics
+        self.use_cuda = use_cuda
+        self.debug = debug
+        self.omniscient_callbacks = []
+        self.random_states = {}
 
+        self.json_logger = logging.getLogger("stats")
+        self.debug_logger = logging.getLogger("debug")
+        self.debug_logger.info(self.__str__())
+        
         if metrics is None:
             metrics = {"top1": top1_accuracy}
-        
-        super().__init__(metrics, use_cuda, debug)
         
         if self.use_actor:
             self.ray_actors = [RayActor.options(num_gpus=gpu_per_actor).remote() for _ in range(num_actors)]
@@ -125,8 +91,22 @@ class Simulator(DistributedSimulatorBase):
             self.ray_trainers = [Trainer(backend="torch", num_workers=num_actors // num_trainers, use_gpu=use_cuda,
                                          resources_per_worker={'GPU': gpu_per_actor}) for _ in range(num_trainers)]
             [trainer.start() for trainer in self.ray_trainers]
-    
-    
+
+    def cache_random_state(self) -> None:
+        if self.use_cuda:
+            self.random_states["torch_cuda"] = torch.cuda.get_rng_state()
+        self.random_states["torch"] = torch.get_rng_state()
+        self.random_states["numpy"] = np.random.get_state()
+
+    def restore_random_state(self) -> None:
+        if self.use_cuda:
+            torch.cuda.set_rng_state(self.random_states["torch_cuda"])
+        torch.set_rng_state(self.random_states["torch"])
+        np.random.set_state(self.random_states["numpy"])
+
+    def register_omniscient_callback(self, callback):
+        self.omniscient_callbacks.append(callback)
+        
     def setup_clients(self, model, loss_func, device, optimizer, **kwargs):
         users = self.data_manager.get_clients()
         self.clients = []
@@ -134,7 +114,7 @@ class Simulator(DistributedSimulatorBase):
             client = TorchClient(u, metrics=self.metrics,
                                  model=model, loss_func=loss_func, device=device, optimizer=optimizer, **kwargs)
             self.clients.append(client)
-            
+    
     def parallel_call(self, f: Callable[[TorchClient], None]) -> None:
         self.cache_random_state()
         _ = [f(worker) for worker in self.clients]
@@ -205,7 +185,7 @@ class Simulator(DistributedSimulatorBase):
     #             continue
     
     def train_fedavg_actor(self, global_round, num_rounds):
-    
+        
         # TODO: randomly select a subset of clients for local training
         self.debug_logger.info(f"Train global round {global_round}")
         
@@ -242,8 +222,7 @@ class Simulator(DistributedSimulatorBase):
         loss, top1 = self.log_validate(metrics)
         
         self.debug_logger.info(f"Test global round {global_round}, loss: {loss}, top1: {top1}")
-
-
+    
     def train_fedavg(self, epoch, num_rounds):
         
         self.debug_logger.info(f"Train epoch {epoch}")
@@ -307,12 +286,12 @@ class Simulator(DistributedSimulatorBase):
             "_meta": {"type": "test"},
             "E": metrics[0]['E'],
             "top1": top1,
-            "Length":np.sum([metric['Length'] for metric in metrics]),
+            "Length": np.sum([metric['Length'] for metric in metrics]),
             "Loss": loss,
         }
         self.json_logger.info(r)
         return loss, top1
-
+    
     def log_train(self, progress, batch_idx, epoch, results):
         length = sum(res["length"] for res in results)
         
