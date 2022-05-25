@@ -1,5 +1,5 @@
-src/tasks/cifar10/data/cifar-10-batches-py/*
-/src/tasks/cifar10/data/cifar-10-python.tar.gz
+byzantinefl/tasks/cifar10/data/cifar-10-batches-py/*
+/byzantinefl/tasks/cifar10/data/cifar-10-python.tar.gz
 *obj
 /outputs/*
 *.ipynb_checkpoints*
@@ -8,10 +8,10 @@ src/tasks/cifar10/data/cifar-10-batches-py/*
 *nohup.out
 trainers/outputs/*
 others/landscape/cifar10/data/cifar-10-batches-py
-/src/outputs/cifar10-all/
+/byzantinefl/outputs/cifar10-all/
 src_ray/outputs/*
-src/outputs/*
+byzantinefl/outputs/*
 /half_seminar/build/*
-/src/tasks/cifar10/data/preprocess/cifar-10-batches-py
-/src/tasks/cifar10/data/preprocess/cifar-10-python.tar.gz
+/byzantinefl/tasks/cifar10/data/preprocess/cifar-10-batches-py
+/byzantinefl/tasks/cifar10/data/preprocess/cifar-10-python.tar.gz
 /build
