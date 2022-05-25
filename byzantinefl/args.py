@@ -15,7 +15,7 @@ def parse_arguments():
     parser.add_argument("--debug", action="store_true", default=False)
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument("--round", type=int, default=100)
-    parser.add_argument("--local_round", type=int, default=5)
+    parser.add_argument("--local_round", type=int, default=50)
     parser.add_argument("--batch_size", type=int, default=32)
     parser.add_argument("--test_batch_size", type=int, default=128)
     parser.add_argument("--log_interval", type=int, default=10)
