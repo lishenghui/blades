@@ -2,13 +2,13 @@ import logging
 import os
 import pickle
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from typing import Union, Callable, Any
 
 import numpy as np
 import ray
 import torch
 from ray.train import Trainer
-
+from typing import Any, Callable, Optional
+from .utils import top1_accuracy
 from .client import TorchClient
 from .server import TorchServer
 
@@ -36,16 +36,7 @@ class RayActor(object):
             update.append(result)
         return update
 
-
 class DistributedSimulatorBase(object):
-    """Simulate distributed programs with low memory usage.
-
-    Functionality:
-    1. randomness control: numpy, torch, torch-cuda
-    2. add workers
-
-    This base class is used by both trainer and evaluator.
-    """
     
     def __init__(self, metrics: dict, use_cuda: bool, debug: bool):
         """
@@ -82,12 +73,6 @@ class DistributedSimulatorBase(object):
         self.debug_logger.info(f"=> Add worker {client}")
         self.clients.append(client)
     
-    def any_call(self, f: Callable[[TorchClient], None]) -> None:
-        f(self.clients[0])
-    
-    def any_get(self, f: Callable[[TorchClient], Any]) -> list:
-        return f(self.clients[0])
-    
     def cache_random_state(self) -> None:
         if self.use_cuda:
             self.random_states["torch_cuda"] = torch.cuda.get_rng_state()
@@ -104,8 +89,7 @@ class DistributedSimulatorBase(object):
         self.omniscient_callbacks.append(callback)
 
 
-
-class ParallelTrainer(DistributedSimulatorBase):
+class Simulator(DistributedSimulatorBase):
     """Synchronous and parallel training with specified aggregators."""
     
     def __init__(
@@ -113,10 +97,10 @@ class ParallelTrainer(DistributedSimulatorBase):
             server: TorchServer,
             data_manager,
             aggregator: Callable[[list], torch.Tensor],
-            log_interval: int,
-            metrics: dict,
-            use_cuda: bool,
-            debug: bool,
+            log_interval: Optional[int]=None,
+            metrics: Optional[dict]=None,
+            use_cuda: Optional[bool]=False,
+            debug: Optional[bool]=False,
             pre_batch_hooks=None,
             post_batch_hooks=None,
             **kwargs
@@ -140,6 +124,10 @@ class ParallelTrainer(DistributedSimulatorBase):
         self.pre_batch_hooks = pre_batch_hooks or []
         self.post_batch_hooks = post_batch_hooks or []
         self.log_interval = log_interval
+
+        if metrics is None:
+            metrics = {"top1": top1_accuracy}
+        
         super().__init__(metrics, use_cuda, debug)
         
         if self.use_actor:
@@ -355,62 +343,3 @@ class ParallelTrainer(DistributedSimulatorBase):
         
         # Output to file
         self.json_logger.info(r)
-
-
-class DistributedEvaluator(DistributedSimulatorBase):
-    def __init__(
-            self,
-            model: torch.nn.Module,
-            data_loader: torch.utils.data.DataLoader,
-            loss_func: torch.nn.modules.loss._Loss,
-            device: Union[torch.device, str],
-            metrics: dict,
-            use_cuda: bool,
-            debug: bool,
-    ):
-        super().__init__(metrics, use_cuda, debug)
-        self.model = model
-        self.data_loader = data_loader
-        self.loss_func = loss_func
-        self.device = device
-    
-    def __str__(self):
-        return (
-            "DistributedEvaluator("
-            f"use_cuda={self.use_cuda}, "
-            f"debug={self.debug}, "
-            ")"
-        )
-    
-    def evaluate(self, epoch):
-        self.model.eval()
-        r = {
-            "_meta": {"type": "validation"},
-            "E": epoch,
-            "Length": 0,
-            "Loss": 0,
-        }
-        for name in self.metrics:
-            r[name] = 0
-        
-        with torch.no_grad():
-            for _, (data, target) in enumerate(self.data_loader):
-                data, target = data.to(self.device), target.to(self.device)
-                output = self.model.to(self.device)(data)
-                r["Loss"] += self.loss_func(output, target).item() * len(target)
-                r["Length"] += len(target)
-                
-                for name, metric in self.metrics.items():
-                    r[name] += metric(output, target) * len(target)
-        
-        for name in self.metrics:
-            r[name] /= r["Length"]
-        r["Loss"] /= r["Length"]
-        
-        # Output to file
-        self.json_logger.info(r)
-        self.debug_logger.info(
-            f"\n=> Eval Loss={r['Loss']:.4f} "
-            + " ".join(name + "=" + "{:>8.4f}".format(r[name]) for name in self.metrics)
-            + "\n"
-        )

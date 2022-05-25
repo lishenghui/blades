@@ -14,9 +14,9 @@ current_dir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentfra
 parent_dir = os.path.dirname(current_dir)
 sys.path.insert(0, parent_dir)
 from simulator.server import TorchServer
-from utils import top1_accuracy, initialize_logger
-from simulator.datamanager import DataManager
-from simulator.simulator import ParallelTrainer
+from simulator.utils import top1_accuracy, initialize_logger
+from simulator.datasets import DatasetBase, CIFAR10
+from simulator.simulator import Simulator
 
 options = parse_arguments()
 
@@ -43,8 +43,8 @@ def main(args):
     
     server_opt = torch.optim.SGD(model.parameters(), lr=options.lr)
     server = TorchServer(server_opt, model=model)
-    data_mgr = DataManager(data_path=options.data_path, train_bs=options.batch_size, test_bs=options.test_batch_size)
-    trainer = ParallelTrainer(
+    data_mgr = CIFAR10(data_path=options.data_path, train_bs=options.batch_size)
+    trainer = Simulator(
         server=server,
         aggregator=agg_scheme(options),
         data_manager=data_mgr,
@@ -64,10 +64,7 @@ def main(args):
     )
     
     trainer.setup_clients(options.data_path, model, loss_func, device, optimizer)
-    if args.use_actor:
-        trainer.parallel_call(lambda client: client.detach_model())
-    else:
-        trainer.parallel_call(lambda client: client.detach_model())
+    trainer.parallel_call(lambda client: client.detach_model())
     
     time_start = time()
     for round in range(1, options.round + 1):
@@ -79,6 +76,7 @@ def main(args):
         else:
             trainer.train(round)
         if args.use_actor:
+            # pass
             trainer.test_actor(global_round=round, batch_size=options.test_batch_size)
         scheduler.step()
         print(f"E={round}; Learning rate = {scheduler.get_last_lr()[0]:}; Time cost = {time() - time_start}")

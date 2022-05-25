@@ -3,7 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torchvision import datasets, transforms
 
-from ..utils import log_dict
+from simulator.utils import log_dict
 
 
 class Net(nn.Module):
