@@ -47,6 +47,7 @@ class Simulator(object):
             dataset: FLDataset,
             aggregator: Callable[[list], torch.Tensor],
             model=None,
+            mode: Optional[str] = 'actor',
             log_interval: Optional[int] = None,
             metrics: Optional[dict] = None,
             use_cuda: Optional[bool] = False,
@@ -67,7 +68,7 @@ class Simulator(object):
         num_trainers = kwargs["num_trainers"] if "num_trainers" in kwargs else 1
         num_actors = kwargs["num_actors"] if "num_actors" in kwargs else 1
         gpu_per_actor = kwargs["gpu_per_actor"] if "gpu_per_actor" in kwargs else 0
-        self.use_actor = kwargs["use_actor"] if "use_actor" in kwargs else 0
+        self.use_actor = True if mode == 'actor' else False
         self.aggregator = aggregator
         self.server = server
         self.data_manager = dataset
@@ -160,35 +161,6 @@ class Simulator(object):
         aggregated = self.aggregator(update)
         
         self.server.apply_update(aggregated)
-    
-    # def train(self, epoch):
-    #     self.debug_logger.info(f"Train epoch {epoch}")
-    #     self.parallel_call(lambda worker: worker.train_epoch_start.remote())
-    #
-    #     for batch_idx in range(self.max_batches_per_epoch):
-    #         try:
-    #             self.parallel_call(lambda worker: worker.set_para.remote(self.server.get_model()))
-    #             self._run_pre_batch_hooks(epoch, batch_idx)
-    #             results = self.parallel_call(lambda w: w.compute_gradient.remote())
-    #             # self.aggregation_and_update()
-    #             # If there are Byzantine workers, ask them to craft attackers based on the updated settings.
-    #             for omniscient_attacker_callback in self.omniscient_callbacks:
-    #                 omniscient_attacker_callback()
-    #
-    #             gradients = self.parallel_get(lambda w: w.get_gradient.remote())
-    #             aggregated = self.aggregator(gradients)
-    #
-    #             # Assume that the model and optimizers are shared among workers.
-    #             self.server.set_gradient(aggregated)
-    #             self.server.apply_gradient()
-    #
-    #             # progress += results[0]["length"]
-    #             if batch_idx % self.log_interval == 0:
-    #                 # self.log_train(progress, batch_idx, epoch, results)
-    #                 self.log_variance(epoch, gradients)
-    #             self._run_post_batch_hooks(epoch, batch_idx)
-    #         except StopIteration:
-    #             continue
     
     def train_fedavg_actor(self, global_round, num_rounds):
         
