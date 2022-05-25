@@ -61,7 +61,7 @@ def main(args):
     )
     
     trainer.setup_clients(model, loss_func, device, optimizer)
-    trainer.train(round=10)
+    trainer.train(round=100, local_round=options.local_round)
     
 if __name__ == "__main__":
     import ray
