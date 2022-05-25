@@ -66,9 +66,6 @@ class DistributedSimulatorBase(object):
         self.debug_logger = logging.getLogger("debug")
         self.debug_logger.info(self.__str__())
     
-    def __str__(self):
-        return f"DistributedSimulatorBase(metrics={list(self.metrics.keys())},use_cuda={self.use_cuda}, debug={self.debug})"
-    
     def setup_clients(self, data_path, model, loss_func, device, optimizer, **kwargs):
         assert os.path.isfile(data_path)
         with open(data_path, 'rb') as f:
@@ -107,34 +104,8 @@ class DistributedSimulatorBase(object):
         self.omniscient_callbacks.append(callback)
 
 
-class DistributedTrainerBase(DistributedSimulatorBase):
-    """Base class of all distributed training classes."""
-    
-    def __init__(
-            self,
-            max_batches_per_epoch: int,
-            log_interval: int,
-            metrics: dict,
-            use_cuda: bool,
-            debug: bool,
-    ):
-        self.log_interval = log_interval
-        self.max_batches_per_epoch = max_batches_per_epoch
-        super().__init__(metrics, use_cuda, debug)
-    
-    def __str__(self):
-        return (
-            "DistributedTrainerBase("
-            f"max_batches_per_epoch={self.max_batches_per_epoch}, "
-            f"log_interval={self.log_interval}, "
-            f"metrics={list(self.metrics.keys())}"
-            f"use_cuda={self.use_cuda}, "
-            f"debug={self.debug}, "
-            ")",
-        )
 
-
-class ParallelTrainer(DistributedTrainerBase):
+class ParallelTrainer(DistributedSimulatorBase):
     """Synchronous and parallel training with specified aggregators."""
     
     def __init__(
@@ -142,7 +113,6 @@ class ParallelTrainer(DistributedTrainerBase):
             server: TorchServer,
             data_manager,
             aggregator: Callable[[list], torch.Tensor],
-            max_batches_per_epoch: int,
             log_interval: int,
             metrics: dict,
             use_cuda: bool,
@@ -155,8 +125,6 @@ class ParallelTrainer(DistributedTrainerBase):
         Args:
             aggregator (callable): A callable which takes a list of tensors and returns
                 an aggregated tensor.
-            max_batches_per_epoch (int): Set the maximum number of batches in an epoch.
-                Usually used for debugging.
             log_interval (int): Control the frequency of logging training batches
             metrics (dict): dict of metric names and their functions
             use_cuda (bool): Use cuda or not
@@ -171,7 +139,8 @@ class ParallelTrainer(DistributedTrainerBase):
         self.data_manager = data_manager
         self.pre_batch_hooks = pre_batch_hooks or []
         self.post_batch_hooks = post_batch_hooks or []
-        super().__init__(max_batches_per_epoch, log_interval, metrics, use_cuda, debug)
+        self.log_interval = log_interval
+        super().__init__(metrics, use_cuda, debug)
         
         if self.use_actor:
             self.ray_actors = [RayActor.options(num_gpus=gpu_per_actor).remote() for _ in range(num_actors)]
@@ -221,34 +190,34 @@ class ParallelTrainer(DistributedTrainerBase):
         
         self.server.apply_update(aggregated)
     
-    def train(self, epoch):
-        self.debug_logger.info(f"Train epoch {epoch}")
-        self.parallel_call(lambda worker: worker.train_epoch_start.remote())
-        
-        for batch_idx in range(self.max_batches_per_epoch):
-            try:
-                self.parallel_call(lambda worker: worker.set_para.remote(self.server.get_model()))
-                self._run_pre_batch_hooks(epoch, batch_idx)
-                results = self.parallel_call(lambda w: w.compute_gradient.remote())
-                # self.aggregation_and_update()
-                # If there are Byzantine workers, ask them to craft attackers based on the updated settings.
-                for omniscient_attacker_callback in self.omniscient_callbacks:
-                    omniscient_attacker_callback()
-                
-                gradients = self.parallel_get(lambda w: w.get_gradient.remote())
-                aggregated = self.aggregator(gradients)
-                
-                # Assume that the model and optimizers are shared among workers.
-                self.server.set_gradient(aggregated)
-                self.server.apply_gradient()
-                
-                # progress += results[0]["length"]
-                if batch_idx % self.log_interval == 0:
-                    # self.log_train(progress, batch_idx, epoch, results)
-                    self.log_variance(epoch, gradients)
-                self._run_post_batch_hooks(epoch, batch_idx)
-            except StopIteration:
-                continue
+    # def train(self, epoch):
+    #     self.debug_logger.info(f"Train epoch {epoch}")
+    #     self.parallel_call(lambda worker: worker.train_epoch_start.remote())
+    #
+    #     for batch_idx in range(self.max_batches_per_epoch):
+    #         try:
+    #             self.parallel_call(lambda worker: worker.set_para.remote(self.server.get_model()))
+    #             self._run_pre_batch_hooks(epoch, batch_idx)
+    #             results = self.parallel_call(lambda w: w.compute_gradient.remote())
+    #             # self.aggregation_and_update()
+    #             # If there are Byzantine workers, ask them to craft attackers based on the updated settings.
+    #             for omniscient_attacker_callback in self.omniscient_callbacks:
+    #                 omniscient_attacker_callback()
+    #
+    #             gradients = self.parallel_get(lambda w: w.get_gradient.remote())
+    #             aggregated = self.aggregator(gradients)
+    #
+    #             # Assume that the model and optimizers are shared among workers.
+    #             self.server.set_gradient(aggregated)
+    #             self.server.apply_gradient()
+    #
+    #             # progress += results[0]["length"]
+    #             if batch_idx % self.log_interval == 0:
+    #                 # self.log_train(progress, batch_idx, epoch, results)
+    #                 self.log_variance(epoch, gradients)
+    #             self._run_post_batch_hooks(epoch, batch_idx)
+    #         except StopIteration:
+    #             continue
     
     def train_fedavg_actor(self, global_round, num_rounds):
     
