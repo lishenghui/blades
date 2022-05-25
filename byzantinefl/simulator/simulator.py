@@ -6,12 +6,12 @@ import numpy as np
 import ray
 import torch
 from ray.train import Trainer
-
+from time import time
 from .client import TorchClient
 from .datasets import FLDataset
 from .server import TorchServer
 from .utils import top1_accuracy
-
+from torch.optim.lr_scheduler import MultiStepLR
 
 @ray.remote
 class RayActor(object):
@@ -38,12 +38,14 @@ class RayActor(object):
 
 class Simulator(object):
     """Synchronous and parallel training with specified aggregators."""
+
     
     def __init__(
             self,
             server: TorchServer,
             dataset: FLDataset,
             aggregator: Callable[[list], torch.Tensor],
+            model=None,
             log_interval: Optional[int] = None,
             metrics: Optional[dict] = None,
             use_cuda: Optional[bool] = False,
@@ -80,7 +82,10 @@ class Simulator(object):
         self.json_logger = logging.getLogger("stats")
         self.debug_logger = logging.getLogger("debug")
         self.debug_logger.info(self.__str__())
-        
+
+        self.scheduler = torch.optim.lr_scheduler.MultiStepLR(
+            self.server.get_opt(), milestones=[75, 100], gamma=0.5
+        )
         if metrics is None:
             metrics = {"top1": top1_accuracy}
         
@@ -223,8 +228,31 @@ class Simulator(object):
         
         self.debug_logger.info(f"Test global round {global_round}, loss: {loss}, top1: {top1}")
     
+    def train(
+        self,
+        round: Optional[int] = 1,
+        fedavg: Optional[bool] = True,
+        local_round: Optional[int] = 1,
+        test_batch_size: Optional[int] = 64,
+    ):
+        time_start = time()
+        for round in range(1, round + 1):
+            if fedavg:
+                if self.use_actor:
+                    self.train_fedavg_actor(round, local_round)
+                else:
+                    self.train_fedavg(round, local_round)
+            else:
+                pass
+                # trainer.train(round)
+            if self.use_actor:
+                self.test_actor(global_round=round, batch_size=test_batch_size)
+
+            self.parallel_call(lambda client: client.detach_model())
+            self.scheduler.step()
+            print(f"E={round}; Learning rate = {self.scheduler.get_last_lr()[0]:}; Time cost = {time() - time_start}")
+            
     def train_fedavg(self, epoch, num_rounds):
-        
         self.debug_logger.info(f"Train epoch {epoch}")
         
         def local_training(config):

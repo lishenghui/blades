@@ -6,6 +6,10 @@ class TorchServer(object):
         self.optimizer = optimizer
         self.model = model
     
+    
+    def get_opt(self):
+        return self.optimizer
+    
     def get_model(self):
         return self.model
     
