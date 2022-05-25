@@ -65,10 +65,9 @@ def main(args):
     
     trainer.setup_clients(options.data_path, model, loss_func, device, optimizer)
     if args.use_actor:
-        # trainer.parallel_call(lambda worker: worker.detach_model.remote())
-        trainer.parallel_call(lambda worker: worker.detach_model())
+        trainer.parallel_call(lambda client: client.detach_model())
     else:
-        trainer.parallel_call(lambda worker: worker.detach_model())
+        trainer.parallel_call(lambda client: client.detach_model())
     
     time_start = time()
     for round in range(1, options.round + 1):
