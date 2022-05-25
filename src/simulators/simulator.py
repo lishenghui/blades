@@ -251,6 +251,8 @@ class ParallelTrainer(DistributedTrainerBase):
                 continue
     
     def train_fedavg_actor(self, global_round, num_rounds):
+    
+        # TODO: randomly select a subset of clients for local training
         self.debug_logger.info(f"Train global round {global_round}")
         
         def train_function(clients, actor, model, num_rounds):
@@ -289,6 +291,7 @@ class ParallelTrainer(DistributedTrainerBase):
 
 
     def train_fedavg(self, epoch, num_rounds):
+        
         self.debug_logger.info(f"Train epoch {epoch}")
         
         def local_training(config):
