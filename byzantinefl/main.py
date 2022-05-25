@@ -2,7 +2,7 @@ import importlib
 import inspect
 import os
 import sys
-from time import time
+
 
 import numpy as np
 import torch
@@ -47,6 +47,7 @@ def main(args):
     trainer = Simulator(
         server=server,
         aggregator=agg_scheme(options),
+        model=model,
         dataset=dataset,
         max_batches_per_epoch=options.local_round,
         log_interval=args.log_interval,
@@ -59,28 +60,9 @@ def main(args):
         use_actor=args.use_actor
     )
     
-    scheduler = torch.optim.lr_scheduler.MultiStepLR(
-        server_opt, milestones=[75, 100], gamma=0.5
-    )
-    
     trainer.setup_clients(model, loss_func, device, optimizer)
-    trainer.parallel_call(lambda client: client.detach_model())
+    trainer.train(round=10)
     
-    time_start = time()
-    for round in range(1, options.round + 1):
-        if args.fedavg:
-            if args.use_actor:
-                trainer.train_fedavg_actor(round, options.local_round)
-            else:
-                trainer.train_fedavg(round, options.local_round)
-        else:
-            trainer.train(round)
-        if args.use_actor:
-            trainer.test_actor(global_round=round, batch_size=options.test_batch_size)
-        scheduler.step()
-        print(f"E={round}; Learning rate = {scheduler.get_last_lr()[0]:}; Time cost = {time() - time_start}")
-
-
 if __name__ == "__main__":
     import ray
     
