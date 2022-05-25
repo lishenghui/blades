@@ -27,8 +27,8 @@ def main(args):
     
     opt = importlib.import_module(options.model_path)
     Model = getattr(opt, "Net")
-    model = Model().to(device)
-    loss_func = CrossEntropyLoss().to(device)
+    model = Model()
+    loss_func = CrossEntropyLoss()
     
     metrics = {"top1": top1_accuracy}
     
