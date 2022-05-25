@@ -49,6 +49,7 @@ def main(args):
         num_trainers=args.num_trainers,
         gpu_per_actor=args.gpu_per_actor,
         num_actors=args.num_actors,
+        device=device,
         mode='actor'
     )
     
