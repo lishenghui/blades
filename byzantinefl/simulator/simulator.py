@@ -11,7 +11,7 @@ from typing import Any, Callable, Optional
 from .utils import top1_accuracy
 from .client import TorchClient
 from .server import TorchServer
-from datasets import FLDataset
+from .datasets import FLDataset
 
 @ray.remote
 class RayActor(object):
