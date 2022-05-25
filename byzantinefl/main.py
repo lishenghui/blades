@@ -40,6 +40,7 @@ def main(args):
         server=server,
         aggregator=agg_scheme(options),
         model=model,
+        loss_func=loss_func,
         dataset=dataset,
         log_interval=args.log_interval,
         metrics=metrics,
@@ -51,7 +52,7 @@ def main(args):
         mode='actor'
     )
     
-    trainer.setup_clients(model, loss_func, device, optimizer)
+    # trainer.setup_clients(model, loss_func, device, optimizer)
     trainer.train(round=100, local_round=options.local_round)
 
 

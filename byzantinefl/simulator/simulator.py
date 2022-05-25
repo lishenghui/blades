@@ -47,6 +47,7 @@ class Simulator(object):
             dataset: FLDataset,
             aggregator: Callable[[list], torch.Tensor],
             model=None,
+            loss_func: Optional[Any] = None,
             mode: Optional[str] = 'actor',
             log_interval: Optional[int] = None,
             metrics: Optional[dict] = None,
@@ -54,6 +55,8 @@ class Simulator(object):
             debug: Optional[bool] = False,
             pre_batch_hooks=None,
             post_batch_hooks=None,
+            lr: Optional[float]=0.1,
+            device: Optional[str]='cpu',
             **kwargs
     ):
         """
@@ -71,6 +74,8 @@ class Simulator(object):
         self.use_actor = True if mode == 'actor' else False
         self.aggregator = aggregator
         self.server = server
+        self.server_opt = torch.optim.SGD(model.parameters(), lr=lr)
+        self.server = TorchServer(self.server_opt, model=model)
         self.data_manager = dataset
         self.pre_batch_hooks = pre_batch_hooks or []
         self.post_batch_hooks = post_batch_hooks or []
@@ -88,6 +93,8 @@ class Simulator(object):
         self.scheduler = torch.optim.lr_scheduler.MultiStepLR(
             self.server.get_opt(), milestones=[75, 100], gamma=0.5
         )
+
+        self.setup_clients(model, loss_func, device, self.server_opt)
         if metrics is None:
             metrics = {"top1": top1_accuracy}
         
@@ -163,7 +170,6 @@ class Simulator(object):
         self.server.apply_update(aggregated)
     
     def train_fedavg_actor(self, global_round, num_rounds):
-        
         # TODO: randomly select a subset of clients for local training
         self.debug_logger.info(f"Train global round {global_round}")
         
