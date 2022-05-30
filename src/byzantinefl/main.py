@@ -5,7 +5,8 @@ import torch
 from torch.nn.modules.loss import CrossEntropyLoss
 
 from args import parse_arguments
-from simulator.datasets import CIFAR10
+from simulator.datasets import FLDataset
+from builtinDataset.CIFAR10 import CIFAR10
 from simulator.simulator import Simulator
 from simulator.utils import top1_accuracy, initialize_logger
 
@@ -13,6 +14,7 @@ options = parse_arguments()
 
 agg_path = importlib.import_module('aggregators.%s' % options.agg)
 agg_scheme = getattr(agg_path, options.agg.capitalize())
+
 
 def main(args):
     initialize_logger(options.log_dir)
@@ -29,7 +31,8 @@ def main(args):
     
     metrics = {"top1": top1_accuracy}
     
-    dataset = CIFAR10(data_root=options.data_dir, train_bs=options.batch_size)
+    train_dls, testdls = CIFAR10(data_root=options.data_dir, train_bs=options.batch_size).get_dls()
+    dataset = FLDataset(train_dls, testdls)
     trainer = Simulator(
         aggregator=agg_scheme(options),
         model=model,
