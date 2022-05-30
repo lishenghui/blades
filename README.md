@@ -4,7 +4,7 @@
 ## TODO
 
 :white_check_mark: &nbsp; Use `actors` for distributed training
-x
+
 :white_check_mark: &nbsp;  Draw an architecture plot (Li)
 
 :black_square_button: &nbsp; Writing (Shenghui)
