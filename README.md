@@ -5,11 +5,17 @@
 
 :white_check_mark: &nbsp; Use `actors` for distributed training
 
+:black_square_button: &nbsp;  Draw an architecture plot (Li)
+
+:black_square_button: &nbsp; Writting (Shenghui)
+
+:black_square_button: &nbsp; aggregator  (Shenghui)
+
+:black_square_button: &nbsp; Optimize Simulator class (Tianru)
+
+:black_square_button: &nbsp; Extend datasets and models, MNIST (Li)
+
 :black_square_button: &nbsp;  Randomly select subset of clients for local training   
-
-:black_square_button: &nbsp;  Draw an architecture plot
-
-:black_square_button: &nbsp; Extend datasets and models
 
 :black_square_button: &nbsp; Optimize code and make modules & packages
 

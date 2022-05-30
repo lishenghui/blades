@@ -5,7 +5,7 @@ from attackers.bitflippingclient import BitflippingClient
 from attackers.ipmclient import IpmClient
 from attackers.labelflippingclient import LableflippingClient
 from attackers.noiseclient import NoiseClient
-from simulator.client import WorkerWithMomentum, TorchClient, RemoteWorker
+from simulator.client import ClientWithMomentum, TorchClient, RemoteWorker
 
 
 class ClientBuilder(object):
@@ -123,7 +123,7 @@ class ClientBuilder(object):
                     device=device,
                     optimizer=optimizer, **kwargs, )
         else:
-            return WorkerWithMomentum.remote(momentum=self.options.momentum,
+            return ClientWithMomentum.remote(momentum=self.options.momentum,
                                              data_loader=train_loader,
                                              model=model,
                                              loss_func=loss_func,

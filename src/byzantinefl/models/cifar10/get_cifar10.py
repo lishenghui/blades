@@ -69,7 +69,7 @@ def generate_datasets(iid=False, alpha=1.0, num_clients=100):
     
     #     os.system('rm -rf ..')
     #     os.system('mkdir -p ../data')
-    with open(os.path.join('./data', 'data_cache' + ("_alpha" + str(args.alpha) if not args.iid else "") + '.obj'),
+    with open(os.path.join('data', 'data_cache' + ("_alpha" + str(args.alpha) if not args.iid else "") + '.obj'),
               'wb') as f:
         pickle.dump(train_user_ids, f)
         pickle.dump(train_dataset, f)

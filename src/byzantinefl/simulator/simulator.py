@@ -7,12 +7,12 @@ import numpy as np
 import ray
 import torch
 from ray.train import Trainer
+from ray.util.annotations import PublicAPI
 
 from .client import TorchClient
 from .datasets import FLDataset
 from .server import TorchServer
 from .utils import top1_accuracy
-
 
 @ray.remote
 class RayActor(object):
@@ -32,12 +32,17 @@ class RayActor(object):
         update = []
         for i in range(len(clients)):
             clients[i].set_para(model)
-            result = clients[i].evaluate(round_number=round_number, test_set=data[i], batch_size=batch_size,
-                                         use_actor=use_actor)
+            result = clients[i].evaluate(
+                round_number=round_number,
+                test_set=data[i],
+                batch_size=batch_size,
+                use_actor=use_actor
+            )
             update.append(result)
         return update
 
 
+@PublicAPI
 class Simulator(object):
     """Synchronous and parallel training with specified aggregators."""
     
@@ -74,7 +79,7 @@ class Simulator(object):
         self.aggregator = aggregator
         self.server_opt = torch.optim.SGD(model.parameters(), lr=lr)
         self.server = TorchServer(self.server_opt, model=model)
-        self.data_manager = dataset
+        self.dataset = dataset
         self.pre_batch_hooks = pre_batch_hooks or []
         self.post_batch_hooks = post_batch_hooks or []
         self.log_interval = log_interval
@@ -120,7 +125,7 @@ class Simulator(object):
         self.omniscient_callbacks.append(callback)
     
     def setup_clients(self, model, loss_func, device, optimizer, **kwargs):
-        users = self.data_manager.get_clients()
+        users = self.dataset.get_clients()
         self.clients = []
         for i, u in enumerate(users):
             client = TorchClient(u, metrics=self.metrics,
@@ -172,7 +177,7 @@ class Simulator(object):
         self.debug_logger.info(f"Train global round {global_round}")
         
         def train_function(clients, actor, model, num_rounds):
-            data = [self.data_manager.get_train_data(client.id, num_rounds) for client in clients]
+            data = [self.dataset.get_train_data(client.id, num_rounds) for client in clients]
             return actor.local_training.remote(clients, model, data, num_rounds, use_actor=self.use_actor)
         
         client_per_trainer = len(self.clients) // len(self.ray_actors)
@@ -190,7 +195,7 @@ class Simulator(object):
     
     def test_actor(self, global_round, batch_size):
         def test_function(clients, actor, model, batch_size):
-            data = [self.data_manager.get_all_test_data(client.id) for client in clients]
+            data = [self.dataset.get_all_test_data(client.id) for client in clients]
             return actor.evaluate.remote(clients, model, data, round_number=global_round, batch_size=batch_size,
                                          use_actor=self.use_actor)
         
@@ -207,27 +212,27 @@ class Simulator(object):
     
     def train(
             self,
-            round: Optional[int] = 1,
+            global_round: Optional[int] = 1,
             fedavg: Optional[bool] = True,
             local_round: Optional[int] = 1,
             test_batch_size: Optional[int] = 64,
     ):
         time_start = time()
-        for round in range(1, round + 1):
+        for global_round in range(1, global_round + 1):
             if fedavg:
                 if self.use_actor:
-                    self.train_fedavg_actor(round, local_round)
+                    self.train_fedavg_actor(global_round, local_round)
                 else:
-                    self.train_fedavg(round, local_round)
+                    self.train_fedavg(global_round, local_round)
             else:
                 pass
                 # trainer.train(round)
             if self.use_actor:
-                self.test_actor(global_round=round, batch_size=test_batch_size)
+                self.test_actor(global_round=global_round, batch_size=test_batch_size)
             
             self.parallel_call(lambda client: client.detach_model())
             self.scheduler.step()
-            print(f"E={round}; Learning rate = {self.scheduler.get_last_lr()[0]:}; Time cost = {time() - time_start}")
+            print(f"E={global_round}; Learning rate = {self.scheduler.get_last_lr()[0]:}; Time cost = {time() - time_start}")
     
     def train_fedavg(self, epoch, num_rounds):
         self.debug_logger.info(f"Train epoch {epoch}")
@@ -242,7 +247,7 @@ class Simulator(object):
             return update
         
         def train_function(clients, trainer, model, num_rounds):
-            data = [self.data_manager.get_train_data(client.id, num_rounds) for client in clients]
+            data = [self.dataset.get_train_data(client.id, num_rounds) for client in clients]
             return trainer.run(local_training,
                                config={'client': clients, 'data': data, 'model': model, 'use_actor': self.use_actor,
                                        'local_round': num_rounds})

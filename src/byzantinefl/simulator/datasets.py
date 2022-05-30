@@ -143,7 +143,7 @@ class CIFAR10(FLDataset):
     
     def __init__(
             self,
-            data_root: str,
+            data_root: str = './data',
             train_bs: Optional[int] = 32,
             iid: Optional[bool] = True,
             alpha: Optional[float] = 0.1,
