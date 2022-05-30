@@ -25,7 +25,7 @@ class RayActor(object):
             clients[i].train_epoch_start()
             clients[i].local_training(local_round, use_actor, data[i])
             update.append(clients[i].get_update())
-        return clients
+        return update
     
     def evaluate(self, clients, model, data, round_number, batch_size, use_actor=False):
         update = []
@@ -138,24 +138,12 @@ class Simulator(object):
         self.restore_random_state()
     
     def parallel_get(self, f: Callable[[TorchClient], Any]) -> list:
-        # results = ray.get([f(worker) for worker in self.workers])
         results = []
         for w in self.clients:
             self.cache_random_state()
             results.append(f(w))
             self.restore_random_state()
         return results
-    
-    def aggregation_and_update_fedavg(self):
-        # If there are Byzantine workers, ask them to craft attackers based on the updated settings.
-        for omniscient_attacker_callback in self.omniscient_callbacks:
-            omniscient_attacker_callback()
-        
-        update = self.parallel_get(lambda w: w.get_update())
-        
-        aggregated = self.aggregator(update)
-        
-        self.server.apply_update(aggregated)
     
     def train_fedavg_actor(self, global_round, num_rounds):
         # TODO: randomly select a subset of clients for local training
@@ -170,20 +158,23 @@ class Simulator(object):
             train_function(self.clients[i * client_per_trainer:(i + 1) * client_per_trainer], self.ray_actors[i],
                            self.server.get_model().to('cpu'), num_rounds) for i in range(len(self.ray_actors))]
         
-        # update = [item for actor_return in ray.get(all_tasks) for item in actor_return]
-        self.clients = [item for actor_return in ray.get(all_tasks) for item in actor_return]
+        updates = [item for actor_return in ray.get(all_tasks) for item in actor_return]
+
+        # TODO(Shenghui): This block should be modified to assign update using member function of client.
+        for client, update in zip(self.clients, updates):
+            client.state['saved_update'] = update
 
         # If there are Byzantine workers, ask them to craft attackers based on the updated settings.
         for omniscient_attacker_callback in self.omniscient_callbacks:
             omniscient_attacker_callback()
 
-        update = self.parallel_get(lambda w: w.get_update())
+        updates = self.parallel_get(lambda w: w.get_update())
         
-        aggregated = self.aggregator(update)
+        aggregated = self.aggregator(updates)
         
         self.server.apply_update(aggregated)
         
-        self.log_variance(global_round, update)
+        self.log_variance(global_round, updates)
     
     def test_actor(self, global_round, batch_size):
         def test_function(clients, actor, model, batch_size):
