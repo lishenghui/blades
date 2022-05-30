@@ -4,10 +4,10 @@
 ## TODO
 
 :white_check_mark: &nbsp; Use `actors` for distributed training
+x
+:white_check_mark: &nbsp;  Draw an architecture plot (Li)
 
-:black_square_button: &nbsp;  Draw an architecture plot (Li)
-
-:black_square_button: &nbsp; Writting (Shenghui)
+:black_square_button: &nbsp; Writing (Shenghui)
 
 :black_square_button: &nbsp; aggregator  (Shenghui)
 
@@ -20,5 +20,7 @@
 :black_square_button: &nbsp; Optimize code and make modules & packages
 
 :black_square_button: &nbsp; Optimize Configuration
+
+:black_square_button: &nbsp; Set random seeds for reproduction
 
 :black_square_button: &nbsp; Write documentations

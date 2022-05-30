@@ -7,7 +7,6 @@ import numpy as np
 import ray
 import torch
 from ray.train import Trainer
-from ray.util.annotations import PublicAPI
 
 from .client import TorchClient
 from .datasets import FLDataset
@@ -26,7 +25,7 @@ class RayActor(object):
             clients[i].train_epoch_start()
             clients[i].local_training(local_round, use_actor, data[i])
             update.append(clients[i].get_update())
-        return update
+        return clients
     
     def evaluate(self, clients, model, data, round_number, batch_size, use_actor=False):
         update = []
@@ -42,10 +41,9 @@ class RayActor(object):
         return update
 
 
-@PublicAPI
 class Simulator(object):
     """Synchronous and parallel training with specified aggregators."""
-    
+    # TODO(Shenghui): Move some parameters to `run` function
     def __init__(
             self,
             dataset: FLDataset,
@@ -57,8 +55,6 @@ class Simulator(object):
             metrics: Optional[dict] = None,
             use_cuda: Optional[bool] = False,
             debug: Optional[bool] = False,
-            pre_batch_hooks=None,
-            post_batch_hooks=None,
             lr: Optional[float]=0.1,
             device: Optional[torch.device]='cpu',
             **kwargs
@@ -80,8 +76,6 @@ class Simulator(object):
         self.server_opt = torch.optim.SGD(model.parameters(), lr=lr)
         self.server = TorchServer(self.server_opt, model=model)
         self.dataset = dataset
-        self.pre_batch_hooks = pre_batch_hooks or []
-        self.post_batch_hooks = post_batch_hooks or []
         self.log_interval = log_interval
         self.metrics = metrics
         self.use_cuda = use_cuda
@@ -97,7 +91,7 @@ class Simulator(object):
             self.server.get_opt(), milestones=[75, 100], gamma=0.5
         )
 
-        self.setup_clients(model, loss_func, device, self.server_opt)
+        self._setup_clients(model, loss_func, device, self.server_opt)
         if metrics is None:
             metrics = {"top1": top1_accuracy}
         
@@ -110,12 +104,14 @@ class Simulator(object):
             [trainer.start() for trainer in self.ray_trainers]
     
     def cache_random_state(self) -> None:
+        # This function should be used for reproducibility
         if self.use_cuda:
             self.random_states["torch_cuda"] = torch.cuda.get_rng_state()
         self.random_states["torch"] = torch.get_rng_state()
         self.random_states["numpy"] = np.random.get_state()
     
     def restore_random_state(self) -> None:
+        # This function should be used for reproducibility
         if self.use_cuda:
             torch.cuda.set_rng_state(self.random_states["torch_cuda"])
         torch.set_rng_state(self.random_states["torch"])
@@ -124,13 +120,17 @@ class Simulator(object):
     def register_omniscient_callback(self, callback):
         self.omniscient_callbacks.append(callback)
     
-    def setup_clients(self, model, loss_func, device, optimizer, **kwargs):
+    def _setup_clients(self, model, loss_func, device, optimizer, **kwargs):
         users = self.dataset.get_clients()
         self.clients = []
         for i, u in enumerate(users):
             client = TorchClient(u, metrics=self.metrics,
                                  model=model, loss_func=loss_func, device=device, optimizer=optimizer, **kwargs)
             self.clients.append(client)
+    
+    def register_attackers(self, client, num):
+        # TODO(Shenghui): implement this function to register malicious clients
+        pass
     
     def parallel_call(self, f: Callable[[TorchClient], None]) -> None:
         self.cache_random_state()
@@ -145,21 +145,6 @@ class Simulator(object):
             results.append(f(w))
             self.restore_random_state()
         return results
-    
-    def aggregation_and_update(self, log_var=True):
-        # If there are Byzantine workers, ask them to craft attackers based on the updated settings.
-        for omniscient_attacker_callback in self.omniscient_callbacks:
-            omniscient_attacker_callback()
-        
-        gradients = self.parallel_get(lambda w: w.get_gradient())
-        if log_var:
-            var = torch.norm(torch.var(torch.vstack(gradients), dim=0, unbiased=False)).item()
-            print(var)
-        aggregated = self.aggregator(gradients)
-        
-        # Assume that the model and optimizers are shared among workers.
-        self.server.set_gradient(aggregated)
-        self.server.apply_gradient()
     
     def aggregation_and_update_fedavg(self):
         # If there are Byzantine workers, ask them to craft attackers based on the updated settings.
@@ -185,7 +170,14 @@ class Simulator(object):
             train_function(self.clients[i * client_per_trainer:(i + 1) * client_per_trainer], self.ray_actors[i],
                            self.server.get_model().to('cpu'), num_rounds) for i in range(len(self.ray_actors))]
         
-        update = [item for actor_return in ray.get(all_tasks) for item in actor_return]
+        # update = [item for actor_return in ray.get(all_tasks) for item in actor_return]
+        self.clients = [item for actor_return in ray.get(all_tasks) for item in actor_return]
+
+        # If there are Byzantine workers, ask them to craft attackers based on the updated settings.
+        for omniscient_attacker_callback in self.omniscient_callbacks:
+            omniscient_attacker_callback()
+
+        update = self.parallel_get(lambda w: w.get_update())
         
         aggregated = self.aggregator(update)
         
@@ -210,25 +202,23 @@ class Simulator(object):
         
         self.debug_logger.info(f"Test global round {global_round}, loss: {loss}, top1: {top1}")
     
-    def train(
+    def run(
             self,
             global_round: Optional[int] = 1,
-            fedavg: Optional[bool] = True,
             local_round: Optional[int] = 1,
             test_batch_size: Optional[int] = 64,
     ):
         time_start = time()
         for global_round in range(1, global_round + 1):
-            if fedavg:
-                if self.use_actor:
-                    self.train_fedavg_actor(global_round, local_round)
-                else:
-                    self.train_fedavg(global_round, local_round)
+            if self.use_actor:
+                self.train_fedavg_actor(global_round, local_round)
             else:
-                pass
-                # trainer.train(round)
+                self.train_fedavg(global_round, local_round)
+                
             if self.use_actor:
                 self.test_actor(global_round=global_round, batch_size=test_batch_size)
+                
+            # TODO(Shenghui): If using trainer, the test function is not implemented so far.
             
             self.parallel_call(lambda client: client.detach_model())
             self.scheduler.step()
@@ -267,12 +257,6 @@ class Simulator(object):
         self.server.apply_update(aggregated)
         
         self.log_variance(epoch, update)
-    
-    def _run_pre_batch_hooks(self, epoch, batch_idx):
-        [f(self, epoch, batch_idx) for f in self.pre_batch_hooks]
-    
-    def _run_post_batch_hooks(self, epoch, batch_idx):
-        [f(self, epoch, batch_idx) for f in self.post_batch_hooks]
     
     def log_variance(self, round, update):
         var_avg = torch.mean(torch.var(torch.vstack(update), dim=0, unbiased=False)).item()

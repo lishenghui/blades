@@ -43,10 +43,10 @@ def main(args):
         gpu_per_actor=args.gpu_per_actor,
         num_actors=args.num_actors,
         device=device,
-        mode='actor'
+        mode=args.mode,
     )
     
-    trainer.train(global_round=100, local_round=options.local_round)
+    trainer.run(global_round=100, local_round=options.local_round)
 
 
 if __name__ == "__main__":

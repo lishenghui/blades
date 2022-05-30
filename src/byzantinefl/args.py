@@ -11,7 +11,8 @@ def parse_arguments():
     parser = argparse.ArgumentParser()
     # parser.add_argument("--use-cuda", action="store_true", default=False)
     parser.add_argument("--fedavg", action="store_true", default=True)
-    parser.add_argument("--use_actor", action="store_true", default=False)
+    parser.add_argument("--mode", type=str, default='actor')
+    # parser.add_argument("--use_actor", action="store_true", default=False)
     parser.add_argument("--debug", action="store_true", default=False)
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument("--round", type=int, default=100)
@@ -66,7 +67,7 @@ def parse_arguments():
         options.gpu_per_actor = 0
     else:
         options.gpu_per_actor = (options.num_gpus - 0.05) / options.num_actors
-    if not options.use_actor:
+    if options.mode == 'trainer':
         options.batch_size = int(options.batch_size // (options.num_actors / options.num_trainers))
     options.use_cuda = torch.cuda.is_available()
     return options

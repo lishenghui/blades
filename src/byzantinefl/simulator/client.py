@@ -146,18 +146,11 @@ class TorchClient(object):
         else:
             model = train.torch.prepare_model(self.model)
         
-        # for _ in range(num_rounds):
         for data, target in data_batches:
-            # try:
-            #     data, target = self.running["train_loader_iterator"].__next__()
-            # except StopIteration:
-            #     self.reset_data_loader()
-            #     data, target = self.running["train_loader_iterator"].__next__()
             data, target = data.to(self.device), target.to(self.device)
             self.optimizer.zero_grad()
             
             output = model(data)
-            # output = self.model(data)
             loss = self.loss_func(output, target)
             loss.backward()
             self.apply_gradient()
