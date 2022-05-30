@@ -145,7 +145,7 @@ class Simulator(object):
             self.restore_random_state()
         return results
     
-    def train_fedavg_actor(self, global_round, num_rounds):
+    def train_actor(self, global_round, num_rounds):
         # TODO: randomly select a subset of clients for local training
         self.debug_logger.info(f"Train global round {global_round}")
         
@@ -175,7 +175,42 @@ class Simulator(object):
         self.server.apply_update(aggregated)
         
         self.log_variance(global_round, updates)
+
+    def train_trainer(self, epoch, num_rounds):
+        self.debug_logger.info(f"Train epoch {epoch}")
     
+        def local_training(config):
+            update = []
+            for i in range(len(config['client'])):
+                config['client'][i].set_para(config['model'])
+                config['client'][i].train_epoch_start()
+                config['client'][i].local_training(config['local_round'], config['use_actor'], config['data'][i])
+                update.append(config['client'][i].get_update())
+            return update
+    
+        def train_function(clients, trainer, model, num_rounds):
+            data = [self.dataset.get_train_data(client.id, num_rounds) for client in clients]
+            return trainer.run(local_training,
+                               config={'client': clients, 'data': data, 'model': model, 'use_actor': self.use_actor,
+                                       'local_round': num_rounds})
+    
+        client_per_trainer = len(self.clients) // len(self.ray_trainers)
+        all_tasks = [
+            self.executor.submit(train_function, self.clients[i * client_per_trainer:(i + 1) * client_per_trainer],
+                                 self.ray_trainers[i],
+                                 self.server.get_model().to('cpu'), num_rounds) for i in range(len(self.ray_trainers))]
+    
+        update = []
+        for task in as_completed(all_tasks):
+            update.extend(task.result()[0])
+    
+        aggregated = self.aggregator(update)
+    
+        self.server.apply_update(aggregated)
+    
+        self.log_variance(epoch, update)
+        
+        
     def test_actor(self, global_round, batch_size):
         def test_function(clients, actor, model, batch_size):
             data = [self.dataset.get_all_test_data(client.id) for client in clients]
@@ -202,9 +237,9 @@ class Simulator(object):
         time_start = time()
         for global_round in range(1, global_round + 1):
             if self.use_actor:
-                self.train_fedavg_actor(global_round, local_round)
+                self.train_actor(global_round, local_round)
             else:
-                self.train_fedavg(global_round, local_round)
+                self.train_trainer(global_round, local_round)
                 
             if self.use_actor:
                 self.test_actor(global_round=global_round, batch_size=test_batch_size)
@@ -214,40 +249,7 @@ class Simulator(object):
             self.parallel_call(lambda client: client.detach_model())
             self.scheduler.step()
             print(f"E={global_round}; Learning rate = {self.scheduler.get_last_lr()[0]:}; Time cost = {time() - time_start}")
-    
-    def train_fedavg(self, epoch, num_rounds):
-        self.debug_logger.info(f"Train epoch {epoch}")
-        
-        def local_training(config):
-            update = []
-            for i in range(len(config['client'])):
-                config['client'][i].set_para(config['model'])
-                config['client'][i].train_epoch_start()
-                config['client'][i].local_training(config['local_round'], config['use_actor'], config['data'][i])
-                update.append(config['client'][i].get_update())
-            return update
-        
-        def train_function(clients, trainer, model, num_rounds):
-            data = [self.dataset.get_train_data(client.id, num_rounds) for client in clients]
-            return trainer.run(local_training,
-                               config={'client': clients, 'data': data, 'model': model, 'use_actor': self.use_actor,
-                                       'local_round': num_rounds})
-        
-        client_per_trainer = len(self.clients) // len(self.ray_trainers)
-        all_tasks = [
-            self.executor.submit(train_function, self.clients[i * client_per_trainer:(i + 1) * client_per_trainer],
-                                 self.ray_trainers[i],
-                                 self.server.get_model().to('cpu'), num_rounds) for i in range(len(self.ray_trainers))]
-        
-        update = []
-        for task in as_completed(all_tasks):
-            update.extend(task.result()[0])
-        
-        aggregated = self.aggregator(update)
-        
-        self.server.apply_update(aggregated)
-        
-        self.log_variance(epoch, update)
+
     
     def log_variance(self, round, update):
         var_avg = torch.mean(torch.var(torch.vstack(update), dim=0, unbiased=False)).item()
