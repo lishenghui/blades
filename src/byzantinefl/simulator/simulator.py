@@ -210,7 +210,6 @@ class Simulator(object):
     
         self.log_variance(epoch, update)
         
-        
     def test_actor(self, global_round, batch_size):
         def test_function(clients, actor, model, batch_size):
             data = [self.dataset.get_all_test_data(client.id) for client in clients]
