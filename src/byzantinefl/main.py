@@ -6,7 +6,6 @@ from torch.nn.modules.loss import CrossEntropyLoss
 
 from args import parse_arguments
 from simulator.datasets import CIFAR10
-from simulator.server import TorchServer
 from simulator.simulator import Simulator
 from simulator.utils import top1_accuracy, initialize_logger
 
@@ -15,11 +14,9 @@ options = parse_arguments()
 agg_path = importlib.import_module('aggregators.%s' % options.agg)
 agg_scheme = getattr(agg_path, options.agg.capitalize())
 
-
 def main(args):
     initialize_logger(options.log_dir)
     device = torch.device("cuda" if args.use_cuda else "cpu")
-    
     kwargs = {"pin_memory": True} if args.use_cuda else {}
     
     torch.manual_seed(args.seed)
@@ -49,7 +46,7 @@ def main(args):
         mode='actor'
     )
     
-    trainer.train(round=100, local_round=options.local_round)
+    trainer.train(global_round=100, local_round=options.local_round)
 
 
 if __name__ == "__main__":
