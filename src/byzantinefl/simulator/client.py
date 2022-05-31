@@ -28,7 +28,6 @@ class TorchClient(object):
         
         self.__is_byzantine = False
         self.running = {}
-        self.metrics = {}
         self.state = defaultdict(dict)
         self.metrics = metrics
         self.json_logger = logging.getLogger("stats")
