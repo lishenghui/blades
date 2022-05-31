@@ -92,7 +92,10 @@ class Simulator(object):
             self.server.get_opt(), milestones=[75, 100], gamma=0.5
         )
 
-        self._setup_clients(model, loss_func, device, self.server_opt)
+        #self._setup_clients(model, loss_func, device, self.server_opt)
+        # removed since definition of clients is moved inside .run() (Tianru)
+        if metrics is None:
+            metrics = {"top1": top1_accuracy}
         
         if self.use_actor:
             self.ray_actors = [RayActor.options(num_gpus=gpu_per_actor).remote() for _ in range(num_actors)]
@@ -119,6 +122,9 @@ class Simulator(object):
     def register_omniscient_callback(self, callback):
         self.omniscient_callbacks.append(callback)
     
+    # clients definition is moved into .run() function, (Tianru)
+    # in order to define loss_func, optimizer, model, metrics and etc. in .run()
+    '''
     def _setup_clients(self, model, loss_func, device, optimizer, **kwargs):
         users = self.dataset.get_clients()
         self.clients = []
@@ -126,48 +132,51 @@ class Simulator(object):
             client = TorchClient(u, metrics=self.metrics,
                                  model=model, loss_func=loss_func, device=device, optimizer=optimizer, **kwargs)
             self.clients.append(client)
+    '''
     
     def register_attackers(self, client, num):
         # TODO(Shenghui): implement this function to register malicious clients
         pass
     
-    def parallel_call(self, f: Callable[[TorchClient], None]) -> None:
+    def parallel_call(self, clients, f: Callable[[TorchClient], None]) -> None: #clients is added due to the changing of self.clients
         self.cache_random_state()
-        _ = [f(worker) for worker in self.clients]
+        _ = [f(worker) for worker in clients]
         self.restore_random_state()
     
-    def parallel_get(self, f: Callable[[TorchClient], Any]) -> list:
+    def parallel_get(self, clients, f: Callable[[TorchClient], Any]) -> list: #clients is added due to the changing of self.clients
         results = []
-        for w in self.clients:
+        for w in clients:
             self.cache_random_state()
             results.append(f(w))
             self.restore_random_state()
         return results
     
-    def train_actor(self, global_round, num_rounds):
+    def train_actor(self, global_round, num_rounds, clients):
         # TODO: randomly select a subset of clients for local training
+        # clients is added due to the changing of self.clients (Tianru)
+        # self.clients is changed to clients (Tianru)
         self.debug_logger.info(f"Train global round {global_round}")
         
         def train_function(clients, actor, model, num_rounds):
             data = [self.dataset.get_train_data(client.id, num_rounds) for client in clients]
             return actor.local_training.remote(clients, model, data, num_rounds, use_actor=self.use_actor)
         
-        client_per_trainer = len(self.clients) // len(self.ray_actors)
+        client_per_trainer = len(clients) // len(self.ray_actors)
         all_tasks = [
-            train_function(self.clients[i * client_per_trainer:(i + 1) * client_per_trainer], self.ray_actors[i],
+            train_function(clients[i * client_per_trainer:(i + 1) * client_per_trainer], self.ray_actors[i],
                            self.server.get_model().to('cpu'), num_rounds) for i in range(len(self.ray_actors))]
         
         updates = [item for actor_return in ray.get(all_tasks) for item in actor_return]
 
         # TODO(Shenghui): This block should be modified to assign update using member function of client.
-        for client, update in zip(self.clients, updates):
+        for client, update in zip(clients, updates):
             client.state['saved_update'] = update
 
         # If there are Byzantine workers, ask them to craft attackers based on the updated settings.
         for omniscient_attacker_callback in self.omniscient_callbacks:
             omniscient_attacker_callback()
 
-        updates = self.parallel_get(lambda w: w.get_update())
+        updates = self.parallel_get(clients, lambda w: w.get_update())
         
         aggregated = self.aggregator(updates)
         
@@ -175,7 +184,9 @@ class Simulator(object):
         
         self.log_variance(global_round, updates)
 
-    def train_trainer(self, epoch, num_rounds):
+    def train_trainer(self, epoch, num_rounds, clients):
+        # clients is added due to the changing of self.clients (Tianru)
+        # self.clients is changed to clients (Tianru)
         self.debug_logger.info(f"Train epoch {epoch}")
     
         def local_training(config):
@@ -193,9 +204,9 @@ class Simulator(object):
                                config={'client': clients, 'data': data, 'model': model, 'use_actor': self.use_actor,
                                        'local_round': num_rounds})
     
-        client_per_trainer = len(self.clients) // len(self.ray_trainers)
+        client_per_trainer = len(clients) // len(self.ray_trainers)
         all_tasks = [
-            self.executor.submit(train_function, self.clients[i * client_per_trainer:(i + 1) * client_per_trainer],
+            self.executor.submit(train_function, clients[i * client_per_trainer:(i + 1) * client_per_trainer],
                                  self.ray_trainers[i],
                                  self.server.get_model().to('cpu'), num_rounds) for i in range(len(self.ray_trainers))]
     
@@ -208,16 +219,19 @@ class Simulator(object):
         self.server.apply_update(aggregated)
     
         self.log_variance(epoch, update)
-        
-    def test_actor(self, global_round, batch_size):
+         
+    def test_actor(self, global_round, batch_size, clients):
+        # clients is added due to the changing of self.clients (Tianru)
+        # self.clients is changed to clients (Tianru)
+
         def test_function(clients, actor, model, batch_size):
             data = [self.dataset.get_all_test_data(client.id) for client in clients]
             return actor.evaluate.remote(clients, model, data, round_number=global_round, batch_size=batch_size,
                                          use_actor=self.use_actor)
         
-        client_per_trainer = len(self.clients) // len(self.ray_actors)
+        client_per_trainer = len(clients) // len(self.ray_actors)
         all_tasks = [
-            test_function(self.clients[i * client_per_trainer:(i + 1) * client_per_trainer], self.ray_actors[i],
+            test_function(clients[i * client_per_trainer:(i + 1) * client_per_trainer], self.ray_actors[i],
                           self.server.get_model().to('cpu'), batch_size) for i in range(len(self.ray_actors))]
         
         metrics = [item for actor_return in ray.get(all_tasks) for item in actor_return]
@@ -228,23 +242,32 @@ class Simulator(object):
     
     def run(
             self,
+            model, loss_func, device, optimizer,
             global_round: Optional[int] = 1,
             local_round: Optional[int] = 1,
-            test_batch_size: Optional[int] = 64,
+            test_batch_size: Optional[int] = 64, **kwargs
     ):
+        # clients are generated here, instead of self._setup_clients (Tianru)
+        users = self.dataset.get_clients()
+        clients = []
+        for i, u in enumerate(users):
+            client = TorchClient(u, metrics=self.metrics,
+                                 model=model, loss_func=loss_func, device=device, optimizer=optimizer, **kwargs)
+            clients.append(client)
+
         time_start = time()
         for global_round in range(1, global_round + 1):
             if self.use_actor:
-                self.train_actor(global_round, local_round)
+                self.train_actor(global_round, local_round, clients)
             else:
-                self.train_trainer(global_round, local_round)
+                self.train_trainer(global_round, local_round, clients)
                 
             if self.use_actor:
-                self.test_actor(global_round=global_round, batch_size=test_batch_size)
+                self.test_actor(global_round=global_round, batch_size=test_batch_size, clients)
                 
             # TODO(Shenghui): If using trainer, the test function is not implemented so far.
             
-            self.parallel_call(lambda client: client.detach_model())
+            self.parallel_call(clients, lambda client: client.detach_model())
             self.scheduler.step()
             print(f"E={global_round}; Learning rate = {self.scheduler.get_last_lr()[0]:}; Time cost = {time() - time_start}")
 
