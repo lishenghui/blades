@@ -1,6 +1,6 @@
 import torch
 import numpy as np
-from src.byzantinefl.models.MNIST.dnn import create_model
+from models.MNIST.dnn import create_model
 from aggregators.mean import Mean
 from simulator.simulator import Simulator
 from builtinDataset.MNIST import MNIST
@@ -28,7 +28,7 @@ def main():
         dataset=datasets,
         log_interval=10,
         metrics=metrics,
-        debug=True,
+        debug=False,
         gpu_per_actor=0,
         num_trainers=5,
         device=device,

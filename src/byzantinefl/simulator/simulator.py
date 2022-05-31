@@ -55,8 +55,8 @@ class Simulator(object):
             metrics: Optional[dict] = None,
             use_cuda: Optional[bool] = False,
             debug: Optional[bool] = False,
-            lr: Optional[float]=0.1,
-            device: Optional[torch.device]='cpu',
+            lr: Optional[float] = 0.1,
+            device: Optional[torch.device] = 'cpu',
             **kwargs
     ):
         """
