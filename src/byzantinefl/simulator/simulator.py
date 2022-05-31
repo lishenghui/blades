@@ -11,7 +11,7 @@ from ray.train import Trainer
 from .client import TorchClient
 from .datasets import FLDataset
 from .server import TorchServer
-from .utils import top1_accuracy
+from .utils import top1_accuracy, initialize_logger
 
 
 @ray.remote
@@ -53,6 +53,7 @@ class Simulator(object):
             loss_func: Optional[Any] = None,
             mode: Optional[str] = 'actor',
             log_interval: Optional[int] = None,
+            log_path: str = "./output",
             metrics: Optional[dict] = None,
             use_cuda: Optional[bool] = False,
             debug: Optional[bool] = False,
@@ -72,6 +73,8 @@ class Simulator(object):
         num_trainers = kwargs["num_trainers"] if "num_trainers" in kwargs else 1
         num_actors = kwargs["num_actors"] if "num_actors" in kwargs else 1
         gpu_per_actor = kwargs["gpu_per_actor"] if "gpu_per_actor" in kwargs else 0
+        self.log_path = log_path
+        initialize_logger(log_path)
         self.use_actor = True if mode == 'actor' else False
         self.aggregator = aggregator
         self.server_opt = torch.optim.SGD(model.parameters(), lr=lr)
