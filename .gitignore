@@ -19,3 +19,5 @@ src/byzantinefl/simulator/data/
 src/build
 src/dist
 *egg-info
+src/byzantinefl/MNIST/MNIST/*
+src/byzantinefl/mnist_output/*

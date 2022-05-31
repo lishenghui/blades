@@ -263,7 +263,7 @@ class Simulator(object):
                 self.train_trainer(global_round, local_round, clients)
                 
             if self.use_actor:
-                self.test_actor(global_round=global_round, batch_size=test_batch_size, clients)
+                self.test_actor(global_round=global_round, batch_size=test_batch_size, clients=clients)
                 
             # TODO(Shenghui): If using trainer, the test function is not implemented so far.
             
