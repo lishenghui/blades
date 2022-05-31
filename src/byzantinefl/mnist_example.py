@@ -5,11 +5,13 @@ from aggregators.mean import Mean
 from simulator.simulator import Simulator
 from builtinDataset.MNIST import MNIST
 from simulator.datasets import FLDataset
-
+from simulator.utils import initialize_logger
+from args import parse_arguments
+options = parse_arguments()
 
 def main():
     random_seed = 0
-
+    initialize_logger('./mnist_output')
     device = torch.device("cpu")
 
     torch.manual_seed(random_seed)
