@@ -5,13 +5,12 @@ from aggregators.mean import Mean
 from simulator.simulator import Simulator
 from builtinDataset.MNIST import MNIST
 from simulator.datasets import FLDataset
-from simulator.utils import initialize_logger
+
 from args import parse_arguments
 options = parse_arguments()
 
 def main():
     random_seed = 0
-    initialize_logger('./mnist_output')
     device = torch.device("cpu")
 
     torch.manual_seed(random_seed)
@@ -19,7 +18,7 @@ def main():
 
     model, loss_func = create_model()
 
-    traindls, testdls = MNIST(data_root="./MNIST", train_bs=32, num_clients=10).get_dls()
+    traindls, testdls = MNIST(data_root="./data", train_bs=32, num_clients=10).get_dls()
     datasets = FLDataset(traindls, testdls)
     trainer = Simulator(
         aggregator=Mean(),
@@ -29,7 +28,8 @@ def main():
         log_interval=10,
         gpu_per_actor=0,
         device=device,
-        mode='actor'
+        mode='actor',
+        log_path='./outputs/mnist',
     )
     trainer.run(global_round=100, local_round=1)
 
