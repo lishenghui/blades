@@ -5,8 +5,8 @@ import torch
 from torch.nn.modules.loss import CrossEntropyLoss
 
 from args import parse_arguments
-from simulator.datasets import FLDataset
 from builtinDataset.CIFAR10 import CIFAR10
+from simulator.datasets import FLDataset
 from simulator.simulator import Simulator
 from simulator.utils import top1_accuracy, initialize_logger
 
@@ -49,7 +49,7 @@ def main(args):
         mode=args.mode,
     )
     
-    trainer.run(global_round=100, local_round=options.local_round)
+    trainer.run(model=model, loss_func=loss_func, device=device, optimizer=opt, global_round=400, local_round=50)
 
 
 if __name__ == "__main__":
