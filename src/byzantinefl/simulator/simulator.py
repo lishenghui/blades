@@ -13,6 +13,7 @@ from .datasets import FLDataset
 from .server import TorchServer
 from .utils import top1_accuracy
 
+
 @ray.remote
 class RayActor(object):
     def __int__(*args, **kwargs):
@@ -55,8 +56,8 @@ class Simulator(object):
             metrics: Optional[dict] = None,
             use_cuda: Optional[bool] = False,
             debug: Optional[bool] = False,
-            lr: Optional[float]=0.1,
-            device: Optional[torch.device]='cpu',
+            lr: Optional[float] = 0.1,
+            device: Optional[torch.device] = 'cpu',
             **kwargs
     ):
         """
@@ -77,7 +78,7 @@ class Simulator(object):
         self.server = TorchServer(self.server_opt, model=model)
         self.dataset = dataset
         self.log_interval = log_interval
-        self.metrics = metrics
+        self.metrics = {"top1": top1_accuracy} if metrics is None else metrics
         self.use_cuda = use_cuda
         self.debug = debug
         self.omniscient_callbacks = []
@@ -218,11 +219,11 @@ class Simulator(object):
         self.server.apply_update(aggregated)
     
         self.log_variance(epoch, update)
-        
-        
+         
     def test_actor(self, global_round, batch_size, clients):
         # clients is added due to the changing of self.clients (Tianru)
         # self.clients is changed to clients (Tianru)
+
         def test_function(clients, actor, model, batch_size):
             data = [self.dataset.get_all_test_data(client.id) for client in clients]
             return actor.evaluate.remote(clients, model, data, round_number=global_round, batch_size=batch_size,
@@ -236,7 +237,7 @@ class Simulator(object):
         metrics = [item for actor_return in ray.get(all_tasks) for item in actor_return]
         
         loss, top1 = self.log_validate(metrics)
-        
+        # print(f"Test global round {global_round}, loss: {loss}, top1: {top1}")
         self.debug_logger.info(f"Test global round {global_round}, loss: {loss}, top1: {top1}")
     
     def run(
@@ -270,7 +271,6 @@ class Simulator(object):
             self.scheduler.step()
             print(f"E={global_round}; Learning rate = {self.scheduler.get_last_lr()[0]:}; Time cost = {time() - time_start}")
 
-    
     def log_variance(self, round, update):
         var_avg = torch.mean(torch.var(torch.vstack(update), dim=0, unbiased=False)).item()
         norm = torch.norm(torch.var(torch.vstack(update), dim=0, unbiased=False)).item()
@@ -323,6 +323,5 @@ class Simulator(object):
             f"[E{r['E']:2}B{r['B']:<3}| {progress:6}/{total} ({pct:3.0f}%) ] Loss: {r['Loss']:.4f} "
             + " ".join(name + "=" + "{:>8.4f}".format(r[name]) for name in self.metrics)
         )
-        
         # Output to file
         self.json_logger.info(r)
