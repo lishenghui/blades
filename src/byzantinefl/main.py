@@ -24,11 +24,14 @@ def main(args):
     torch.manual_seed(args.seed)
     np.random.seed(args.seed)
     
-    opt = importlib.import_module(options.model_path)
-    Model = getattr(opt, "Net")
+    model_path = importlib.import_module(options.model_path)
+    Model = getattr(model_path, "Net")
     model = Model()
     loss_func = CrossEntropyLoss()
-    
+    opt = torch.optim.SGD(model.parameters(), lr=0.2)
+    lr_scheduler = torch.optim.lr_scheduler.MultiStepLR(
+            opt, milestones=[100, 200, 400], gamma=0.5
+        )
     metrics = {"top1": top1_accuracy}
     
     train_dls, testdls = CIFAR10(data_root=options.data_dir, train_bs=options.batch_size).get_dls()
@@ -49,7 +52,15 @@ def main(args):
         mode=args.mode,
     )
     
-    trainer.run(model=model, loss_func=loss_func, device=device, optimizer=opt, global_round=400, local_round=50)
+    trainer.run(model=model, 
+        loss_func=loss_func, 
+        validate_interval=20, 
+        device=device, 
+        optimizer=opt, 
+        lr_scheduler=lr_scheduler, 
+        global_round=600, 
+        local_round=50,
+    )
 
 
 if __name__ == "__main__":
