@@ -7,13 +7,13 @@
 
 :white_check_mark: &nbsp;  Draw an architecture plot (Li)
 
+:white_check_mark: &nbsp; Extend datasets and models, MNIST (Li)
+
+:white_check_mark: &nbsp; Optimize Simulator class (Tianru)
+
 :black_square_button: &nbsp; Writing (Shenghui)
 
 :black_square_button: &nbsp; aggregator  (Shenghui)
-
-:black_square_button: &nbsp; Optimize Simulator class (Tianru)
-
-:black_square_button: &nbsp; Extend datasets and models, MNIST (Li)
 
 :black_square_button: &nbsp;  Randomly select subset of clients for local training   
 
