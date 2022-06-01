@@ -46,13 +46,17 @@ class CIFAR10:
             num_clients: Optional[int] = 20
     ):
         self.train_bs = train_bs
-        self._generate_datasets(data_root, iid, alpha, num_clients)
+        self._data_path = os.path.join(data_root, self.__class__.__name__ + '.obj')
+        if not os.path.exists(self._data_path):
+            self._generate_datasets(data_root, iid, alpha, num_clients)
 
     def _generate_datasets(self, path='./data', iid=True, alpha=0.1, num_clients=20):
+        num_train = 48000
+        num_test = 9600
         train_set = torchvision.datasets.CIFAR10(train=True, download=True, root=path)
         test_set = torchvision.datasets.CIFAR10(train=False, download=True, root=path)
-        x_test, y_test = test_set.data, np.array(test_set.targets)
-        x_train, y_train = train_set.data, np.array(train_set.targets)
+        x_test, y_test = test_set.data[:num_test], np.array(test_set.targets)[:num_test]
+        x_train, y_train = train_set.data[:num_train], np.array(train_set.targets)[:num_train]
 
         x_train = x_train.astype('float32') / 255.0
         x_train = np.transpose(x_train, (0, 3, 1, 2))
@@ -106,7 +110,6 @@ class CIFAR10:
             train_dataset[id] = {'x': x_train_splits[index], 'y': y_train_splits[index].flatten()}
             test_dataset[id] = {'x': x_test_splits[index], 'y': y_test_splits[index].flatten()}
 
-        self._data_path = os.path.join(path, self.__class__.__name__ + '.obj')
         with open(self._data_path, 'wb') as f:
             pickle.dump(train_user_ids, f)
             pickle.dump(train_dataset, f)
