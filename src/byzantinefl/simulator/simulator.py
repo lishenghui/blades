@@ -50,14 +50,12 @@ class Simulator(object):
             dataset: FLDataset,
             aggregator: Callable[[list], torch.Tensor],
             model=None,
-            loss_func: Optional[Any] = None,
             mode: Optional[str] = 'actor',
             log_interval: Optional[int] = None,
             metrics: Optional[dict] = None,
             use_cuda: Optional[bool] = False,
             debug: Optional[bool] = False,
             lr: Optional[float] = 0.1,
-            device: Optional[torch.device] = 'cpu',
             **kwargs
     ):
         """
