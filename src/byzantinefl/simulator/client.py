@@ -33,9 +33,10 @@ class TorchClient(object):
         self.json_logger = logging.getLogger("stats")
         self.debug_logger = logging.getLogger("debug")
     
-    def detach_model(self):
+    def detach_model(self, lr):
         self.model = copy.deepcopy(self.model)
-        self.optimizer = torch.optim.SGD(self.model.parameters(), lr=self.optimizer.param_groups[0]['lr'])
+        self.optimizer = torch.optim.SGD(self.model.parameters(), lr=lr)
+        # self.optimizer = torch.optim.SGD(self.model.parameters(), lr=self.optimizer.param_groups[0]['lr'])
         self.loss_func = CrossEntropyLoss().to(self.device)
     
     def getattr(self, attr):
