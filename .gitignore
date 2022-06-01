@@ -21,3 +21,5 @@ src/dist
 *egg-info
 src/byzantinefl/outputs
 src/byzantinefl/data
+src/byzantinefl/MNIST/MNIST/*
+src/byzantinefl/mnist_output/*

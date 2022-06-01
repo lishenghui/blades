@@ -39,7 +39,6 @@ def main(args):
     trainer = Simulator(
         aggregator=agg_scheme(options),
         model=model,
-        loss_func=loss_func,
         dataset=dataset,
         log_interval=args.log_interval,
         metrics=metrics,
