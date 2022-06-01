@@ -17,6 +17,7 @@ def main():
     np.random.seed(random_seed)
 
     model, loss_func = create_model()
+    opt = torch.optim.SGD(model.parameters(), lr=0.1)
 
     traindls, testdls = MNIST(data_root="./data", train_bs=32, num_clients=10).get_dls()
     datasets = FLDataset(traindls, testdls)
@@ -31,7 +32,7 @@ def main():
         mode='actor',
         log_path='./outputs/mnist',
     )
-    trainer.run(global_round=100, local_round=1)
+    trainer.run(model=model, loss_func=loss_func, device=device, optimizer=opt, global_round=100, local_round=1)
 
 
 if __name__ == "__main__":
