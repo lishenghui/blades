@@ -11,7 +11,7 @@ from ray.train import Trainer
 from .client import TorchClient
 from .datasets import FLDataset
 from .server import TorchServer
-from .utils import top1_accuracy
+from .utils import top1_accuracy, initialize_logger
 
 
 @ray.remote
@@ -52,10 +52,11 @@ class Simulator(object):
             model=None,
             mode: Optional[str] = 'actor',
             log_interval: Optional[int] = None,
+            log_path: str = "./output",
             metrics: Optional[dict] = None,
             use_cuda: Optional[bool] = False,
             debug: Optional[bool] = False,
-            lr: Optional[float] = 0.1,
+            device: Optional[torch.device] = 'cpu',
             **kwargs
     ):
         """
@@ -70,10 +71,13 @@ class Simulator(object):
         num_trainers = kwargs["num_trainers"] if "num_trainers" in kwargs else 1
         num_actors = kwargs["num_actors"] if "num_actors" in kwargs else 1
         gpu_per_actor = kwargs["gpu_per_actor"] if "gpu_per_actor" in kwargs else 0
+        self.log_path = log_path
+        initialize_logger(log_path)
         self.use_actor = True if mode == 'actor' else False
         self.aggregator = aggregator
-        self.server_opt = torch.optim.SGD(model.parameters(), lr=lr)
-        self.server = TorchServer(self.server_opt, model=model)
+        self.model = model
+        # self.server_opt = torch.optim.SGD(model.parameters(), lr=lr)
+        # self.server = TorchServer(self.server_opt, model=model)
         self.dataset = dataset
         self.log_interval = log_interval
         self.metrics = {"top1": top1_accuracy} if metrics is None else metrics
@@ -86,9 +90,9 @@ class Simulator(object):
         self.debug_logger = logging.getLogger("debug")
         self.debug_logger.info(self.__str__())
         
-        self.scheduler = torch.optim.lr_scheduler.MultiStepLR(
-            self.server.get_opt(), milestones=[75, 100], gamma=0.5
-        )
+        # self.scheduler = torch.optim.lr_scheduler.MultiStepLR(
+        #     self.server.get_opt(), milestones=[100, 200, 300], gamma=0.5
+        # )
 
         #self._setup_clients(model, loss_func, device, self.server_opt)
         # removed since definition of clients is moved inside .run() (Tianru)
@@ -240,12 +244,18 @@ class Simulator(object):
     
     def run(
             self,
-            model, loss_func, device, optimizer,
+            model, loss_func, device, 
             global_round: Optional[int] = 1,
             local_round: Optional[int] = 1,
-            test_batch_size: Optional[int] = 64, **kwargs
+            validate_interval: Optional[int] = 1,
+            optimizer: Optional[torch.optim.Optimizer] = None,
+            test_batch_size: Optional[int] = 64, 
+            lr_scheduler = None,
+            **kwargs,
     ):
-        # clients are generated here, instead of self._setup_clients (Tianru)
+        # clients are generated here
+        self.server_opt = optimizer
+        self.server = TorchServer(self.server_opt, model=model)
         users = self.dataset.get_clients()
         clients = []
         for i, u in enumerate(users):
@@ -260,14 +270,18 @@ class Simulator(object):
             else:
                 self.train_trainer(global_round, local_round, clients)
                 
-            if self.use_actor:
+            if self.use_actor and global_round % validate_interval == 0:
                 self.test_actor(global_round=global_round, batch_size=test_batch_size, clients=clients)
                 
             # TODO(Shenghui): If using trainer, the test function is not implemented so far.
             
-            self.parallel_call(clients, lambda client: client.detach_model())
-            self.scheduler.step()
-            print(f"E={global_round}; Learning rate = {self.scheduler.get_last_lr()[0]:}; Time cost = {time() - time_start}")
+            if lr_scheduler:
+                lr_scheduler.step()
+                lr = lr_scheduler.get_last_lr()[0]
+            else:
+                lr = self.server_opt.param_groups[0]['lr']
+            self.parallel_call(clients, lambda client: client.detach_model(lr=lr))
+            print(f"E={global_round}; Learning rate = {lr:}; Time cost = {time() - time_start}")
 
     def log_variance(self, round, update):
         var_avg = torch.mean(torch.var(torch.vstack(update), dim=0, unbiased=False)).item()
