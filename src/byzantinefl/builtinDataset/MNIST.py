@@ -5,7 +5,6 @@ from typing import Optional
 import numpy as np
 import torch
 import torchvision
-import torchvision.transforms as transforms
 from sklearn.utils import shuffle
 from .CustomDataset import CustomTensorDataset
 
@@ -13,16 +12,6 @@ from .CustomDataset import CustomTensorDataset
 class MNIST:
     """`
     """
-
-    # test_transform = transforms.Compose([
-    #     transforms.Normalize(mean=stats["mean"], std=stats["std"]),
-    # ])
-    #
-    # train_transform = transforms.Compose([
-    #     transforms.RandomHorizontalFlip(),
-    #     transforms.Normalize(mean=stats["mean"], std=stats["std"]),
-    # ])
-
     def __init__(
             self,
             data_root: str = './data',
@@ -32,7 +21,9 @@ class MNIST:
             num_clients: Optional[int] = 20
     ):
         self.train_bs = train_bs
-        self._generate_datasets(data_root, iid, alpha, num_clients)
+        self._data_path = os.path.join(data_root, self.__class__.__name__ + '.obj')
+        if not os.path.exists(self._data_path):
+            self._generate_datasets(data_root, iid, alpha, num_clients)
 
     def _generate_datasets(self, path='./data', iid=True, alpha=0.1, num_clients=20):
         train_set = torchvision.datasets.MNIST(train=True, download=True, root=path)
@@ -90,7 +81,6 @@ class MNIST:
             train_dataset[id] = {'x': x_train_splits[index], 'y': y_train_splits[index].flatten()}
             test_dataset[id] = {'x': x_test_splits[index], 'y': y_test_splits[index].flatten()}
 
-        self._data_path = os.path.join(path, self.__class__.__name__ + '.obj')
         with open(self._data_path, 'wb') as f:
             pickle.dump(train_user_ids, f)
             pickle.dump(train_dataset, f)
