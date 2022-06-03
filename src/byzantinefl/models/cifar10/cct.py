@@ -10,3 +10,7 @@ class Net(nn.Module):
     
     def forward(self, x):
         return self.mdoel(x)
+
+
+def create_model():
+    return Net(), nn.modules.loss.CrossEntropyLoss()

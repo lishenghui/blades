@@ -52,11 +52,10 @@ class Simulator(object):
             model=None,
             mode: Optional[str] = 'actor',
             log_interval: Optional[int] = None,
-            log_path: str = "./output",
+            log_path: str = "./outputs",
             metrics: Optional[dict] = None,
             use_cuda: Optional[bool] = False,
             debug: Optional[bool] = False,
-            device: Optional[torch.device] = 'cpu',
             **kwargs
     ):
         """
@@ -263,8 +262,10 @@ class Simulator(object):
                                  model=model, loss_func=loss_func, device=device, optimizer=optimizer, **kwargs)
             clients.append(client)
 
-        time_start = time()
+        global_start = time()
+        ret = []
         for global_round in range(1, global_round + 1):
+            round_start = time()
             if self.use_actor:
                 self.train_actor(global_round, local_round, clients)
             else:
@@ -281,7 +282,9 @@ class Simulator(object):
             else:
                 lr = self.server_opt.param_groups[0]['lr']
             self.parallel_call(clients, lambda client: client.detach_model(lr=lr))
-            print(f"E={global_round}; Learning rate = {lr:}; Time cost = {time() - time_start}")
+            ret.append(time() - round_start)
+            print(f"E={global_round}; Learning rate = {lr:}; Time cost = {time() - global_start}")
+        return ret
 
     def log_variance(self, round, update):
         var_avg = torch.mean(torch.var(torch.vstack(update), dim=0, unbiased=False)).item()
