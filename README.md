@@ -116,7 +116,7 @@ In detail, the following methods are currently implemented:
 | Methods   | Descriptions                                                                                                                               | Examples                                                                                       |
 | --------- | ------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------- |
 | **Krum**   | *Blanchard et al.* [Machine Learning with Adversaries: Byzantine Tolerant Gradient Descent](https://proceedings.neurips.cc/paper/2017/hash/f4b9ec30ad9f68f89b29639786cb62ef-Abstract.html), *NIPS'17*              | [[**Example**]](https://github.com/EdisonLeeeee/GraphWar/blob/master/examples/models/gcn.py)   |
-|
+| **GeoMed**   | *Blanchard et al.* [Distributed Statistical Machine Learning in Adversarial Settings: Byzantine Gradient Descent](https://arxiv.org/abs/1705.05491), *NIPS'17*              | [[**Example**]](https://github.com/EdisonLeeeee/GraphWar/blob/master/examples/models/gcn.py)   |
 
 <!-- 
 # ❓ Known Issues
