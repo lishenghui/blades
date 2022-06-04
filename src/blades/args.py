@@ -4,9 +4,6 @@ import os
 import torch
 
 
-# from settings.data_utils import read_data
-
-
 def parse_arguments():
     parser = argparse.ArgumentParser()
     # parser.add_argument("--use-cuda", action="store_true", default=False)

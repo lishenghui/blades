@@ -5,7 +5,7 @@ import torch
 from torch.nn.modules.loss import CrossEntropyLoss
 
 from args import parse_arguments
-from builtinDataset.CIFAR10 import CIFAR10
+from datasets.CIFAR10 import CIFAR10
 from simulator.datasets import FLDataset
 from simulator.simulator import Simulator
 from simulator.utils import top1_accuracy, initialize_logger
