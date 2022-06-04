@@ -30,6 +30,7 @@
 
 NOTE: Blade is still in the early stages and the API will likely continue to change. 
 If you are interested in this project, don't hesitate to contact me or make a PR directly.
+
 # 🚀 Installation
 
 Please make sure you have installed [PyTorch](https://pytorch.org) and [Ray](https://docs.ray.io/en/latest/).
