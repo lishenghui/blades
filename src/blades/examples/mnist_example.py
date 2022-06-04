@@ -3,7 +3,7 @@ import numpy as np
 from models.MNIST.dnn import create_model
 from aggregators.mean import Mean
 from simulator.simulator import Simulator
-from builtinDataset.MNIST import MNIST
+from datasets.MNIST import MNIST
 from simulator.datasets import FLDataset
 
 from args import parse_arguments
