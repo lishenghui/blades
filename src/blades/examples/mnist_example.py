@@ -32,7 +32,7 @@ def main():
         mode='actor',
         log_path='./outputs/mnist',
     )
-    trainer.run(model=model, loss_func=loss_func, device=device, optimizer=opt, global_round=100, local_round=20)
+    trainer.run(model=model, loss=loss_func, device=device, optimizer=opt, global_rounds=100, local_steps=20)
 
 
 if __name__ == "__main__":

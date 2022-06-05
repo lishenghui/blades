@@ -1,8 +1,7 @@
 import logging
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from time import time
-from typing import Any, Callable, Optional
-
+from typing import Any, Callable, Optional, Union, Iterable
 import numpy as np
 import ray
 import torch
@@ -13,6 +12,9 @@ from .datasets import FLDataset
 from .server import TorchServer
 from .utils import top1_accuracy, initialize_logger
 
+import sys
+sys.path.insert(0,'..')
+from aggregators.mean import Mean
 
 @ray.remote
 class RayActor(object):
@@ -44,12 +46,13 @@ class RayActor(object):
 
 class Simulator(object):
     """Synchronous and parallel training with specified aggregators."""
-    # TODO(Shenghui): Move some parameters to `run` function
     def __init__(
             self,
             dataset: FLDataset,
             aggregator: Callable[[list], torch.Tensor],
-            model=None,
+            num_byzantine: Optional[int] = 0,
+            attack: Optional[str] = 'None',
+            num_actors: Optional[int] = 4,
             mode: Optional[str] = 'actor',
             log_interval: Optional[int] = None,
             log_path: str = "./outputs",
@@ -68,15 +71,17 @@ class Simulator(object):
             debug (bool):
         """
         num_trainers = kwargs["num_trainers"] if "num_trainers" in kwargs else 1
-        num_actors = kwargs["num_actors"] if "num_actors" in kwargs else 1
+        self.device = torch.device("cuda" if use_cuda else "cpu")
         gpu_per_actor = kwargs["gpu_per_actor"] if "gpu_per_actor" in kwargs else 0
         self.log_path = log_path
         initialize_logger(log_path)
         self.use_actor = True if mode == 'actor' else False
-        self.aggregator = aggregator
-        self.model = model
+        self.aggregator = Mean()
         # self.server_opt = torch.optim.SGD(model.parameters(), lr=lr)
         # self.server = TorchServer(self.server_opt, model=model)
+        if type(dataset) != FLDataset:
+            traindls, testdls = dataset.get_dls()
+            dataset = FLDataset(traindls, testdls)
         self.dataset = dataset
         self.log_interval = log_interval
         self.metrics = {"top1": top1_accuracy} if metrics is None else metrics
@@ -89,12 +94,17 @@ class Simulator(object):
         self.debug_logger = logging.getLogger("debug")
         self.debug_logger.info(self.__str__())
         
-        # self.scheduler = torch.optim.lr_scheduler.MultiStepLR(
-        #     self.server.get_opt(), milestones=[100, 200, 300], gamma=0.5
-        # )
-
-        #self._setup_clients(model, loss_func, device, self.server_opt)
-        # removed since definition of clients is moved inside .run() (Tianru)
+        
+        users = self.dataset.get_clients()
+        self.clients = []
+        for i, u in enumerate(users):
+            client = TorchClient(u, metrics=self.metrics,
+                                 # model=model,
+                                 # loss_func=loss_func,
+                                 device=self.device,
+                                 # optimizer=optimizer,
+                                 )
+            self.clients.append(client)
         if metrics is None:
             metrics = {"top1": top1_accuracy}
         
@@ -243,47 +253,49 @@ class Simulator(object):
     
     def run(
             self,
-            model, loss_func, device, 
-            global_round: Optional[int] = 1,
-            local_round: Optional[int] = 1,
+            model,
+            server_optimizer: Union[torch.optim.Optimizer, str] = 'SGD',
+            client_optimizer: Union[torch.optim.Optimizer, str] = 'SGD',
+            loss: Optional[str] = 'crossentropy',
+            global_rounds: Optional[int] = 1,
+            local_steps: Optional[int] = 1,
             validate_interval: Optional[int] = 1,
-            optimizer: Optional[torch.optim.Optimizer] = None,
-            test_batch_size: Optional[int] = 64, 
+            test_batch_size: Optional[int] = 64,
+            lr: Optional[float] = 0.1,
             lr_scheduler = None,
-            **kwargs,
     ):
-        # clients are generated here
-        self.server_opt = optimizer
+        
+        if server_optimizer == 'SGD':
+            self.server_opt = torch.optim.SGD(model.parameters(), lr=lr)
+        else:
+            raise NotImplementedError
+            
+        self.client_opt = client_optimizer
         self.server = TorchServer(self.server_opt, model=model)
-        users = self.dataset.get_clients()
-        clients = []
-        for i, u in enumerate(users):
-            client = TorchClient(u, metrics=self.metrics,
-                                 model=model, loss_func=loss_func, device=device, optimizer=optimizer, **kwargs)
-            clients.append(client)
 
+        self.parallel_call(self.clients, lambda client: client.set_loss(loss))
         global_start = time()
         ret = []
-        for global_round in range(1, global_round + 1):
+        for global_rounds in range(1, global_rounds + 1):
+            self.parallel_call(self.clients, lambda client: client.set_model(self.server.get_model(), torch.optim.SGD, lr))
             round_start = time()
             if self.use_actor:
-                self.train_actor(global_round, local_round, clients)
+                self.train_actor(global_rounds, local_steps, self.clients)
             else:
-                self.train_trainer(global_round, local_round, clients)
+                self.train_trainer(global_rounds, local_steps, self.clients)
                 
-            if self.use_actor and global_round % validate_interval == 0:
-                self.test_actor(global_round=global_round, batch_size=test_batch_size, clients=clients)
+            if self.use_actor and global_rounds % validate_interval == 0:
+                self.test_actor(global_round=global_rounds, batch_size=test_batch_size, clients=self.clients)
                 
-            # TODO(Shenghui): If using trainer, the test function is not implemented so far.
-            
+            # TODO(Shenghui): When using trainer, the test function is not implemented so far.
             if lr_scheduler:
                 lr_scheduler.step()
                 lr = lr_scheduler.get_last_lr()[0]
             else:
                 lr = self.server_opt.param_groups[0]['lr']
-            self.parallel_call(clients, lambda client: client.detach_model(lr=lr))
+            
             ret.append(time() - round_start)
-            print(f"E={global_round}; Learning rate = {lr:}; Time cost = {time() - global_start}")
+            print(f"E={global_rounds}; Learning rate = {lr:}; Time cost = {time() - global_start}")
         return ret
 
     def log_variance(self, round, update):

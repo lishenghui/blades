@@ -10,7 +10,6 @@ src/blades/models/cifar10/data/cifar-10-batches-py/*
 *debug
 *ubyte
 trainers/outputs/*
-others/landscape/cifar10/data/cifar-10-batches-py
 /src/blades/outputs/cifar10-all/
 src_ray/outputs/*
 src/blades/outputs/*
@@ -26,3 +25,6 @@ src/blades/outputs
 src/blades/data
 src/blades/MNIST/MNIST/*
 src/blades/mnist_output/*
+/.vscode/
+/src/blades/examples/data/
+/src/blades/examples/outputs/
