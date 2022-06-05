@@ -1,19 +1,18 @@
 import logging
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from time import time
-from typing import Any, Callable, Optional, Union, Iterable
+from typing import Any, Callable, Optional, Union
 import numpy as np
 import ray
 import torch
 from ray.train import Trainer
-import importlib
-from .client import TorchClient
-from .datasets import FLDataset
-from .server import TorchServer
-from .utils import top1_accuracy, initialize_logger
-from . import alieclient
+from blades.client import TorchClient
+from blades.datasets.datasets import FLDataset
+from blades.server import TorchServer
+from blades.utils import top1_accuracy, initialize_logger
+from blades.attackers import alieclient
 import sys
-sys.path.insert(0,'..')
+sys.path.insert(0, '')
 from aggregators.mean import Mean
 
 @ray.remote
@@ -113,14 +112,17 @@ class Simulator(object):
         # module_path = importlib.import_module('attackers.%sclient' % attack, abs_path)
         # attack_scheme = getattr(module_path, '%sClient' % attack.capitalize())
         users = self.dataset.get_clients()
-        self.clients = []
+        self._clients = []
         for i, u in enumerate(users):
             if i < num_byzantine:
                 client = alieclient.AlieClient(20, 5, client_id=u, metrics=self.metrics, device=self.device)
+                
+                # client.configure(self)
+                self.register_omniscient_callback(client.omniscient_callback)
                 # client = attack_scheme(20, 5, client_id=u, metrics=self.metrics, device=self.device)
             else:
                 client = TorchClient(u, metrics=self.metrics, device=self.device)
-            self.clients.append(client)
+            self._clients.append(client)
     
     
     def cache_random_state(self) -> None:
@@ -192,7 +194,7 @@ class Simulator(object):
 
         # If there are Byzantine workers, ask them to craft attackers based on the updated settings.
         for omniscient_attacker_callback in self.omniscient_callbacks:
-            omniscient_attacker_callback()
+            omniscient_attacker_callback(self)
 
         updates = self.parallel_get(clients, lambda w: w.get_update())
         
@@ -280,19 +282,22 @@ class Simulator(object):
         self.client_opt = client_optimizer
         self.server = TorchServer(self.server_opt, model=model)
 
-        self.parallel_call(self.clients, lambda client: client.set_loss(loss))
+        self.parallel_call(self._clients, lambda client: client.set_loss(loss))
+        # for client in self._clients:
+            # self.register_omniscient_callback(client.omniscient_callback(self))
+        # self.parallel_call(self._clients, lambda client: self.register_omniscient_callback(client.omniscient_callback(self)))
         global_start = time()
         ret = []
         for global_rounds in range(1, global_rounds + 1):
-            self.parallel_call(self.clients, lambda client: client.set_model(self.server.get_model(), torch.optim.SGD, lr))
+            self.parallel_call(self._clients, lambda client: client.set_model(self.server.get_model(), torch.optim.SGD, lr))
             round_start = time()
             if self.use_actor:
-                self.train_actor(global_rounds, local_steps, self.clients)
+                self.train_actor(global_rounds, local_steps, self._clients)
             else:
-                self.train_trainer(global_rounds, local_steps, self.clients)
+                self.train_trainer(global_rounds, local_steps, self._clients)
                 
             if self.use_actor and global_rounds % validate_interval == 0:
-                self.test_actor(global_round=global_rounds, batch_size=test_batch_size, clients=self.clients)
+                self.test_actor(global_round=global_rounds, batch_size=test_batch_size, clients=self._clients)
                 
             # TODO(Shenghui): When using trainer, the test function is not implemented so far.
             if lr_scheduler:
@@ -351,7 +356,7 @@ class Simulator(object):
             )
         
         # Output to console
-        total = len(self.clients[0].data_loader.dataset)
+        total = len(self._clients[0].data_loader.dataset)
         pct = 100 * progress / total
         self.debug_logger.info(
             f"[E{r['E']:2}B{r['B']:<3}| {progress:6}/{total} ({pct:3.0f}%) ] Loss: {r['Loss']:.4f} "

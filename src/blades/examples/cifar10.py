@@ -10,12 +10,12 @@ conf_params = {
     "dataset": cifar10,
     "aggregator": "Krum",# defense: robust aggregation
     "num_byzantine": 5,  # number of byzantine clients
-    "attack": "IPM",     # attack strategy
+    "attack": "alie",     # attack strategy
     "num_actors": 4,     # number of training actors
     "seed": 1,           # reproducibility
 }
 
-ray.init(num_gpus=0)
+ray.init(local_mode=True, num_gpus=0)
 simulator = Simulator(**conf_params)
 
 # runtime parameters

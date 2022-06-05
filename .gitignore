@@ -28,3 +28,5 @@ src/blades/mnist_output/*
 /.vscode/
 /src/blades/examples/data/
 /src/blades/examples/outputs/
+.vscode-upload.json
+*.egg
