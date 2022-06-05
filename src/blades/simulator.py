@@ -94,7 +94,7 @@ class Simulator(object):
         self.debug_logger.info(self.__str__())
         
         
-        self._setup_clients(attack, num_byzantine=num_byzantine)
+        self._setup_clients(attack, num_byzantine=num_byzantine, **kwargs["attack_para"])
         if metrics is None:
             metrics = {"top1": top1_accuracy}
         
@@ -106,16 +106,18 @@ class Simulator(object):
                                          resources_per_worker={'GPU': gpu_per_actor}) for _ in range(num_trainers)]
             [trainer.start() for trainer in self.ray_trainers]
     
-    def _setup_clients(self, attack: str, num_byzantine):
+    def _setup_clients(self, attack: str, num_byzantine, **kwargs):
         # from pathlib import Path
+        import importlib
         # abs_path = Path(__file__).absolute().parent.parent
-        # module_path = importlib.import_module('attackers.%sclient' % attack, abs_path)
-        # attack_scheme = getattr(module_path, '%sClient' % attack.capitalize())
+        module_path = importlib.import_module('attackers.%sclient' % attack)
+        attack_scheme = getattr(module_path, '%sClient' % attack.capitalize())
         users = self.dataset.get_clients()
         self._clients = []
         for i, u in enumerate(users):
             if i < num_byzantine:
-                client = alieclient.AlieClient(20, 5, client_id=u, metrics=self.metrics, device=self.device)
+                # client = alieclient.AlieClient(20, 5, client_id=u, metrics=self.metrics, device=self.device)
+                client = attack_scheme(client_id=u, metrics=self.metrics, device=self.device, **kwargs)
                 
                 # client.configure(self)
                 self.register_omniscient_callback(client.omniscient_callback)
