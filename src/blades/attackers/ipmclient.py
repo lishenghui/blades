@@ -1,6 +1,3 @@
-"""
-A better name will be Inner Product Manipulation Attack.
-"""
 import os
 import sys
 from pathlib import Path
@@ -12,9 +9,9 @@ sys.path.append(os.path.dirname(Path(os.path.abspath(__file__)).parent))
 from simulator.client import ByzantineWorker
 
 
-@ray.remote
+# @ray.remote
 class IpmClient(ByzantineWorker):
-    def __init__(self, epsilon, is_fedavg, *args, **kwargs):
+    def __init__(self, epsilon: float = 0.5, is_fedavg: bool = True, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.epsilon = epsilon
         self.__fedavg = is_fedavg
