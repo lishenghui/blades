@@ -28,7 +28,7 @@
 > 「知己知彼，百战百胜」 ——《孙子兵法•谋攻篇》
 
 
-NOTE: Blade is still in the early stages and the API will likely continue to change. 
+NOTE: Blade is still in the early stages and the API are subject to change.
 If you are interested in this project, don't hesitate to contact me or make a PR directly.
 
 # 🚀 Installation
@@ -57,6 +57,7 @@ pip install -e . --verbose
 ## How fast can we train and evaluate your own GNN?
 Take `GCN` as an example:
 ```python
+import ray
 from blades.simulator import Simulator
 from blades.datasets import CIFAR10
 from blades.models.cifar10 import CCTNet
@@ -78,12 +79,12 @@ simulator = Simulator(**conf_params)
 
 # runtime parameters
 run_params = {
-    "model": CCTNet(),        # global model
-    "server_optimizer": 'SGD' # server optimizer
-    "client_optimizer": 'SGD',# client optimizer
-    "loss": "crossentropy",   # loss function
-    "global_rounds": 400,     # number of global rounds
-    "local_steps": 20,        # number of steps per round
+    "model": CCTNet(),         # global model
+    "server_optimizer": 'SGD', # server optimizer
+    "client_optimizer": 'SGD', # client optimizer
+    "loss": "crossentropy",    # loss function
+    "global_rounds": 400,      # number of global rounds
+    "local_steps": 20,         # number of steps per round
 }
 simulator.run(**run_params)
 ```
