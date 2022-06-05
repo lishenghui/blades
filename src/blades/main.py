@@ -6,9 +6,9 @@ from torch.nn.modules.loss import CrossEntropyLoss
 
 from args import parse_arguments
 from datasets.cifar10 import CIFAR10
-from simulator.datasets import FLDataset
-from simulator.simulator import Simulator
-from simulator.utils import top1_accuracy, initialize_logger
+from blades.datasets.datasets import FLDataset
+from blades.simulator import Simulator
+from blades.utils import top1_accuracy, initialize_logger
 
 options = parse_arguments()
 
@@ -65,6 +65,7 @@ if __name__ == "__main__":
     import ray
     
     if not ray.is_initialized():
-        # ray.init(local_mode=True, include_dashboard=True, num_gpus=options.num_gpus)
-        ray.init(include_dashboard=True, num_gpus=options.num_gpus)
+        ray.init(local_mode=True, include_dashboard=True, num_gpus=options.num_gpus)
+        ray.init(local_mode=True, include_dashboard=True, num_gpus=options.num_gpus)
+        # ray.init(include_dashboard=True, num_gpus=options.num_gpus)
     main(options)

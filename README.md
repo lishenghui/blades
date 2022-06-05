@@ -1,4 +1,4 @@
-# ⚔🛡 **Blade**: A simulator for Byzantine-robust federated Learning with Attacks and Defenses Experimental Simulation
+# ⚔🛡 **Blades**: A simulator for Byzantine-robust federated Learning with Attacks and Defenses Experimental Simulation
 
 <!-- <p align="center">
   <img width = "450" height = "150" src="https://github.com/
@@ -67,14 +67,16 @@ cifar10 = CIFAR10(num_clients=20, iid=True) # built-in federated cifar10 dataset
 # configuration parameters
 conf_params = {
     "dataset": cifar10,
-    "num_byzantine": 5,  # number of byzantine clients
-    "attack": "IPM",     # attack strategy
-    "aggregator": "Krum",# defense: robust aggregation
-    "num_actors": 4,     # number of training actors
-    "seed": 1            # reproducibility
+    "aggregator": "Krum",   # defense: robust aggregation
+    "num_byzantine": 5,     # number of byzantine clients
+    "attack": "alie",       # attack strategy
+    "attack_para":{"n": 20, # attacker parameters
+                   "m": 5},
+    "num_actors": 4,        # number of training actors
+    "seed": 1,              # reproducibility
 }
 
-ray.init(num_gpus=2)
+ray.init(num_gpus=0)
 simulator = Simulator(**conf_params)
 
 # runtime parameters
@@ -84,7 +86,8 @@ run_params = {
     "client_optimizer": 'SGD', # client optimizer
     "loss": "crossentropy",    # loss function
     "global_rounds": 400,      # number of global rounds
-    "local_steps": 20,         # number of steps per round
+    "local_steps": 2,         # number of steps per round
+    "lr": 0.1,                 # learning rate
 }
 simulator.run(**run_params)
 ```
@@ -100,7 +103,8 @@ In detail, the following methods are currently implemented:
 
 | Methods          | Descriptions                                                                                                                                           | Examples                                                                                                        |
 | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------- |
-| **NoiseAttack** | Put random noise to the updates.                                                                                            | [[**Example**]](https://github.com/bladesteam/blades/blob/master/src/blades/attackers/noiseclient.py) |
+| **NoiseAttack** | Put random noise to the updates. | [[**Example**]](https://github.com/bladesteam/blades/blob/master/src/blades/attackers/noiseclient.py) |
+| **NoiseAttack** | Put random noise to the updates. | [[**Example**]](https://github.com/bladesteam/blades/blob/master/src/blades/attackers/noiseclient.py) |
 <!-- | **DICEAttack**   | *Waniek et al.* [Hiding Individuals and Communities in a Social Network](https://arxiv.org/abs/1608.00375), *Nature Human Behavior'16*                 | [[**Example**]](https://github.com/EdisonLeeeee/GraphWar/blob/master/examples/attack/targeted/dice_attack.py)   |
 | **Nettack**      | *Zügner et al.* [Adversarial Attacks on Neural Networks for Graph Data](https://arxiv.org/abs/1805.07984), *KDD'18*                                    | [[**Example**]](https://github.com/EdisonLeeeee/GraphWar/blob/master/examples/attack/targeted/nettack.py)       |
 | **FGAttack**     | *Chen et al.* [Fast Gradient Attack on Network Embedding](https://arxiv.org/abs/1809.02797), *arXiv'18*                                                | [[**Example**]](https://github.com/EdisonLeeeee/GraphWar/blob/master/examples/attack/targeted/fg_attack.py)     |

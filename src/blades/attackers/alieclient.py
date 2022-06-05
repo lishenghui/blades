@@ -10,10 +10,10 @@ from scipy.stats import norm
 currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 parentdir = os.path.dirname(currentdir)
 sys.path.insert(0, parentdir)
-from simulator.client import ByzantineWorker
+from client import ByzantineWorker
 
 
-@ray.remote
+# @ray.remote
 class AlieClient(ByzantineWorker):
     """
     Args:
@@ -21,7 +21,7 @@ class AlieClient(ByzantineWorker):
         m (int): Number of Byzantine workers
     """
     
-    def __init__(self, n, m, is_fedavg, z=None, *args, **kwargs):
+    def __init__(self, n, m, is_fedavg=True, z=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.__fedavg = is_fedavg
         # Number of supporters
@@ -44,13 +44,10 @@ class AlieClient(ByzantineWorker):
         # Loop over good workers and accumulate their gradients
         updates = []
         for w in simulator._clients:
-            is_byzantine = ray.get(w.get_is_byzantine.remote())
+            is_byzantine = w.get_is_byzantine()
             # is_byzantine = ray.get(w.getattr.remote('__is_byzantine'))
             if not is_byzantine:
-                if self.__fedavg:
-                    updates.append(ray.get(w.get_update.remote()))
-                else:
-                    updates.append(ray.get(w.get_gradient.remote()))
+                updates.append(w.get_update())
         
         stacked_updates = torch.stack(updates, 1)
         mu = torch.mean(stacked_updates, 1)
@@ -60,11 +57,11 @@ class AlieClient(ByzantineWorker):
         if self.__fedavg:
             self.state['saved_update'] = self._gradient
     
-    def set_gradient(self, gradient) -> None:
-        raise NotImplementedError
+    # def set_gradient(self, gradient) -> None:
+    #     raise NotImplementedError
+    #
+    # def apply_gradient(self) -> None:
+    #     raise NotImplementedError
     
-    def apply_gradient(self) -> None:
-        raise NotImplementedError
-    
-    def local_training(self, num_rounds):
-        pass
+    # def local_training(self, num_rounds, use_actor, data_batches):
+    #     pass

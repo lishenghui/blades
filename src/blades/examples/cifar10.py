@@ -8,11 +8,13 @@ cifar10 = CIFAR10(num_clients=20, iid=True) # built-in federated cifar10 dataset
 # configuration parameters
 conf_params = {
     "dataset": cifar10,
-    "aggregator": "Krum",# defense: robust aggregation
-    "num_byzantine": 5,  # number of byzantine clients
-    "attack": "IPM",     # attack strategy
-    "num_actors": 4,     # number of training actors
-    "seed": 1,           # reproducibility
+    "aggregator": "Krum",   # defense: robust aggregation
+    "num_byzantine": 5,     # number of byzantine clients
+    "attack": "alie",       # attack strategy
+    "attack_para":{"n": 20, # attacker parameters
+                   "m": 5},
+    "num_actors": 4,        # number of training actors
+    "seed": 1,              # reproducibility
 }
 
 ray.init(num_gpus=0)
