@@ -2,7 +2,7 @@ import copy
 import logging
 from collections import defaultdict
 from typing import Union, Callable, Tuple
-
+import torch.nn as nn
 import ray.train as train
 import torch
 import torchvision.transforms as transforms
@@ -15,15 +15,15 @@ class TorchClient(object):
     def __init__(
             self,
             client_id, metrics,
-            model: torch.nn.Module,
-            optimizer: torch.optim.Optimizer,
-            loss_func: torch.nn.modules.loss._Loss,
+            # model: torch.nn.Module,
+            # optimizer: torch.optim.Optimizer,
+            # loss_func: torch.nn.modules.loss._Loss,
             device: Union[torch.device, str],
     ):
         self.id = client_id
-        self.model = model.to('cpu')
-        self.optimizer = optimizer
-        self.loss_func = loss_func
+        # self.model = model.to('cpu')
+        # self.optimizer = optimizer
+        # self.loss_func = loss_func
         self.device = device
         
         self.__is_byzantine = False
@@ -37,7 +37,6 @@ class TorchClient(object):
         self.model = copy.deepcopy(self.model)
         self.optimizer = torch.optim.SGD(self.model.parameters(), lr=lr)
         # self.optimizer = torch.optim.SGD(self.model.parameters(), lr=self.optimizer.param_groups[0]['lr'])
-        self.loss_func = CrossEntropyLoss().to(self.device)
     
     def getattr(self, attr):
         return getattr(self, attr)
@@ -45,8 +44,18 @@ class TorchClient(object):
     def get_is_byzantine(self):
         return self.__is_byzantine
     
+    def set_model(self, model, opt, lr):
+        self.model = copy.deepcopy(model)
+        self.optimizer = opt(self.model.parameters(), lr=lr)
+        
     def omniscient_callback(self, simulator):
         pass
+    
+    def set_loss(self, loss_func='crossentropy'):
+        if loss_func == 'crossentropy':
+            self.loss_func = nn.modules.loss.CrossEntropyLoss()
+        else:
+            raise NotImplementedError
     
     def set_para(self, model):
         self.model.load_state_dict(model.state_dict())  # .to(self.device)
