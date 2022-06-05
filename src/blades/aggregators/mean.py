@@ -8,11 +8,11 @@ import sys
 
 import torch
 
-currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
-parentdir = os.path.dirname(currentdir)
-sys.path.insert(0, parentdir)
+# currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+# parentdir = os.path.dirname(currentdir)
+# sys.path.insert(0, parentdir)
 
-from simulator.utils import log, log_dict
+# from simulator.utils import log, log_dict
 
 
 class _BaseAggregator(object):
@@ -23,8 +23,9 @@ class _BaseAggregator(object):
     """
     
     def __init__(self, *args, **kwargs):
-        log("Init aggregators: " + self.__str__())
-        log_dict({"Aggregator": self.__str__(), "Type": "Setup"})
+        pass
+        # log("Init aggregators: " + self.__str__())
+        # log_dict({"Aggregator": self.__str__(), "Type": "Setup"})
     
     def __call__(self, inputs):
         """Aggregate the inputs and update in-place.
@@ -42,8 +43,9 @@ class _BaseAsyncAggregator(object):
     """AsyncAggregator base object"""
     
     def __init__(self):
-        log("Init aggregators: " + self.__str__())
-        log_dict({"Aggregator": self.__str__(), "Type": "Setup"})
+        pass
+        # log("Init aggregators: " + self.__str__())
+        # log_dict({"Aggregator": self.__str__(), "Type": "Setup"})
     
     def __call__(self, inputs):
         """Aggregate the inputs and update in-place.
