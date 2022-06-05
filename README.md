@@ -55,7 +55,7 @@ pip install -e . --verbose
 
 
 ## How fast can we train and evaluate your own GNN?
-Take `GCN` as an example:
+Take `IPM Attack` and `Krum Aggregation` as an example:
 ```python
 import ray
 from blades.simulator import Simulator
