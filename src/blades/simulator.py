@@ -6,12 +6,12 @@ import numpy as np
 import ray
 import torch
 from ray.train import Trainer
-
+import importlib
 from .client import TorchClient
 from .datasets import FLDataset
 from .server import TorchServer
 from .utils import top1_accuracy, initialize_logger
-
+from . import alieclient
 import sys
 sys.path.insert(0,'..')
 from aggregators.mean import Mean
@@ -95,16 +95,7 @@ class Simulator(object):
         self.debug_logger.info(self.__str__())
         
         
-        users = self.dataset.get_clients()
-        self.clients = []
-        for i, u in enumerate(users):
-            client = TorchClient(u, metrics=self.metrics,
-                                 # model=model,
-                                 # loss_func=loss_func,
-                                 device=self.device,
-                                 # optimizer=optimizer,
-                                 )
-            self.clients.append(client)
+        self._setup_clients(attack, num_byzantine=num_byzantine)
         if metrics is None:
             metrics = {"top1": top1_accuracy}
         
@@ -115,6 +106,22 @@ class Simulator(object):
             self.ray_trainers = [Trainer(backend="torch", num_workers=num_actors // num_trainers, use_gpu=use_cuda,
                                          resources_per_worker={'GPU': gpu_per_actor}) for _ in range(num_trainers)]
             [trainer.start() for trainer in self.ray_trainers]
+    
+    def _setup_clients(self, attack: str, num_byzantine):
+        # from pathlib import Path
+        # abs_path = Path(__file__).absolute().parent.parent
+        # module_path = importlib.import_module('attackers.%sclient' % attack, abs_path)
+        # attack_scheme = getattr(module_path, '%sClient' % attack.capitalize())
+        users = self.dataset.get_clients()
+        self.clients = []
+        for i, u in enumerate(users):
+            if i < num_byzantine:
+                client = alieclient.AlieClient(20, 5, client_id=u, metrics=self.metrics, device=self.device)
+                # client = attack_scheme(20, 5, client_id=u, metrics=self.metrics, device=self.device)
+            else:
+                client = TorchClient(u, metrics=self.metrics, device=self.device)
+            self.clients.append(client)
+    
     
     def cache_random_state(self) -> None:
         # This function should be used for reproducibility
