@@ -33,7 +33,7 @@ If you are interested in this project, don't hesitate to contact me or make a PR
 
 # 🚀 Installation
 
-Please make sure you have installed [PyTorch](https://pytorch.org) and [Ray](https://docs.ray.io/en/latest/).
+<!-- Please make sure you have installed [PyTorch](https://pytorch.org) and [Ray](https://docs.ray.io/en/latest/). -->
 
 
 ```bash
@@ -85,7 +85,7 @@ run_params = {
     "client_optimizer": 'SGD', # client optimizer
     "loss": "crossentropy",    # loss function
     "global_rounds": 400,      # number of global rounds
-    "local_steps": 2,         # number of steps per round
+    "local_steps": 2,          # number of steps per round
     "lr": 0.1,                 # learning rate
 }
 simulator.run(**run_params)
@@ -120,7 +120,7 @@ In detail, the following methods are currently implemented:
 | Methods   | Descriptions                                                                                                                               | Examples                                                                                       |
 | --------- | ------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------- |
 | **Krum**   | *Blanchard et al.* [Machine Learning with Adversaries: Byzantine Tolerant Gradient Descent](https://proceedings.neurips.cc/paper/2017/hash/f4b9ec30ad9f68f89b29639786cb62ef-Abstract.html), *NIPS'17*              | [[**Example**]](https://github.com/bladesteam/blades/blob/master/src/blades/aggregators/krum.py)   |
-| **GeoMed**   | *Blanchard et al.* [Distributed Statistical Machine Learning in Adversarial Settings: Byzantine Gradient Descent](https://arxiv.org/abs/1705.05491), *POMACS'18*              | [[**Example**]](https://github.com/bladesteam/blades/blob/master/src/blades/aggregators/geomed.py)   |
+| **GeoMed**   | *Chen et al.* [Distributed Statistical Machine Learning in Adversarial Settings: Byzantine Gradient Descent](https://arxiv.org/abs/1705.05491), *POMACS'18*              | [[**Example**]](https://github.com/bladesteam/blades/blob/master/src/blades/aggregators/geomed.py)   |
 | **AutoGM**   | *Li et al.* [Byzantine-Robust Aggregation in Federated Learning Empowered Industrial IoT](https://ieeexplore.ieee.org/abstract/document/9614992), *IEEE TII'22*              | [[**Example**]](https://github.com/bladesteam/blades/blob/master/src/blades/aggregators/autogm.py)   |
 | **Median**   | *Yin et al.* [Byzantine-robust distributed learning: Towards optimal statistical rates](https://proceedings.mlr.press/v80/yin18a), *ICML'18*              | [[**Example**]](https://github.com/bladesteam/blades/blob/master/src/blades/aggregators/median.py)   |
 | **TrimmedMean**   | *Yin et al.* [Byzantine-robust distributed learning: Towards optimal statistical rates](https://proceedings.mlr.press/v80/yin18a), *ICML'18*              | [[**Example**]](https://github.com/bladesteam/blades/blob/master/src/blades/aggregators/trimmedmean.py)   |
