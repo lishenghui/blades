@@ -13,6 +13,3 @@ class Median(_BaseAggregator):
         values_upper, _ = stacked.median(dim=0)
         values_lower, _ = (-stacked).median(dim=0)
         return (values_upper - values_lower) / 2
-    
-    def __str__(self):
-        return "Coordinate-wise median"
