@@ -7,6 +7,7 @@ from typing import Any, Callable, Optional, Union
 import numpy as np
 import ray
 import torch
+# from torch import nn
 from ray.train import Trainer
 
 from blades.client import TorchClient
@@ -17,10 +18,19 @@ from blades.utils import top1_accuracy, initialize_logger
 sys.path.insert(0, '')
 # from aggregators.mean import Mean
 
-
 @ray.remote
 class RayActor(object):
+    """Ray Actor"""
     def __int__(*args, **kwargs):
+        """
+       Args:
+           aggregator (callable): A callable which takes a list of tensors and returns
+               an aggregated tensor.
+           log_interval (int): Control the frequency of logging training batches
+           metrics (dict): dict of metric names and their functions
+           use_cuda (bool): Use cuda or not
+           debug (bool):
+       """
         super().__init__()
     
     def local_training(self, clients, model, data, local_round, use_actor=False):
@@ -47,7 +57,12 @@ class RayActor(object):
 
 
 class Simulator(object):
-    """Synchronous and parallel training with specified aggregators."""
+    """Synchronous and parallel training with specified aggregators.
+    
+    :param aggregator: A callable which takes a list of tensors and returns
+                an aggregated tensor.
+    :param name: name of human.
+    """
     def __init__(
             self,
             dataset: FLDataset,
@@ -60,18 +75,8 @@ class Simulator(object):
             log_path: str = "./outputs",
             metrics: Optional[dict] = None,
             use_cuda: Optional[bool] = False,
-            debug: Optional[bool] = False,
-            **kwargs
+            **kwargs,
     ):
-        """
-        Args:
-            aggregator (callable): A callable which takes a list of tensors and returns
-                an aggregated tensor.
-            log_interval (int): Control the frequency of logging training batches
-            metrics (dict): dict of metric names and their functions
-            use_cuda (bool): Use cuda or not
-            debug (bool):
-        """
         import importlib
         agg_path = importlib.import_module('blades.aggregators.%s' % aggregator)
         agg_scheme = getattr(agg_path, aggregator.capitalize())
@@ -93,7 +98,7 @@ class Simulator(object):
         self.log_interval = log_interval
         self.metrics = {"top1": top1_accuracy} if metrics is None else metrics
         self.use_cuda = use_cuda
-        self.debug = debug
+        # self.debug = debug
         self.omniscient_callbacks = []
         self.random_states = {}
         
@@ -114,7 +119,11 @@ class Simulator(object):
             [trainer.start() for trainer in self.ray_trainers]
     
     def _setup_clients(self, attack: str, num_byzantine, **kwargs):
-        # from pathlib import Path
+        """speak some words.
+
+        :param words: words to speak.
+        :return: None
+        """
         import importlib
         # abs_path = Path(__file__).absolute().parent.parent
         module_path = importlib.import_module('blades.attackers.%sclient' % attack)
@@ -132,7 +141,9 @@ class Simulator(object):
             else:
                 client = TorchClient(u, metrics=self.metrics, device=self.device)
             self._clients.append(client)
-    
+
+  
+        
     def cache_random_state(self) -> None:
         # This function should be used for reproducibility
         if self.use_cuda:
@@ -149,18 +160,6 @@ class Simulator(object):
     
     def register_omniscient_callback(self, callback):
         self.omniscient_callbacks.append(callback)
-    
-    # clients definition is moved into .run() function, (Tianru)
-    # in order to define loss_func, optimizer, model, metrics and etc. in .run()
-    '''
-    def _setup_clients(self, model, loss_func, device, optimizer, **kwargs):
-        users = self.dataset.get_clients()
-        self.clients = []
-        for i, u in enumerate(users):
-            client = TorchClient(u, metrics=self.metrics,
-                                 model=model, loss_func=loss_func, device=device, optimizer=optimizer, **kwargs)
-            self.clients.append(client)
-    '''
     
     def register_attackers(self, client, num):
         # TODO(Shenghui): implement this function to register malicious clients
@@ -251,8 +250,6 @@ class Simulator(object):
         self.log_variance(epoch, update)
     
     def test_actor(self, global_round, batch_size, clients):
-        # clients is added due to the changing of self.clients (Tianru)
-        # self.clients is changed to clients (Tianru)
         
         def test_function(clients, actor, model, batch_size):
             data = [self.dataset.get_all_test_data(client.id) for client in clients]
@@ -272,7 +269,7 @@ class Simulator(object):
     
     def run(
             self,
-            model,
+            model: torch.nn.Module,
             server_optimizer: Union[torch.optim.Optimizer, str] = 'SGD',
             client_optimizer: Union[torch.optim.Optimizer, str] = 'SGD',
             loss: Optional[str] = 'crossentropy',
@@ -283,7 +280,28 @@ class Simulator(object):
             lr: Optional[float] = 0.1,
             lr_scheduler=None,
     ):
-        
+        """Run the adversarial training.
+    
+        :param model: The global model for training.
+        :type model: `torch.nn.Module`
+        :param server_optimizer: Pytorch optimizer for server-side optimization. Currently, the `str` type only supports `SGD`
+        :type server_optimizer: torch.optim.Optimizer or str
+        :param client_optimizer: Pytorch optimizer for client-side optimization. Currently, the ``str`` type only supports `SGD`
+        :type client_optimizer: torch.optim.Optimizer or str
+        :param loss: A Pytorch Loss function. See https://pytorch.org/docs/stable/nn.html#loss-functions. Currently, the `str` type only supports `SGD`
+        :type loss: str
+        :param global_rounds: Number of communication rounds in total.
+        :type global_rounds: int, optional
+        :param local_steps: Number of local steps of each global round.
+        :type local_steps: int, optional
+        :param validate_interval: Interval of evaluating the global model using test set.
+        :type validate_interval: int, optional
+        :param test_batch_size: Batch size of evaluation
+        :type test_batch_size: int, optional
+        :param lr: Learning rate of ``client_optimizer``
+        :type lr: float, optional
+        :return: None
+        """
         if server_optimizer == 'SGD':
             self.server_opt = torch.optim.SGD(model.parameters(), lr=lr)
         else:
@@ -293,9 +311,6 @@ class Simulator(object):
         self.server = TorchServer(self.server_opt, model=model)
         
         self.parallel_call(self._clients, lambda client: client.set_loss(loss))
-        # for client in self._clients:
-        # self.register_omniscient_callback(client.omniscient_callback(self))
-        # self.parallel_call(self._clients, lambda client: self.register_omniscient_callback(client.omniscient_callback(self)))
         global_start = time()
         ret = []
         for global_rounds in range(1, global_rounds + 1):

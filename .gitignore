@@ -31,3 +31,4 @@ src/blades/mnist_output/*
 .vscode-upload.json
 *.egg
 *.vscode
+/docs/build

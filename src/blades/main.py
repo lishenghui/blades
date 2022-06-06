@@ -17,6 +17,7 @@ agg_scheme = getattr(agg_path, options.agg.capitalize())
 
 
 def main(args):
+    '''This is an example'''
     initialize_logger(options.log_dir)
     device = torch.device("cuda" if args.use_cuda else "cpu")
     kwargs = {"pin_memory": True} if args.use_cuda else {}
