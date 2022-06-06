@@ -1,3 +1,5 @@
+# import sys
+# sys.path.insert(0, '../..')
 import ray
 from blades.simulator import Simulator
 from blades.datasets import CIFAR10
@@ -27,7 +29,7 @@ run_params = {
     "client_optimizer": 'SGD', # client optimizer
     "loss": "crossentropy",    # loss function
     "global_rounds": 400,      # number of global rounds
-    "local_steps": 2,         # number of steps per round
+    "local_steps": 2,          # number of steps per round
     "lr": 0.1,                 # learning rate
 }
 simulator.run(**run_params)
