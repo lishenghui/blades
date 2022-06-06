@@ -72,6 +72,7 @@ class Simulator(object):
         num_trainers = kwargs["num_trainers"] if "num_trainers" in kwargs else 1
         self.device = torch.device("cuda" if use_cuda else "cpu")
         gpu_per_actor = kwargs["gpu_per_actor"] if "gpu_per_actor" in kwargs else 0
+        attack_para = kwargs["attack_para"] if "attack_para" in kwargs else {}
         self.log_path = log_path
         initialize_logger(log_path)
         self.use_actor = True if mode == 'actor' else False
@@ -94,7 +95,7 @@ class Simulator(object):
         self.debug_logger.info(self.__str__())
         
         
-        self._setup_clients(attack, num_byzantine=num_byzantine, **kwargs["attack_para"])
+        self._setup_clients(attack, num_byzantine=num_byzantine, **attack_para)
         if metrics is None:
             metrics = {"top1": top1_accuracy}
         
@@ -110,7 +111,7 @@ class Simulator(object):
         # from pathlib import Path
         import importlib
         # abs_path = Path(__file__).absolute().parent.parent
-        module_path = importlib.import_module('attackers.%sclient' % attack)
+        module_path = importlib.import_module('blades.attackers.%sclient' % attack)
         attack_scheme = getattr(module_path, '%sClient' % attack.capitalize())
         users = self.dataset.get_clients()
         self._clients = []
