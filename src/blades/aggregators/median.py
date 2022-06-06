@@ -5,7 +5,7 @@ from .mean import _BaseAggregator
 
 class Median(_BaseAggregator):
     
-    def __int__(self, options):
+    def __int__(self):
         super(Median, self).__init__()
     
     def __call__(self, inputs):

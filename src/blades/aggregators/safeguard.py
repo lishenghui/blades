@@ -5,8 +5,8 @@ Allen-Zhu Z, Ebrahimian F, Li J, et al. Byzantine-Resilient Non-Convex Stochasti
 import random
 
 import torch
-
 from simulator.utils import log
+
 from .mean import _BaseAggregator
 
 

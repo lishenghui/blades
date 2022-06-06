@@ -9,6 +9,7 @@ class FLDataset(object):
         test_dataloaders (list, optional): dataloaders of test data for clients. Two lists of dataloders should be
             in corresponding order to the client they belong to.
     """
+    
     def __init__(
             self,
             train_dataloaders: list,
@@ -26,10 +27,10 @@ class FLDataset(object):
             self._train_dls[idx] = traindl
             self._test_dls[idx] = testdl
         self._clients = list(range(len(self._train_dls)))
-
+    
     def get_clients(self):
         return self._clients
-
+    
     def get_train_data(self, u_id, num_batches):
         data = [next(self._train_dls[u_id]) for _ in range(num_batches)]
         return data

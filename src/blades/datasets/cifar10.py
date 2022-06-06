@@ -7,6 +7,7 @@ import torch
 import torchvision
 import torchvision.transforms as transforms
 from sklearn.utils import shuffle
+
 from .CustomDataset import CustomTensorDataset
 
 
@@ -31,12 +32,12 @@ class CIFAR10:
     test_transform = transforms.Compose([
         transforms.Normalize(mean=stats["mean"], std=stats["std"]),
     ])
-
+    
     train_transform = transforms.Compose([
         transforms.RandomHorizontalFlip(),
         transforms.Normalize(mean=stats["mean"], std=stats["std"]),
     ])
-
+    
     def __init__(
             self,
             data_root: str = './data',
@@ -49,7 +50,7 @@ class CIFAR10:
         self._data_path = os.path.join(data_root, self.__class__.__name__ + '.obj')
         if not os.path.exists(self._data_path):
             self._generate_datasets(data_root, iid, alpha, num_clients)
-
+    
     def _generate_datasets(self, path='./data', iid=True, alpha=0.1, num_clients=20):
         num_train = 48000
         num_test = 9600
@@ -57,20 +58,20 @@ class CIFAR10:
         test_set = torchvision.datasets.CIFAR10(train=False, download=True, root=path)
         x_test, y_test = test_set.data[:num_test], np.array(test_set.targets)[:num_test]
         x_train, y_train = train_set.data[:num_train], np.array(train_set.targets)[:num_train]
-
+        
         x_train = x_train.astype('float32') / 255.0
         x_train = np.transpose(x_train, (0, 3, 1, 2))
         x_test = x_test.astype('float32') / 255.0
         x_test = np.transpose(x_test, (0, 3, 1, 2))
-
+        
         np.random.seed(1234)
         x_train, y_train = shuffle(x_train, y_train)
         x_test, y_test = shuffle(x_test, y_test)
-
+        
         train_user_ids = [str(id) for id in range(num_clients)]
         x_test_splits = np.split(x_test, num_clients)
         y_test_splits = np.split(y_test, num_clients)
-
+        
         if iid:
             x_train_splits = np.split(x_train, num_clients)
             y_train_splits = np.split(y_train, num_clients)
@@ -80,7 +81,7 @@ class CIFAR10:
             K = 10
             N = y_train.shape[0]
             client_dataidx_map = {}
-
+            
             while min_size < 10:
                 proportion_list = []
                 idx_batch = [[] for _ in range(num_clients)]
@@ -88,7 +89,7 @@ class CIFAR10:
                     idx_k = np.where(y_train == k)[0]
                     np.random.shuffle(idx_k)
                     proportions = np.random.dirichlet(np.repeat(alpha, num_clients))
-
+                    
                     proportions = np.array(
                         [p * (len(idx_j) < N / num_clients) for p, idx_j in zip(proportions, idx_batch)])
                     proportions = proportions / proportions.sum()
@@ -103,19 +104,19 @@ class CIFAR10:
                 client_dataidx_map[j] = idx_batch[j]
                 x_train_splits.append(x_train[idx_batch[j], :])
                 y_train_splits.append(y_train[idx_batch[j], :])
-
+        
         test_dataset = {}
         train_dataset = {}
         for id, index in zip(train_user_ids, range(num_clients)):
             train_dataset[id] = {'x': x_train_splits[index], 'y': y_train_splits[index].flatten()}
             test_dataset[id] = {'x': x_test_splits[index], 'y': y_test_splits[index].flatten()}
-
+        
         with open(self._data_path, 'wb') as f:
             pickle.dump(train_user_ids, f)
             pickle.dump(train_dataset, f)
             pickle.dump(train_user_ids, f)
             pickle.dump(test_dataset, f)
-
+    
     @staticmethod
     def _preprocess_train_data(
             data,
@@ -127,13 +128,13 @@ class CIFAR10:
         np.random.seed(seed=seed)
         idx = np.random.permutation(len(labels))
         data, labels = data[idx], labels[idx]
-
+        
         while True:
             if i * batch_size >= len(labels):
                 i = 0
                 idx = np.random.permutation(len(labels))
                 data, labels = data[idx], labels[idx]
-
+                
                 continue
             else:
                 X = data[i * batch_size:(i + 1) * batch_size, :]
@@ -141,7 +142,7 @@ class CIFAR10:
                 i += 1
                 X = torch.Tensor(X)
                 yield CIFAR10.train_transform(X), torch.LongTensor(y)
-
+    
     @staticmethod
     def _preprocess_test_data(
             data,
@@ -150,15 +151,15 @@ class CIFAR10:
         tensor_x = torch.Tensor(data)  # transform to torch tensor
         tensor_y = torch.LongTensor(labels)
         return CustomTensorDataset(tensor_x, tensor_y, transform_list=CIFAR10.test_transform)
-
+    
     # generate two lists of dataloaders for train
     def get_dls(self):
         assert os.path.isfile(self._data_path)
         with open(self._data_path, 'rb') as f:
             (train_clients, train_data, test_clients, test_data) = [pickle.load(f) for _ in range(4)]
-
+        
         assert sorted(train_clients) == sorted(test_clients)
-
+        
         train_dls = []
         test_dls = []
         for idx, u_id in enumerate(train_clients):
@@ -170,4 +171,3 @@ class CIFAR10:
                                                        labels=np.array(test_data[u_id]['y']),
                                                        ))
         return train_dls, test_dls
-
