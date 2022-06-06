@@ -1,27 +1,14 @@
-import inspect
-import os
-import sys
-
 import ray.train as train
 
-currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
-parentdir = os.path.dirname(currentdir)
-sys.path.insert(0, parentdir)
-from client import ByzantineWorker
+from blades.client import ByzantineClient
 
 
-class SignflippingClient(ByzantineWorker):
+class SignflippingClient(ByzantineClient):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
     
-    def get_gradient(self):
-        # Use self.simulator to get all other workers
-        # Note that the byzantine worker does not modify the states directly.
-        return -super().get_gradient()
-    
     def local_training(self, num_rounds, use_actor, data_batches):
         self._save_para()
-        results = {}
         
         if use_actor:
             model = self.model
@@ -40,13 +27,3 @@ class SignflippingClient(ByzantineWorker):
             self.apply_gradient()
         
         self._save_update()
-        
-        self.running["data"] = data
-        self.running["target"] = target
-        
-        results["loss"] = loss.item()
-        results["length"] = len(target)
-        results["metrics"] = {}
-        for name, metric in self.metrics.items():
-            results["metrics"][name] = metric(output, target)
-        return results
