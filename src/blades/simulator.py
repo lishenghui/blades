@@ -1,19 +1,22 @@
 import logging
+import sys
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from time import time
 from typing import Any, Callable, Optional, Union
+
 import numpy as np
 import ray
 import torch
 from ray.train import Trainer
+
 from blades.client import TorchClient
 from blades.datasets.datasets import FLDataset
 from blades.server import TorchServer
 from blades.utils import top1_accuracy, initialize_logger
-from blades.attackers import alieclient
-import sys
+
 sys.path.insert(0, '')
 from aggregators.mean import Mean
+
 
 @ray.remote
 class RayActor(object):
@@ -45,6 +48,7 @@ class RayActor(object):
 
 class Simulator(object):
     """Synchronous and parallel training with specified aggregators."""
+    
     def __init__(
             self,
             dataset: FLDataset,
@@ -94,7 +98,6 @@ class Simulator(object):
         self.debug_logger = logging.getLogger("debug")
         self.debug_logger.info(self.__str__())
         
-        
         self._setup_clients(attack, num_byzantine=num_byzantine, **attack_para)
         if metrics is None:
             metrics = {"top1": top1_accuracy}
@@ -126,7 +129,6 @@ class Simulator(object):
             else:
                 client = TorchClient(u, metrics=self.metrics, device=self.device)
             self._clients.append(client)
-    
     
     def cache_random_state(self) -> None:
         # This function should be used for reproducibility
@@ -161,12 +163,14 @@ class Simulator(object):
         # TODO(Shenghui): implement this function to register malicious clients
         pass
     
-    def parallel_call(self, clients, f: Callable[[TorchClient], None]) -> None: #clients is added due to the changing of self.clients
+    def parallel_call(self, clients,
+                      f: Callable[[TorchClient], None]) -> None:  # clients is added due to the changing of self.clients
         self.cache_random_state()
         _ = [f(worker) for worker in clients]
         self.restore_random_state()
     
-    def parallel_get(self, clients, f: Callable[[TorchClient], Any]) -> list: #clients is added due to the changing of self.clients
+    def parallel_get(self, clients,
+                     f: Callable[[TorchClient], Any]) -> list:  # clients is added due to the changing of self.clients
         results = []
         for w in clients:
             self.cache_random_state()
@@ -190,15 +194,15 @@ class Simulator(object):
                            self.server.get_model().to('cpu'), num_rounds) for i in range(len(self.ray_actors))]
         
         updates = [item for actor_return in ray.get(all_tasks) for item in actor_return]
-
+        
         # TODO(Shenghui): This block should be modified to assign update using member function of client.
         for client, update in zip(clients, updates):
             client.state['saved_update'] = update
-
+        
         # If there are Byzantine workers, ask them to craft attackers based on the updated settings.
         for omniscient_attacker_callback in self.omniscient_callbacks:
             omniscient_attacker_callback(self)
-
+        
         updates = self.parallel_get(clients, lambda w: w.get_update())
         
         aggregated = self.aggregator(updates)
@@ -206,12 +210,12 @@ class Simulator(object):
         self.server.apply_update(aggregated)
         
         self.log_variance(global_round, updates)
-
+    
     def train_trainer(self, epoch, num_rounds, clients):
         # clients is added due to the changing of self.clients (Tianru)
         # self.clients is changed to clients (Tianru)
         self.debug_logger.info(f"Train epoch {epoch}")
-    
+        
         def local_training(config):
             update = []
             for i in range(len(config['client'])):
@@ -220,33 +224,33 @@ class Simulator(object):
                 config['client'][i].local_training(config['local_round'], config['use_actor'], config['data'][i])
                 update.append(config['client'][i].get_update())
             return update
-    
+        
         def train_function(clients, trainer, model, num_rounds):
             data = [self.dataset.get_train_data(client.id, num_rounds) for client in clients]
             return trainer.run(local_training,
                                config={'client': clients, 'data': data, 'model': model, 'use_actor': self.use_actor,
                                        'local_round': num_rounds})
-    
+        
         client_per_trainer = len(clients) // len(self.ray_trainers)
         all_tasks = [
             self.executor.submit(train_function, clients[i * client_per_trainer:(i + 1) * client_per_trainer],
                                  self.ray_trainers[i],
                                  self.server.get_model().to('cpu'), num_rounds) for i in range(len(self.ray_trainers))]
-    
+        
         update = []
         for task in as_completed(all_tasks):
             update.extend(task.result()[0])
-    
+        
         aggregated = self.aggregator(update)
-    
+        
         self.server.apply_update(aggregated)
-    
+        
         self.log_variance(epoch, update)
-         
+    
     def test_actor(self, global_round, batch_size, clients):
         # clients is added due to the changing of self.clients (Tianru)
         # self.clients is changed to clients (Tianru)
-
+        
         def test_function(clients, actor, model, batch_size):
             data = [self.dataset.get_all_test_data(client.id) for client in clients]
             return actor.evaluate.remote(clients, model, data, round_number=global_round, batch_size=batch_size,
@@ -274,34 +278,35 @@ class Simulator(object):
             validate_interval: Optional[int] = 1,
             test_batch_size: Optional[int] = 64,
             lr: Optional[float] = 0.1,
-            lr_scheduler = None,
+            lr_scheduler=None,
     ):
         
         if server_optimizer == 'SGD':
             self.server_opt = torch.optim.SGD(model.parameters(), lr=lr)
         else:
             raise NotImplementedError
-            
+        
         self.client_opt = client_optimizer
         self.server = TorchServer(self.server_opt, model=model)
-
+        
         self.parallel_call(self._clients, lambda client: client.set_loss(loss))
         # for client in self._clients:
-            # self.register_omniscient_callback(client.omniscient_callback(self))
+        # self.register_omniscient_callback(client.omniscient_callback(self))
         # self.parallel_call(self._clients, lambda client: self.register_omniscient_callback(client.omniscient_callback(self)))
         global_start = time()
         ret = []
         for global_rounds in range(1, global_rounds + 1):
-            self.parallel_call(self._clients, lambda client: client.set_model(self.server.get_model(), torch.optim.SGD, lr))
+            self.parallel_call(self._clients,
+                               lambda client: client.set_model(self.server.get_model(), torch.optim.SGD, lr))
             round_start = time()
             if self.use_actor:
                 self.train_actor(global_rounds, local_steps, self._clients)
             else:
                 self.train_trainer(global_rounds, local_steps, self._clients)
-                
+            
             if self.use_actor and global_rounds % validate_interval == 0:
                 self.test_actor(global_round=global_rounds, batch_size=test_batch_size, clients=self._clients)
-                
+            
             # TODO(Shenghui): When using trainer, the test function is not implemented so far.
             if lr_scheduler:
                 lr_scheduler.step()
@@ -312,7 +317,7 @@ class Simulator(object):
             ret.append(time() - round_start)
             print(f"E={global_rounds}; Learning rate = {lr:}; Time cost = {time() - global_start}")
         return ret
-
+    
     def log_variance(self, round, update):
         var_avg = torch.mean(torch.var(torch.vstack(update), dim=0, unbiased=False)).item()
         norm = torch.norm(torch.var(torch.vstack(update), dim=0, unbiased=False)).item()

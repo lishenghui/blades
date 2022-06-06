@@ -2,13 +2,12 @@ import copy
 import logging
 from collections import defaultdict
 from typing import Union, Callable, Tuple
-import torch.nn as nn
+
 import ray.train as train
 import torch
+import torch.nn as nn
 import torchvision.transforms as transforms
 from torch.utils.data import DataLoader
-
-from torch.nn.modules.loss import CrossEntropyLoss
 
 
 class TorchClient(object):
@@ -47,7 +46,7 @@ class TorchClient(object):
     def set_model(self, model, opt, lr):
         self.model = copy.deepcopy(model)
         self.optimizer = opt(self.model.parameters(), lr=lr)
-        
+    
     def omniscient_callback(self, simulator):
         pass
     
