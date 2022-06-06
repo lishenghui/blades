@@ -34,7 +34,6 @@ class LabelflippingCIFAR10(datasets.CIFAR10):
         return img, target
 
 
-@ray.remote
 class LableflippingClient(ByzantineWorker):
     def __init__(self, revertible_label_transformer, *args, **kwargs):
         """

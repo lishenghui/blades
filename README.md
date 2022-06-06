@@ -104,13 +104,12 @@ In detail, the following methods are currently implemented:
 | Methods          | Descriptions                                                                                                                                           | Examples                                                                                                        |
 | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------- |
 | **NoiseAttack** | Put random noise to the updates. | [[**Example**]](https://github.com/bladesteam/blades/blob/master/src/blades/attackers/noiseclient.py) |
-| **NoiseAttack** | Put random noise to the updates. | [[**Example**]](https://github.com/bladesteam/blades/blob/master/src/blades/attackers/noiseclient.py) |
-<!-- | **DICEAttack**   | *Waniek et al.* [Hiding Individuals and Communities in a Social Network](https://arxiv.org/abs/1608.00375), *Nature Human Behavior'16*                 | [[**Example**]](https://github.com/EdisonLeeeee/GraphWar/blob/master/examples/attack/targeted/dice_attack.py)   |
-| **Nettack**      | *Zügner et al.* [Adversarial Attacks on Neural Networks for Graph Data](https://arxiv.org/abs/1805.07984), *KDD'18*                                    | [[**Example**]](https://github.com/EdisonLeeeee/GraphWar/blob/master/examples/attack/targeted/nettack.py)       |
-| **FGAttack**     | *Chen et al.* [Fast Gradient Attack on Network Embedding](https://arxiv.org/abs/1809.02797), *arXiv'18*                                                | [[**Example**]](https://github.com/EdisonLeeeee/GraphWar/blob/master/examples/attack/targeted/fg_attack.py)     |
-| **GFAttack**     | *Chang et al*.  [A Restricted Black - box Adversarial Framework Towards Attacking Graph Embedding Models](https://arxiv.org/abs/1908.01297), *AAAI'20* | [[**Example**]](https://github.com/EdisonLeeeee/GraphWar/blob/master/examples/attack/targeted/gf_attack.py)     |
-| **IGAttack**     | *Wu et al.* [Adversarial Examples on Graph Data: Deep Insights into Attack and Defense](https://arxiv.org/abs/1903.01610), *IJCAI'19*                  | [[**Example**]](https://github.com/EdisonLeeeee/GraphWar/blob/master/examples/attack/targeted/ig_attack.py)     |
-| **SGAttack**     | *Li et al.* [ Adversarial Attack on Large Scale Graph](https://arxiv.org/abs/2009.03488), *TKDE'21*                                                    | [[**Example**]](https://github.com/EdisonLeeeee/GraphWar/blob/master/examples/attack/targeted/sg_attack.py)     | -->
+| **LabelflippingAttack** | *Fang et al.* [Local Model Poisoning Attacks to Byzantine-Robust Federated Learning](https://www.usenix.org/conference/usenixsecurity20/presentation/fang), *USENIX Security' 20 * | [[**Example**]](https://github.com/bladesteam/blades/blob/master/src/blades/attackers/labelflippingclient.py) |
+| **SignflippingAttack** | *Li et al.* [RSA: Byzantine-Robust Stochastic Aggregation Methods for Distributed Learning from Heterogeneous Datasets](https://ojs.aaai.org/index.php/AAAI/article/view/3968), *AAAI' 19 * | [[**Example**]](https://github.com/bladesteam/blades/blob/master/src/blades/attackers/signflippingclient.py) |
+| **ALIEAttack** | *Baruch et al.* [A little is enough: Circumventing defenses for distributed learning](https://proceedings.neurips.cc/paper/2019/hash/ec1c59141046cd1866bbbcdfb6ae31d4-Abstract.html), *NeurIPS' 19 * | [[**Example**]](https://github.com/bladesteam/blades/blob/master/src/blades/attackers/alieclient.py) |
+| **IPMAttack** | *Xie et al.* [Fall of empires: Breaking byzantine- tolerant sgd by inner product manipulation](https://arxiv.org/abs/1903.03936), *UAI' 20 * | [[**Example**]](https://github.com/bladesteam/blades/blob/master/src/blades/attackers/ipmclient.py) |
+
+
 
 
 
