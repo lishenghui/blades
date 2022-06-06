@@ -10,7 +10,7 @@ def _compute_euclidean_distance(v1, v2):
 
 
 class Autogm(_BaseAggregator):
-    def __init__(self, options):
+    def __init__(self):
         super(Autogm, self).__init__()
         self.gm_agg = Geomed()
         self.momentum = None

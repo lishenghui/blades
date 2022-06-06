@@ -15,7 +15,7 @@ from blades.server import TorchServer
 from blades.utils import top1_accuracy, initialize_logger
 
 sys.path.insert(0, '')
-from aggregators.mean import Mean
+# from aggregators.mean import Mean
 
 
 @ray.remote
@@ -48,11 +48,10 @@ class RayActor(object):
 
 class Simulator(object):
     """Synchronous and parallel training with specified aggregators."""
-    
     def __init__(
             self,
             dataset: FLDataset,
-            aggregator: Callable[[list], torch.Tensor],
+            aggregator: Union[Callable[[list], torch.Tensor], str],
             num_byzantine: Optional[int] = 0,
             attack: Optional[str] = 'None',
             num_actors: Optional[int] = 4,
@@ -73,6 +72,10 @@ class Simulator(object):
             use_cuda (bool): Use cuda or not
             debug (bool):
         """
+        import importlib
+        agg_path = importlib.import_module('blades.aggregators.%s' % aggregator)
+        agg_scheme = getattr(agg_path, aggregator.capitalize())
+        self.aggregator = agg_scheme()
         num_trainers = kwargs["num_trainers"] if "num_trainers" in kwargs else 1
         self.device = torch.device("cuda" if use_cuda else "cpu")
         gpu_per_actor = kwargs["gpu_per_actor"] if "gpu_per_actor" in kwargs else 0
@@ -80,7 +83,7 @@ class Simulator(object):
         self.log_path = log_path
         initialize_logger(log_path)
         self.use_actor = True if mode == 'actor' else False
-        self.aggregator = Mean()
+
         # self.server_opt = torch.optim.SGD(model.parameters(), lr=lr)
         # self.server = TorchServer(self.server_opt, model=model)
         if type(dataset) != FLDataset:

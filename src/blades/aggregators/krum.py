@@ -94,9 +94,9 @@ class Krum(_BaseAggregator):
     Advances in Neural Information Processing Systems. 2017.
     """
     
-    def __init__(self, options):
-        self.n = options.num_clients
-        self.f = options.num_byzantine
+    def __init__(self, num_clients=20, num_byzantine=5):
+        self.n = num_clients
+        self.f = num_byzantine
         self.m = 1
         super(Krum, self).__init__()
     
