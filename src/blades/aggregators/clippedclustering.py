@@ -14,7 +14,7 @@ import torch_utils
 
 
 class Clippedclustering():
-    def __init__(self, options) -> None:
+    def __init__(self) -> None:
         self.l2norm_his = []
     
     def __call__(self, inputs):

@@ -5,10 +5,10 @@ import torch
 from torch.nn.modules.loss import CrossEntropyLoss
 
 from args import parse_arguments
-from datasets.cifar10 import CIFAR10
 from blades.datasets.datasets import FLDataset
 from blades.simulator import Simulator
 from blades.utils import top1_accuracy, initialize_logger
+from datasets.cifar10 import CIFAR10
 
 options = parse_arguments()
 
@@ -30,8 +30,8 @@ def main(args):
     loss_func = CrossEntropyLoss()
     opt = torch.optim.SGD(model.parameters(), lr=0.2)
     lr_scheduler = torch.optim.lr_scheduler.MultiStepLR(
-            opt, milestones=[100, 200, 400], gamma=0.5
-        )
+        opt, milestones=[100, 200, 400], gamma=0.5
+    )
     metrics = {"top1": top1_accuracy}
     
     train_dls, testdls = CIFAR10(data_root=options.data_dir, train_bs=options.batch_size).get_dls()
