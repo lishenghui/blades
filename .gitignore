@@ -30,4 +30,4 @@ src/blades/mnist_output/*
 /src/blades/examples/outputs/
 .vscode-upload.json
 *.egg
-.vscode
+*.vscode
