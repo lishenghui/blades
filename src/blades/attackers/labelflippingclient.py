@@ -8,7 +8,7 @@ currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentfram
 parentdir = os.path.dirname(currentdir)
 sys.path.insert(0, parentdir)
 
-from simulator.client import ByzantineWorker
+from blades.client import ByzantineClient
 
 
 class LabelflippingMNIST(datasets.MNIST):
@@ -33,7 +33,7 @@ class LabelflippingCIFAR10(datasets.CIFAR10):
         return img, target
 
 
-class LableflippingClient(ByzantineWorker):
+class LableflippingClient(ByzantineClient):
     def __init__(self, revertible_label_transformer, *args, **kwargs):
         """
         Args:

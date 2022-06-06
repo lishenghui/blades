@@ -16,11 +16,14 @@ from blades.server import TorchServer
 from blades.utils import top1_accuracy, initialize_logger
 
 sys.path.insert(0, '')
+
+
 # from aggregators.mean import Mean
 
 @ray.remote
 class RayActor(object):
     """Ray Actor"""
+    
     def __int__(*args, **kwargs):
         """
        Args:
@@ -42,7 +45,7 @@ class RayActor(object):
             update.append(clients[i].get_update())
         return update
     
-    def evaluate(self, clients, model, data, round_number, batch_size, use_actor=False):
+    def evaluate(self, clients, model, data, round_number, batch_size, metrics, use_actor=False):
         update = []
         for i in range(len(clients)):
             clients[i].set_para(model)
@@ -50,6 +53,7 @@ class RayActor(object):
                 round_number=round_number,
                 test_set=data[i],
                 batch_size=batch_size,
+                metrics=metrics,
                 use_actor=use_actor
             )
             update.append(result)
@@ -62,7 +66,13 @@ class Simulator(object):
     :param aggregator: A callable which takes a list of tensors and returns
                 an aggregated tensor.
     :param name: name of human.
+    :param attack: ``None`` by default. One of the build-in attacks, i.e., ``None``, ``noise``, ``labelflipping``, ``signflipping``, ``alie``,
+                    ``ipm``. It should be ``None`` if you have custom attack strategy.
+    :type attack: str
+    :param num_byzantine: Number of Byzantine clients under build-in attack. It should be ``0`` if you have custom attack strategy.
+    :type num_byzantine: int, optional
     """
+    
     def __init__(
             self,
             dataset: FLDataset,
@@ -88,7 +98,7 @@ class Simulator(object):
         self.log_path = log_path
         initialize_logger(log_path)
         self.use_actor = True if mode == 'actor' else False
-
+        
         # self.server_opt = torch.optim.SGD(model.parameters(), lr=lr)
         # self.server = TorchServer(self.server_opt, model=model)
         if type(dataset) != FLDataset:
@@ -125,25 +135,20 @@ class Simulator(object):
         :return: None
         """
         import importlib
-        # abs_path = Path(__file__).absolute().parent.parent
-        module_path = importlib.import_module('blades.attackers.%sclient' % attack)
-        attack_scheme = getattr(module_path, '%sClient' % attack.capitalize())
+        if attack == None:
+            num_byzantine = 0
         users = self.dataset.get_clients()
         self._clients = []
         for i, u in enumerate(users):
             if i < num_byzantine:
-                # client = alieclient.AlieClient(20, 5, client_id=u, metrics=self.metrics, device=self.device)
-                client = attack_scheme(client_id=u, metrics=self.metrics, device=self.device, **kwargs)
-                
-                # client.configure(self)
+                module_path = importlib.import_module('blades.attackers.%sclient' % attack)
+                attack_scheme = getattr(module_path, '%sClient' % attack.capitalize())
+                client = attack_scheme(client_id=u, device=self.device, **kwargs)
                 self.register_omniscient_callback(client.omniscient_callback)
-                # client = attack_scheme(20, 5, client_id=u, metrics=self.metrics, device=self.device)
             else:
-                client = TorchClient(u, metrics=self.metrics, device=self.device)
+                client = TorchClient(u, device=self.device)
             self._clients.append(client)
-
-  
-        
+    
     def cache_random_state(self) -> None:
         # This function should be used for reproducibility
         if self.use_cuda:
@@ -161,9 +166,12 @@ class Simulator(object):
     def register_omniscient_callback(self, callback):
         self.omniscient_callbacks.append(callback)
     
-    def register_attackers(self, client, num):
-        # TODO(Shenghui): implement this function to register malicious clients
-        pass
+    def register_attackers(self, clients):
+        assert len(clients) < len(self._clients)
+        for i in range(len(clients)):
+            clients[i].set_id(self._clients[i].get_id())
+            self._clients[i] = clients[i]
+            self.register_omniscient_callback(clients[i].omniscient_callback)
     
     def parallel_call(self, clients,
                       f: Callable[[TorchClient], None]) -> None:  # clients is added due to the changing of self.clients
@@ -253,8 +261,12 @@ class Simulator(object):
         
         def test_function(clients, actor, model, batch_size):
             data = [self.dataset.get_all_test_data(client.id) for client in clients]
-            return actor.evaluate.remote(clients, model, data, round_number=global_round, batch_size=batch_size,
-                                         use_actor=self.use_actor)
+            return actor.evaluate.remote(clients, model, data,
+                                         round_number=global_round,
+                                         batch_size=batch_size,
+                                         metrics=self.metrics,
+                                         use_actor=self.use_actor,
+                                         )
         
         client_per_trainer = len(clients) // len(self.ray_actors)
         all_tasks = [
@@ -284,11 +296,11 @@ class Simulator(object):
     
         :param model: The global model for training.
         :type model: `torch.nn.Module`
-        :param server_optimizer: Pytorch optimizer for server-side optimization. Currently, the `str` type only supports `SGD`
+        :param server_optimizer: Pytorch optimizer for server-side optimization. Currently, the `str` type only supports ``SGD``
         :type server_optimizer: torch.optim.Optimizer or str
-        :param client_optimizer: Pytorch optimizer for client-side optimization. Currently, the ``str`` type only supports `SGD`
+        :param client_optimizer: Pytorch optimizer for client-side optimization. Currently, the ``str`` type only supports ``SGD``
         :type client_optimizer: torch.optim.Optimizer or str
-        :param loss: A Pytorch Loss function. See https://pytorch.org/docs/stable/nn.html#loss-functions. Currently, the `str` type only supports `SGD`
+        :param loss: A Pytorch Loss function. See https://pytorch.org/docs/stable/nn.html#loss-functions. Currently, the `str` type only supports ``crossentropy``
         :type loss: str
         :param global_rounds: Number of communication rounds in total.
         :type global_rounds: int, optional
