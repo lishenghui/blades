@@ -37,7 +37,6 @@ Please make sure you have installed [PyTorch](https://pytorch.org) and [Ray](htt
 
 
 ```bash
-# Coming soon
 pip install blades
 ```
 
@@ -97,7 +96,7 @@ simulator.run(**run_params)
 
 In detail, the following methods are currently implemented:
 
-## ⚔ Attack
+## 🗡️ Attack
 
 #### Untargeted Attack
 
@@ -130,8 +129,12 @@ In detail, the following methods are currently implemented:
 | **ClippedClustering**   | *Li et al.* [An Experimental Study of Byzantine-Robust sAggregation Schemes in Federated Learning](https://www.techrxiv.org/articles/preprint/An_Experimental_Study_of_Byzantine-Robust_Aggregation_Schemes_in_Federated_Learning/19560325), *TechRxiv'22*              | [[**Example**]](https://github.com/bladesteam/blades/blob/master/src/blades/aggregators/clippedclustering.py)   |
 
 
+## ☁️ Cluster Deployment
 
-<!-- 
+To run `blades` on a cluster, you only need to deploy `Ray cluster` according to the [official guide](https://docs.ray.io/en/latest/cluster/user-guide.html)
+
+
+
 # ❓ Known Issues
-+ Despite our best efforts, we still had difficulty reproducing the results of [GNNGUARD](https://arxiv.org/abs/2006.08149) in the paper. If you find any problems, please don't hesitate to contact me.
-+ Untargeted attacks are suffering from performance degradation, as also in DeepRobust, when a validation set is used during training with model picking. Such phenomenon has also been revealed in [Black-box Gradient Attack on Graph Neural Networks: Deeper Insights in Graph-based Attack and Defense](https://arxiv.org/abs/2104.15061). -->
++ In the current version, communication across machines is a bottleneck as the dataset is centrialized, we will fix this issue soon.
+<!-- + Untargeted attacks are suffering from performance degradation, as also in DeepRobust, when a validation set is used during training with model picking. Such phenomenon has also been revealed in [Black-box Gradient Attack on Graph Neural Networks: Deeper Insights in Graph-based Attack and Defense](https://arxiv.org/abs/2104.15061). -->
