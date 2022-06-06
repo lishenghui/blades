@@ -6,7 +6,7 @@ from sklearn.cluster import AgglomerativeClustering
 
 
 class Clustering():
-    def __init__(self, options) -> None:
+    def __init__(self) -> None:
         pass
     
     def __call__(self, inputs):

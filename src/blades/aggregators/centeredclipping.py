@@ -9,7 +9,7 @@ from .mean import _BaseAsyncAggregator
 debug_logger = logging.getLogger("debug")
 
 
-class Clipping(_BaseAggregator):
+class Centeredclipping(_BaseAggregator):
     def __init__(self, options):
         self.tau = options.clipping_tau
         self.n_iter = 1

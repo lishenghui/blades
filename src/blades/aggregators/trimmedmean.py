@@ -4,8 +4,8 @@ from .mean import _BaseAggregator
 
 
 class Trimmedmean(_BaseAggregator):
-    def __init__(self, options):
-        self.b = options.num_byzantine
+    def __init__(self, num_byzantine=5):
+        self.b = num_byzantine
         super(Trimmedmean, self).__init__()
     
     def __call__(self, inputs):
