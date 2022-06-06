@@ -1,21 +1,34 @@
 from setuptools import setup, find_packages
 
+requirements =[
+'torch>=1.10.2',
+'torchvision>=0.11.3',
+'numpy>=1.19.4',
+'scipy>=1.5.4',
+'ray>=1.0.0',
+'sklearn>=0.0',
+'scikit-learn>=1.0.2',
+'matplotlib>=3.4.1',
+'requests>=2.27.1',
+'setuptools~=58.0.4',
+]
 setup(
     name='blades',
     version='0.0.1',
-    description="""ByzantineFL""",
+    description="""Blades: A simulator for Byzantine-robust federated Learning with Attacks and Defenses Experimental Simulation""",
     # long_description=open('blades/README.md').read(),
     # long_description_content_type="text/markdown",
-    author='Shenghui Li',
+    author='Blades Team',
     author_email='shenghui.li@it.uu.se',
     url='https://github.com/lishenghui',
     # py_modules=['blades'],
     python_requires='>=3.8',
-    license='Apache 2.0',
+    license='MIT license',
     zip_safe=False,
     # entry_points={
     #     'console_scripts': ["fedn=cli:main"]
     # },
+    install_requires=requirements,
     keywords='Federated learning',
     packages=find_packages(),
     classifiers=[
