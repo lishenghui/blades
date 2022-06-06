@@ -6,12 +6,11 @@ import ray
 
 sys.path.append(os.path.dirname(Path(os.path.abspath(__file__)).parent))
 import torch
-from simulator.client import ByzantineWorker
+from client import ByzantineWorker
 
 
-@ray.remote
 class NoiseClient(ByzantineWorker):
-    def __init__(self, is_fedavg, noise=0.1, *args, **kwargs):
+    def __init__(self, is_fedavg=True, noise=0.1, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.__fedavg = is_fedavg
         self.__noise = noise
@@ -23,4 +22,4 @@ class NoiseClient(ByzantineWorker):
     def omniscient_callback(self, simulator):
         if self.__fedavg:
             self.state['saved_update'] = torch.normal(self.__noise, self.__noise, size=super().get_update().shape).to(
-                self.device)
+                'cpu')
