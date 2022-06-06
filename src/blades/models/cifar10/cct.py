@@ -1,6 +1,6 @@
 import torch.nn as nn
 
-from .cctnets import cct_2_3x2_32, cct_4_3x2_32
+from .cctnets import cct_2_3x2_32
 
 
 class CCTNet(nn.Module):

@@ -1,8 +1,8 @@
 import inspect
 import os
 import sys
+
 import ray.train as train
-import ray
 
 currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 parentdir = os.path.dirname(currentdir)
@@ -13,7 +13,6 @@ from client import ByzantineWorker
 class SignflippingClient(ByzantineWorker):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-
     
     def get_gradient(self):
         # Use self.simulator to get all other workers
@@ -23,7 +22,7 @@ class SignflippingClient(ByzantineWorker):
     def local_training(self, num_rounds, use_actor, data_batches):
         self._save_para()
         results = {}
-
+        
         if use_actor:
             model = self.model
         else:
@@ -39,7 +38,7 @@ class SignflippingClient(ByzantineWorker):
             for name, p in self.model.named_parameters():
                 p.grad.data = -p.grad.data
             self.apply_gradient()
-
+        
         self._save_update()
         
         self.running["data"] = data

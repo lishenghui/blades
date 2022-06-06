@@ -2,8 +2,6 @@ import os
 import sys
 from pathlib import Path
 
-import ray
-
 sys.path.append(os.path.dirname(Path(os.path.abspath(__file__)).parent))
 import torch
 from client import ByzantineWorker
