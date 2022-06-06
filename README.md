@@ -134,6 +134,12 @@ In detail, the following methods are currently implemented:
 To run `blades` on a cluster, you only need to deploy `Ray cluster` according to the [official guide](https://docs.ray.io/en/latest/cluster/user-guide.html)
 
 
+## 📘️ [Documentation](https://bladesteam.github.io/)
+
+
+
+To run `blades` on a cluster, you only need to deploy `Ray cluster` according to the [official guide](https://docs.ray.io/en/latest/cluster/user-guide.html)
+
 
 # ❓ Known Issues
 + In the current version, communication across machines is a bottleneck as the dataset is centrialized, we will fix this issue soon.

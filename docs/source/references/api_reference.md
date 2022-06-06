@@ -1,4 +1,7 @@
-Appendix
+API Reference
 =========
 
-:doc:`references/api_reference`
+```{eval-rst}
+.. automodule:: simulator    
+    :members:
+```
