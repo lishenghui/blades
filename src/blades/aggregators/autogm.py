@@ -1,3 +1,7 @@
+'''
+    Byzantine-Robust Aggregation in Federated Learning Empowered Industrial IoT
+    S Li, E Ngai, T Voigt - IEEE Transactions on Industrial Informatics, 2022
+'''
 import numpy as np
 import torch
 

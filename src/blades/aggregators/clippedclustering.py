@@ -1,3 +1,7 @@
+'''
+    S. Li, C. H. E. Ngai and T. Voigt,“An Experimental Study of Byzantine-Robust Aggregation Schemes in Federated Learning”.
+    TechRxiv,11-Apr-2022,doi:10.36227/techrxiv.19560325.v1.
+'''
 import os
 import sys
 
