@@ -1,5 +1,4 @@
 import logging
-import sys
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from time import time
 from typing import Any, Callable, Optional, Union
@@ -14,10 +13,6 @@ from blades.datasets.datasets import FLDataset
 from blades.server import BladesServer
 from blades.utils import top1_accuracy, initialize_logger
 
-sys.path.insert(0, '')
-
-
-# from aggregators.mean import Mean
 
 @ray.remote
 class RayActor(object):

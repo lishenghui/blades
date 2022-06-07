@@ -10,7 +10,7 @@ html_meta:
 (sec:buildinattacks)=
 
 ## Build-in Attacks
-
+The following attack strategies are currently implemented in ``Blades``:
 ### Untargeted Attack
 
 | Strategy          | Descriptions                                                                                                                                           | Examples                                                                                                        |
