@@ -62,7 +62,7 @@ class RayActor(object):
 class Simulator(object):
     """Synchronous and parallel training with specified aggregators.
     
-    :param aggregator: A callable which takes a list of tensors and returns
+    :param aggregator: String (name of build-in aggregation scheme) or a callable which takes a list of tensors and returns
                 an aggregated tensor.
     :param name: name of human.
     :param attack: ``None`` by default. One of the build-in attacks, i.e., ``None``, ``noise``, ``labelflipping``, ``signflipping``, ``alie``,
@@ -86,10 +86,13 @@ class Simulator(object):
             use_cuda: Optional[bool] = False,
             **kwargs,
     ):
-        import importlib
-        agg_path = importlib.import_module('blades.aggregators.%s' % aggregator)
-        agg_scheme = getattr(agg_path, aggregator.capitalize())
-        self.aggregator = agg_scheme()
+        if type(aggregator) == str:
+            import importlib
+            agg_path = importlib.import_module('blades.aggregators.%s' % aggregator)
+            agg_scheme = getattr(agg_path, aggregator.capitalize())
+            self.aggregator = agg_scheme()
+        else:
+            self.aggregator = aggregator
         num_trainers = kwargs["num_trainers"] if "num_trainers" in kwargs else 1
         self.device = torch.device("cuda" if use_cuda else "cpu")
         gpu_per_actor = kwargs["gpu_per_actor"] if "gpu_per_actor" in kwargs else 0
@@ -147,6 +150,11 @@ class Simulator(object):
             else:
                 client = BladesClient(u, device=self.device)
             self._clients.append(client)
+    
+    def get_clients(self):
+        r"""Return all clients.
+        """
+        return self._clients
     
     def cache_random_state(self) -> None:
         # This function should be used for reproducibility

@@ -91,6 +91,7 @@ caption: Documentation
 glob: true
 ---
 
+install
 attacks
 defenses
 references/api_reference
