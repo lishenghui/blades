@@ -18,7 +18,7 @@ class IpmClient(ByzantineClient):
     def omniscient_callback(self, simulator):
         # Loop over good workers and accumulate their gradients
         updates = []
-        for w in simulator._clients:
+        for w in simulator.get_clients():
             is_byzantine = w.get_is_byzantine()
             # is_byzantine = ray.get(w.getattr.remote('_is_byzantine'))
             if not is_byzantine:

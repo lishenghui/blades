@@ -16,7 +16,7 @@ class BladesClient(object):
         .. note::
             Your honest clients should also subclass this class.
             
-        :param client_id: an unique id of the client.
+        :param client_id: a unique id of the client.
         :type client_id: str, optional.
         :param device:  if specified, all parameters will be copied to that device
         :type device: torch.device, or str
@@ -51,7 +51,7 @@ class BladesClient(object):
     def get_is_byzantine(self):
         return self._is_byzantine
     
-    def set_model(self, model: nn.Module, opt, lr):
+    def set_model(self, model: nn.Module, opt, lr) -> None:
         r''' Deep copy the given model to the client.
         
             .. note::
@@ -144,7 +144,16 @@ class BladesClient(object):
         )
         return r
     
-    def local_training(self, num_rounds, use_actor, data_batches) -> None:
+    def local_training(self, num_rounds: int, use_actor: bool, data_batches: list) -> None:
+        r''' Local optimizaiton of the ``client``. Byzantine clients can overwrite this method to perform adversarial attack.
+        
+            :param num_rounds: Number of local optimization steps.
+            :type num_rounds: int
+            :param use_actor: Specifying the training mode, it should be ``True`` if you use ``Trainer Mode``
+            :type use_actor: bool
+            :param data_batches: A list of training batches for local training.
+            :type data_batches: list
+        '''
         self._save_para()
         if use_actor:
             model = self.model
@@ -168,6 +177,8 @@ class BladesClient(object):
         return self._get_saved_grad()
     
     def get_update(self) -> torch.Tensor:
+        r''' Return the saved update of local optimization, represented as a vector.
+        '''
         return torch.nan_to_num(self._get_saved_update())
     
     def apply_gradient(self) -> None:
@@ -256,20 +267,21 @@ class ByzantineClient(BladesClient):
     r"""Base class for Byzantine clients.
     
             .. note::
-                Your Byzantine clients should also subclass this class.
-
+                Your Byzantine clients should also subclass this class, and overwrite ``local_training`` and
+                ``omniscient_callback`` to customize your attack.
+                
         """
     _is_byzantine = True
     def __int__(self, *args, **kwargs):
         super(ByzantineClient).__init__(*args, **kwargs)
     
     def omniscient_callback(self, simulator):
-        r"""A function that will be registered by the simulator and execute after each communication round.
+        r"""A method that will be registered by the simulator and execute after each communication round.
             It allows a Byzantine client has full knowledge of the training system, e.g., updates from all
             clients. Your Byzantine client can overwrite this method to access information from the server
             and other clients.
             
             :param simulator: The running simulator.
-            :type simulator: Simulator.
+            :type simulator: Simulator
         """
         pass
