@@ -6,8 +6,9 @@
   <br/>
 </p> -->
 
+
 <p align=center>
-  <a href="https://www.python.org/downloads/release/python-360/">
+  <a href="https://www.python.org/downloads/release/python-397/">
     <img src="https://img.shields.io/badge/Python->=3.9-3776AB?logo=python" alt="Python">
   </a>    
   <a href="https://github.com/pytorch/pytorch">
@@ -16,8 +17,8 @@
   <!-- <a href="https://pypi.org/project/graphwar/">
     <img src="https://badge.fury.io/py/graphwar.png" alt="pypi">
   </a>        -->
-  <a href="https://github.com/EdisonLeeeee/GraphWar/blob/master/LICENSE">
-    <img src="https://img.shields.io/github/license/EdisonLeeeee/GraphWar" alt="license">
+  <a href="https://github.com/bladesteam/blades/blob/master/LICENSE.md">
+    <img src="https://img.shields.io/github/license/bladesteam/blades?style=plastic" alt="license">
     <img src="https://img.shields.io/badge/Contributions-Welcome-278ea5" alt="Contrib"/>    
   </a>       
 </p>

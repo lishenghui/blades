@@ -1,7 +1,13 @@
 API Reference
-=========
+==============
 
-```{eval-rst}
-.. automodule:: simulator    
-    :members:
+```{toctree}
+---
+hidden: true
+caption: API
+glob: true
+---
+
+simulator
+client
 ```

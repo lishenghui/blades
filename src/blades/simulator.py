@@ -7,12 +7,11 @@ from typing import Any, Callable, Optional, Union
 import numpy as np
 import ray
 import torch
-# from torch import nn
 from ray.train import Trainer
 
-from blades.client import TorchClient
+from blades.client import BladesClient
 from blades.datasets.datasets import FLDataset
-from blades.server import TorchServer
+from blades.server import BladesServer
 from blades.utils import top1_accuracy, initialize_logger
 
 sys.path.insert(0, '')
@@ -146,7 +145,7 @@ class Simulator(object):
                 client = attack_scheme(client_id=u, device=self.device, **kwargs)
                 self.register_omniscient_callback(client.omniscient_callback)
             else:
-                client = TorchClient(u, device=self.device)
+                client = BladesClient(u, device=self.device)
             self._clients.append(client)
     
     def cache_random_state(self) -> None:
@@ -174,13 +173,13 @@ class Simulator(object):
             self.register_omniscient_callback(clients[i].omniscient_callback)
     
     def parallel_call(self, clients,
-                      f: Callable[[TorchClient], None]) -> None:  # clients is added due to the changing of self.clients
+                      f: Callable[[BladesClient], None]) -> None:  # clients is added due to the changing of self.clients
         self.cache_random_state()
         _ = [f(worker) for worker in clients]
         self.restore_random_state()
     
     def parallel_get(self, clients,
-                     f: Callable[[TorchClient], Any]) -> list:  # clients is added due to the changing of self.clients
+                     f: Callable[[BladesClient], Any]) -> list:  # clients is added due to the changing of self.clients
         results = []
         for w in clients:
             self.cache_random_state()
@@ -320,7 +319,7 @@ class Simulator(object):
             raise NotImplementedError
         
         self.client_opt = client_optimizer
-        self.server = TorchServer(self.server_opt, model=model)
+        self.server = BladesServer(self.server_opt, model=model)
         
         self.parallel_call(self._clients, lambda client: client.set_loss(loss))
         global_start = time()
