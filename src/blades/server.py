@@ -1,7 +1,7 @@
 import torch
 
 
-class TorchServer(object):
+class BladesServer(object):
     def __init__(self, optimizer: torch.optim.Optimizer, model):
         self.optimizer = optimizer
         self.model = model

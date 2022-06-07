@@ -1,7 +1,7 @@
 import copy
 import logging
 from collections import defaultdict
-from typing import Union, Callable, Tuple
+from typing import Union, Callable, Tuple, Optional
 
 import ray.train as train
 import torch
@@ -10,12 +10,24 @@ import torchvision.transforms as transforms
 from torch.utils.data import DataLoader
 
 
-class TorchClient(object):
-    _is_byzantine = False
+class BladesClient(object):
+    r"""Base class for all clients.
+    
+        .. note::
+            Your honest clients should also subclass this class.
+            
+        :param client_id: an unique id of the client.
+        :type client_id: str, optional.
+        :param device:  if specified, all parameters will be copied to that device
+        :type device: torch.device, or str
+    """
+    
+    _is_byzantine: bool = False
+    
     
     def __init__(
             self,
-            client_id=None,
+            client_id: Optional[str]=None,
             device: Union[torch.device, str]='cpu',
     ):
         self.id = client_id
@@ -26,10 +38,6 @@ class TorchClient(object):
         self.json_logger = logging.getLogger("stats")
         self.debug_logger = logging.getLogger("debug")
     
-    def detach_model(self, lr):
-        self.model = copy.deepcopy(self.model)
-        self.optimizer = torch.optim.SGD(self.model.parameters(), lr=lr)
-        # self.optimizer = torch.optim.SGD(self.model.parameters(), lr=self.optimizer.param_groups[0]['lr'])
     
     def set_id(self, id):
         self.id = id
@@ -43,12 +51,21 @@ class TorchClient(object):
     def get_is_byzantine(self):
         return self._is_byzantine
     
-    def set_model(self, model, opt, lr):
+    def set_model(self, model: nn.Module, opt, lr):
+        r''' Deep copy the given model to the client.
+        
+            .. note::
+                To improve the scalability, this API may be removed in the future,
+                
+            :param model: a Torch model for current client.
+            :type model: torch.nn.Module
+            :param opt: client optimizer
+            :type opt: torch.optim.Optimizer
+            :param lr:  local learning rate
+            :type lr: float
+        '''
         self.model = copy.deepcopy(model)
         self.optimizer = opt(self.model.parameters(), lr=lr)
-    
-    def omniscient_callback(self, simulator):
-        pass
     
     def set_loss(self, loss_func='crossentropy'):
         if loss_func == 'crossentropy':
@@ -94,14 +111,6 @@ class TorchClient(object):
         self._save_grad()
     
     def evaluate(self, round_number, test_set, batch_size, metrics, use_actor=True):
-        cifar10_stats = {
-            "mean": (0.4914, 0.4822, 0.4465),
-            "std": (0.2023, 0.1994, 0.2010),
-        }
-        transform = transforms.Compose([
-            transforms.ToTensor(),
-            transforms.Normalize(cifar10_stats["mean"], cifar10_stats["std"]),
-        ])
         dataloader = DataLoader(dataset=test_set, batch_size=batch_size)
         self.model.eval()
         r = {
@@ -135,7 +144,7 @@ class TorchClient(object):
         )
         return r
     
-    def local_training(self, num_rounds, use_actor, data_batches) -> Tuple[float, int]:
+    def local_training(self, num_rounds, use_actor, data_batches) -> None:
         self._save_para()
         if use_actor:
             model = self.model
@@ -217,12 +226,7 @@ class TorchClient(object):
         return torch.cat(layer_gradients)
 
 
-class ClientWithMomentum(TorchClient):
-    """
-    Note that we use `WorkerWithMomentum` instead of using multiple `torch.optim.Optimizer`
-    because we need to explicitly update the `momentum_buffer`.
-    """
-    
+class _ClientWithMomentum(BladesClient):
     def __init__(self, momentum, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.momentum = momentum
@@ -248,7 +252,24 @@ class ClientWithMomentum(TorchClient):
         return torch.cat(layer_gradients)
 
 
-class ByzantineClient(TorchClient):
+class ByzantineClient(BladesClient):
+    r"""Base class for Byzantine clients.
+    
+            .. note::
+                Your Byzantine clients should also subclass this class.
+
+        """
     _is_byzantine = True
     def __int__(self, *args, **kwargs):
         super(ByzantineClient).__init__(*args, **kwargs)
+    
+    def omniscient_callback(self, simulator):
+        r"""A function that will be registered by the simulator and execute after each communication round.
+            It allows a Byzantine client has full knowledge of the training system, e.g., updates from all
+            clients. Your Byzantine client can overwrite this method to access information from the server
+            and other clients.
+            
+            :param simulator: The running simulator.
+            :type simulator: Simulator.
+        """
+        pass
