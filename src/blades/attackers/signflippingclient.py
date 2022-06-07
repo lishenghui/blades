@@ -24,6 +24,6 @@ class SignflippingClient(ByzantineClient):
             loss.backward()
             for name, p in self.model.named_parameters():
                 p.grad.data = -p.grad.data
-            self.apply_gradient()
+            self.optimizer.step()
         
         self._save_update()

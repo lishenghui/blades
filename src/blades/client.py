@@ -167,7 +167,7 @@ class BladesClient(object):
             output = model(data)
             loss = self.loss_func(output, target)
             loss.backward()
-            self.apply_gradient()
+            self.optimizer.step()
         
         self.model = model
         update = (self._get_para(current=True) - self._get_para(current=False))
@@ -180,9 +180,6 @@ class BladesClient(object):
         r''' Return the saved update of local optimization, represented as a vector.
         '''
         return torch.nan_to_num(self._get_saved_update())
-    
-    def apply_gradient(self) -> None:
-        self.optimizer.step()
     
     def set_gradient(self, gradient: torch.Tensor) -> None:
         beg = 0
