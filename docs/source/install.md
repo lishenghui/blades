@@ -19,6 +19,9 @@ To use ``Blades`` on a single machine, you only need to install the simulator us
 ## Ray Cluster Simulation
 
 Borrowing the power of [Ray](https://docs.ray.io/en/latest/index.html#), ``Blades`` can be easily adapted to clusters without 
-changing any code.
+changing a single line of the code.
 
-See how to deploy `Ray cluster` according to the [official guide](https://docs.ray.io/en/latest/cluster/user-guide.html).
+```{seealso}
+   See how to deploy `Ray cluster` according to the [official guide](https://docs.ray.io/en/latest/cluster/user-guide.html).
+   Make sure that `Ray` on all machines has the same version.
+```
