@@ -12,20 +12,18 @@ class BladesServer(object):
     def get_model(self):
         return self.model
     
-    def apply_gradient(self) -> None:
-        self.optimizer.step()
-    
     def apply_update(self, update: torch.Tensor) -> None:
         beg = 0
         for group in self.optimizer.param_groups:
             for p in group["params"]:
                 if not p.requires_grad:
                     continue
-                # for p in self.model.parameters():
                 end = beg + len(p.data.view(-1))
                 x = update[beg:end].reshape_as(p.data)
-                p.data += x.clone().detach()
+                # p.data += x.clone().detach()
+                p.grad = x.clone().detach()
                 beg = end
+        self.optimizer.step()
     
     def set_gradient(self, gradient: torch.Tensor) -> None:
         beg = 0

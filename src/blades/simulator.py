@@ -57,14 +57,21 @@ class RayActor(object):
 class Simulator(object):
     """Synchronous and parallel training with specified aggregators.
     
+    :param dataset: FLDataset that consists local data of all clients
     :param aggregator: String (name of build-in aggregation scheme) or a callable which takes a list of tensors and returns
                 an aggregated tensor.
-    :param name: name of human.
+    :param num_byzantine: Number of Byzantine clients under build-in attack. It should be ``0`` if you have custom attack strategy.
+    :type num_byzantine: int, optional
     :param attack: ``None`` by default. One of the build-in attacks, i.e., ``None``, ``noise``, ``labelflipping``, ``signflipping``, ``alie``,
                     ``ipm``. It should be ``None`` if you have custom attack strategy.
     :type attack: str
-    :param num_byzantine: Number of Byzantine clients under build-in attack. It should be ``0`` if you have custom attack strategy.
-    :type num_byzantine: int, optional
+    :param num_actors: Number of ``Ray actors`` that will be created for local training.
+    :type num_actors: int
+    :param mode: Training mode, either ``actor`` or ``trainer``. For large scale client population, ``actor mode`` is favorable
+    :type mode: str
+    :param log_path: The path of logging
+    :type log_path: str
+    
     """
     
     def __init__(
@@ -75,7 +82,6 @@ class Simulator(object):
             attack: Optional[str] = 'None',
             num_actors: Optional[int] = 4,
             mode: Optional[str] = 'actor',
-            log_interval: Optional[int] = None,
             log_path: str = "./outputs",
             metrics: Optional[dict] = None,
             use_cuda: Optional[bool] = False,
@@ -96,16 +102,12 @@ class Simulator(object):
         initialize_logger(log_path)
         self.use_actor = True if mode == 'actor' else False
         
-        # self.server_opt = torch.optim.SGD(model.parameters(), lr=lr)
-        # self.server = TorchServer(self.server_opt, model=model)
         if type(dataset) != FLDataset:
             traindls, testdls = dataset.get_dls()
             dataset = FLDataset(traindls, testdls)
         self.dataset = dataset
-        self.log_interval = log_interval
         self.metrics = {"top1": top1_accuracy} if metrics is None else metrics
         self.use_cuda = use_cuda
-        # self.debug = debug
         self.omniscient_callbacks = []
         self.random_states = {}
         
@@ -141,7 +143,7 @@ class Simulator(object):
                 module_path = importlib.import_module('blades.attackers.%sclient' % attack)
                 attack_scheme = getattr(module_path, '%sClient' % attack.capitalize())
                 client = attack_scheme(client_id=u, device=self.device, **kwargs)
-                self.register_omniscient_callback(client.omniscient_callback)
+                self._register_omniscient_callback(client.omniscient_callback)
             else:
                 client = BladesClient(u, device=self.device)
             self._clients.append(client)
@@ -165,7 +167,7 @@ class Simulator(object):
         torch.set_rng_state(self.random_states["torch"])
         np.random.set_state(self.random_states["numpy"])
     
-    def register_omniscient_callback(self, callback):
+    def _register_omniscient_callback(self, callback):
         self.omniscient_callbacks.append(callback)
     
     def register_attackers(self, clients):
@@ -173,7 +175,7 @@ class Simulator(object):
         for i in range(len(clients)):
             clients[i].set_id(self._clients[i].get_id())
             self._clients[i] = clients[i]
-            self.register_omniscient_callback(clients[i].omniscient_callback)
+            self._register_omniscient_callback(clients[i].omniscient_callback)
     
     def parallel_call(self, clients,
                       f: Callable[[BladesClient], None]) -> None:  # clients is added due to the changing of self.clients
