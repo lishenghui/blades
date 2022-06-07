@@ -9,5 +9,6 @@ glob: true
 ---
 
 simulator
+server
 client
 ```
