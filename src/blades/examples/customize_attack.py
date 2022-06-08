@@ -5,7 +5,6 @@ from blades.datasets import CIFAR10
 from blades.models.cifar10 import CCTNet
 from blades.simulator import Simulator
 
-
 cifar10 = CIFAR10(num_clients=20, iid=True)  # built-in federated cifar10 dataset
 
 
@@ -19,7 +18,7 @@ class MaliciousClient(ByzantineClient):
             is_byzantine = w.get_is_byzantine()
             if not is_byzantine:
                 updates.append(w.get_update())
-        self._save_update(-100 * (sum(updates)) / len(updates))
+        self.save_update(-100 * (sum(updates)) / len(updates))
 
 
 # configuration parameters

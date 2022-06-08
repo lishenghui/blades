@@ -26,4 +26,4 @@ class SignflippingClient(ByzantineClient):
                 p.grad.data = -p.grad.data
             self.optimizer.step()
         
-        self._save_update()
+        self.save_update()

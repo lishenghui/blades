@@ -1,6 +1,7 @@
+from typing import Callable
+
 import torch
-from time import time
-from typing import Any, Callable, Optional, Union
+
 
 class BladesServer(object):
     r'''Simulating the server of the federated learning system.
@@ -17,6 +18,7 @@ class BladesServer(object):
                 an aggregated tensor.
         :type aggregator: callable
     '''
+    
     def __init__(self,
                  optimizer: torch.optim.Optimizer,
                  model: torch.nn.Module,
@@ -40,7 +42,7 @@ class BladesServer(object):
         :type set_to_none: bool
         """
         self.optimizer.zero_grad(set_to_none=set_to_none)
-        
+    
     def get_model(self) -> torch.nn.Module:
         r'''
         Returns the current global model.

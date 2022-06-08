@@ -19,7 +19,8 @@ conf_params = {
     "seed": 1,  # reproducibility
 }
 
-ray.init(num_gpus=0, local_mode=True)
+ray.init(num_gpus=0)
+# ray.init(num_gpus=0, local_mode=True)
 simulator = Simulator(**conf_params)
 
 model = CCTNet()
@@ -27,11 +28,12 @@ server_opt = torch.optim.Adam(model.parameters(), lr=0.01)
 # runtime parameters
 run_params = {
     "model": model,  # global model
-    "server_optimizer": server_opt, #'SGD',  # server optimizer
+    "server_optimizer": 'SGD',  # ,server_opt  # server optimizer
     "client_optimizer": 'SGD',  # client optimizer
     "loss": "crossentropy",  # loss function
     "global_rounds": 400,  # number of global rounds
     "local_steps": 2,  # number of steps per round
+    "server_lr": 1,
     "client_lr": 0.1,  # learning rate
 }
 simulator.run(**run_params)

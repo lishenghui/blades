@@ -19,11 +19,11 @@ class LabelflippingMNIST(datasets.MNIST):
     
     @property
     def raw_folder(self):
-        return os.path.join(self.root, "MNIST", "raw")
+        return os.path.join(self.root, "mnist", "raw")
     
     @property
     def processed_folder(self):
-        return os.path.join(self.root, "MNIST", "processed")
+        return os.path.join(self.root, "mnist", "processed")
 
 
 class LabelflippingCIFAR10(datasets.CIFAR10):
