@@ -218,9 +218,7 @@ class Simulator(object):
             omniscient_attacker_callback(self)
         
         updates = self.parallel_get(clients, lambda w: w.get_update())
-        
-        aggregated = self.aggregator(updates)
-        
+        aggregated = self.server.aggregator(updates)
         self.server.apply_update(aggregated)
         
         self.log_variance(global_round, updates)
@@ -321,10 +319,13 @@ class Simulator(object):
         if server_optimizer == 'SGD':
             self.server_opt = torch.optim.SGD(model.parameters(), lr=lr)
         else:
-            raise NotImplementedError
+            self.server_opt = server_optimizer
         
         self.client_opt = client_optimizer
-        self.server = BladesServer(self.server_opt, model=model)
+        self.server = BladesServer(optimizer=self.server_opt,
+                                   model=model,
+                                   aggregator=self.aggregator,
+                                   )
         
         self.parallel_call(self._clients, lambda client: client.set_loss(loss))
         global_start = time()
