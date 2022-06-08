@@ -2,6 +2,7 @@ import sys
 
 import ray
 import torch
+
 sys.path.insert(0, '../..')
 from blades.simulator import Simulator
 from blades.datasets import CIFAR10
@@ -26,13 +27,12 @@ conf_params = {
 ray.init(num_gpus=4)
 simulator = Simulator(**conf_params)
 
-
 model = CCTNet()
 server_opt = torch.optim.Adam(model.parameters(), lr=0.01)
 # runtime parameters
 run_params = {
     "model": model,  # global model
-    "server_optimizer": server_opt, #'SGD',  # server optimizer
+    "server_optimizer": server_opt,  # 'SGD',  # server optimizer
     "client_optimizer": 'SGD',  # client optimizer
     "loss": "crossentropy",  # loss function
     "global_rounds": 400,  # number of global rounds

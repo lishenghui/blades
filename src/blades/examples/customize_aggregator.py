@@ -1,5 +1,6 @@
 import ray
 import torch
+
 from blades.datasets import CIFAR10
 from blades.models.cifar10 import CCTNet
 from blades.simulator import Simulator
@@ -13,7 +14,7 @@ class Median():
         values_upper, _ = stacked.median(dim=0)
         values_lower, _ = (-stacked).median(dim=0)
         return (values_upper - values_lower) / 2
-    
+
 
 # configuration parameters
 conf_params = {

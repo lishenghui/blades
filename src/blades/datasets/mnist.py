@@ -11,7 +11,7 @@ from .CustomDataset import CustomTensorDataset
 
 
 class MNIST:
-    """`
+    """
     """
     
     def __init__(

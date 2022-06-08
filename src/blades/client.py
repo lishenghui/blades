@@ -1,12 +1,11 @@
 import copy
 import logging
 from collections import defaultdict
-from typing import Union, Callable, Tuple, Optional
+from typing import Union, Tuple, Optional
 
 import ray.train as train
 import torch
 import torch.nn as nn
-import torchvision.transforms as transforms
 from torch.utils.data import DataLoader
 
 
@@ -24,11 +23,10 @@ class BladesClient(object):
     
     _is_byzantine: bool = False
     
-    
     def __init__(
             self,
-            client_id: Optional[str]=None,
-            device: Union[torch.device, str]='cpu',
+            client_id: Optional[str] = None,
+            device: Union[torch.device, str] = 'cpu',
     ):
         self.id = client_id
         self.device = device
@@ -38,13 +36,12 @@ class BladesClient(object):
         self.json_logger = logging.getLogger("stats")
         self.debug_logger = logging.getLogger("debug")
     
-    
     def set_id(self, id):
         self.id = id
-        
+    
     def get_id(self):
         return self.id
-        
+    
     def getattr(self, attr):
         return getattr(self, attr)
     
@@ -87,7 +84,7 @@ class BladesClient(object):
             self.add_metric(name, metrics[name])
     
     def __str__(self) -> str:
-        return "TorchWorker"
+        return "BladesClient"
     
     def train_epoch_start(self) -> None:
         # self.running["train_loader_iterator"] = iter(self.data_loader)
@@ -171,7 +168,7 @@ class BladesClient(object):
         
         self.model = model
         update = (self._get_para(current=True) - self._get_para(current=False))
-        self._save_update(update)
+        self.save_update(update)
     
     def get_gradient(self) -> torch.Tensor:
         return self._get_saved_grad()
@@ -197,7 +194,7 @@ class BladesClient(object):
                 param_state = self.state[p]
                 param_state["saved_grad"] = torch.clone(p.grad).detach()
     
-    def _save_update(self, update: torch.Tensor) -> None:
+    def save_update(self, update: torch.Tensor) -> None:
         self.state['saved_update'] = update.detach()
     
     def _get_saved_update(self):
@@ -269,6 +266,7 @@ class ByzantineClient(BladesClient):
                 
         """
     _is_byzantine = True
+    
     def __int__(self, *args, **kwargs):
         super(ByzantineClient).__init__(*args, **kwargs)
     

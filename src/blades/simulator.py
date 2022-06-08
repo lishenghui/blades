@@ -7,6 +7,7 @@ import numpy as np
 import ray
 import torch
 from ray.train import Trainer
+from ray.util import ActorPool
 
 from blades.client import BladesClient, ByzantineClient
 from blades.datasets.datasets import FLDataset
@@ -17,6 +18,7 @@ from blades.utils import top1_accuracy, initialize_logger
 @ray.remote
 class _RayActor(object):
     """Ray Actor"""
+    
     def __init__(self, dataset: object, *args, **kwargs):
         """
        Args:
@@ -30,26 +32,27 @@ class _RayActor(object):
         traindls, testdls = dataset.get_dls()
         self.dataset = FLDataset(traindls, testdls)
     
-    def local_training(self, clients, model, local_round, use_actor=False):
+    def local_training(self, clients, model, local_round):
         update = []
         for i in range(len(clients)):
             clients[i].set_para(model)
             clients[i].train_epoch_start()
             data = self.dataset.get_train_data(clients[i].id, local_round)
-            clients[i].local_training(local_round, use_actor, data)
+            clients[i].local_training(local_round, use_actor=True, data_batches=data)
             update.append(clients[i].get_update())
         return update
     
-    def evaluate(self, clients, model, data, round_number, batch_size, metrics, use_actor=False):
+    def evaluate(self, clients, model, round_number, batch_size, metrics):
         update = []
         for i in range(len(clients)):
             clients[i].set_para(model)
+            data = self.dataset.get_all_test_data(clients[i].id)
             result = clients[i].evaluate(
                 round_number=round_number,
-                test_set=data[i],
+                test_set=data,
                 batch_size=batch_size,
                 metrics=metrics,
-                use_actor=use_actor
+                use_actor=True,
             )
             update.append(result)
         return update
@@ -115,25 +118,25 @@ class Simulator(object):
         self.debug_logger = logging.getLogger("debug")
         self.debug_logger.info(self.__str__())
         
-        
         if metrics is None:
             metrics = {"top1": top1_accuracy}
         
         if self.use_actor:
             self.ray_actors = [_RayActor.options(num_gpus=gpu_per_actor).remote(dataset)
                                for _ in range(num_actors)]
+            self.actor_pool = ActorPool(self.ray_actors)
         else:
             self.executor = ThreadPoolExecutor(max_workers=num_trainers)
             self.ray_trainers = [Trainer(backend="torch", num_workers=num_actors // num_trainers, use_gpu=use_cuda,
                                          resources_per_worker={'GPU': gpu_per_actor}) for _ in range(num_trainers)]
             [trainer.start() for trainer in self.ray_trainers]
-
+        
         if type(dataset) != FLDataset:
             traindls, testdls = dataset.get_dls()
             self.dataset = FLDataset(traindls, testdls)
-            
-        self._setup_clients(attack, num_byzantine=num_byzantine, **attack_para)
         
+        self._setup_clients(attack, num_byzantine=num_byzantine, **attack_para)
+    
     def _setup_clients(self, attack: str, num_byzantine, **kwargs):
         """speak some words.
 
@@ -190,8 +193,7 @@ class Simulator(object):
         _ = [f(worker) for worker in clients]
         self.restore_random_state()
     
-    def parallel_get(self, clients,
-                     f: Callable[[BladesClient], Any]) -> list:  # clients is added due to the changing of self.clients
+    def parallel_get(self, clients, f: Callable[[BladesClient], Any]) -> list:
         results = []
         for w in clients:
             self.cache_random_state()
@@ -203,19 +205,23 @@ class Simulator(object):
         # TODO: randomly select a subset of clients for local training
         self.debug_logger.info(f"Train global round {global_round}")
         
-        def train_function(clients, actor, model, num_rounds):
-            return actor.local_training.remote(clients, model, num_rounds, use_actor=self.use_actor)
+        # Allocate clients to actors:
+        global_model = self.server.get_model().to('cpu')
+        client_groups = np.array_split(self._clients, len(self.ray_actors))
         
-        client_per_trainer = len(clients) // len(self.ray_actors)
-        all_tasks = [
-            train_function(clients[i * client_per_trainer:(i + 1) * client_per_trainer], self.ray_actors[i],
-                           self.server.get_model().to('cpu'), num_rounds) for i in range(len(self.ray_actors))]
+        all_results = self.actor_pool.map(
+            lambda actor, clients:
+            actor.local_training.remote(
+                clients=clients,
+                model=global_model,
+                local_round=num_rounds,
+            ),
+            client_groups
+        )
         
-        updates = [item for actor_return in ray.get(all_tasks) for item in actor_return]
-        
-        # TODO(Shenghui): This block should be modified to assign update using member function of client.
+        updates = [update for returns in list(all_results) for update in returns]
         for client, update in zip(clients, updates):
-            client.state['saved_update'] = update
+            client.save_update(update)
         
         # If there are Byzantine workers, ask them to craft attackers based on the updated settings.
         for omniscient_attacker_callback in self.omniscient_callbacks:
@@ -264,25 +270,24 @@ class Simulator(object):
         self.log_variance(epoch, update)
     
     def test_actor(self, global_round, batch_size, clients):
+        global_model = self.server.get_model().to('cpu')
+        client_groups = np.array_split(self._clients, len(self.ray_actors))
         
-        def test_function(clients, actor, model, batch_size):
-            data = [self.dataset.get_all_test_data(client.id) for client in clients]
-            return actor.evaluate.remote(clients, model, data,
-                                         round_number=global_round,
-                                         batch_size=batch_size,
-                                         metrics=self.metrics,
-                                         use_actor=self.use_actor,
-                                         )
+        all_results = self.actor_pool.map(
+            lambda actor, clients:
+            actor.evaluate.remote(
+                clients=clients,
+                model=global_model,
+                round_number=global_round,
+                batch_size=batch_size,
+                metrics=self.metrics,
+            ),
+            client_groups
+        )
         
-        client_per_trainer = len(clients) // len(self.ray_actors)
-        all_tasks = [
-            test_function(clients[i * client_per_trainer:(i + 1) * client_per_trainer], self.ray_actors[i],
-                          self.server.get_model().to('cpu'), batch_size) for i in range(len(self.ray_actors))]
-        
-        metrics = [item for actor_return in ray.get(all_tasks) for item in actor_return]
+        metrics = [update for returns in list(all_results) for update in returns]
         
         loss, top1 = self.log_validate(metrics)
-        # print(f"Test global round {global_round}, loss: {loss}, top1: {top1}")
         self.debug_logger.info(f"Test global round {global_round}, loss: {loss}, top1: {top1}")
     
     def run(
