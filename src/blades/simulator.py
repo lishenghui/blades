@@ -98,13 +98,14 @@ class Simulator(object):
             import importlib
             agg_path = importlib.import_module('blades.aggregators.%s' % aggregator)
             agg_scheme = getattr(agg_path, aggregator.capitalize())
-            self.aggregator = agg_scheme()
+            agg_kwarg = kwargs["agg_param"] if "agg_param" in kwargs else {}
+            self.aggregator = agg_scheme(**agg_kwarg)
         else:
             self.aggregator = aggregator
         num_trainers = kwargs["num_trainers"] if "num_trainers" in kwargs else 1
         gpu_per_actor = kwargs["gpu_per_actor"] if "gpu_per_actor" in kwargs else 0
         self.device = torch.device("cuda" if use_cuda or "gpu_per_actor" in kwargs else "cpu")
-        attack_para = kwargs["attack_para"] if "attack_para" in kwargs else {}
+        attack_param = kwargs["attack_param"] if "attack_param" in kwargs else {}
         self.log_path = log_path
         initialize_logger(log_path)
         self.use_actor = True if mode == 'actor' else False
@@ -135,14 +136,9 @@ class Simulator(object):
             traindls, testdls = dataset.get_dls()
             self.dataset = FLDataset(traindls, testdls)
         
-        self._setup_clients(attack, num_byzantine=num_byzantine, **attack_para)
+        self._setup_clients(attack, num_byzantine=num_byzantine, attack_param=attack_param)
     
-    def _setup_clients(self, attack: str, num_byzantine, **kwargs):
-        """speak some words.
-
-        :param words: words to speak.
-        :return: None
-        """
+    def _setup_clients(self, attack: str, num_byzantine, attack_param):
         import importlib
         if attack is None:
             num_byzantine = 0
@@ -152,7 +148,7 @@ class Simulator(object):
             if i < num_byzantine:
                 module_path = importlib.import_module('blades.attackers.%sclient' % attack)
                 attack_scheme = getattr(module_path, '%sClient' % attack.capitalize())
-                client = attack_scheme(client_id=u, device=self.device, **kwargs)
+                client = attack_scheme(client_id=u, device=self.device, **attack_param)
                 self._register_omniscient_callback(client.omniscient_callback)
             else:
                 client = BladesClient(u, device=self.device)

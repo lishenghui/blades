@@ -8,20 +8,20 @@ from blades.client import ByzantineClient
 class AlieClient(ByzantineClient):
     """
     Args:
-        n (int): Total number of workers
-        m (int): Number of Byzantine workers
+        num_clients (int): Total number of clients
+        num_byzantine (int): Number of Byzantine clients
     """
     
-    def __init__(self, n, m, z=None, *args, **kwargs):
+    def __init__(self, num_clients, num_byzantine, z=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
         # Number of supporters
         if z is not None:
             self.z_max = z
         else:
-            s = np.floor(n / 2 + 1) - m
-            cdf_value = (n - m - s) / (n - m)
+            s = np.floor(num_clients / 2 + 1) - num_byzantine
+            cdf_value = (num_clients - num_byzantine - s) / (num_clients - num_byzantine)
             self.z_max = norm.ppf(cdf_value)
-        self.n_good = n - m
+        self.n_good = num_clients - num_byzantine
     
     def get_gradient(self):
         return self._gradient
