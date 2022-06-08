@@ -19,7 +19,7 @@ conf_params = {
     "seed": 1,  # reproducibility
 }
 
-ray.init(num_gpus=0)
+ray.init(num_gpus=0, local_mode=True)
 simulator = Simulator(**conf_params)
 
 model = CCTNet()

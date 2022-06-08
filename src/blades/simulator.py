@@ -1,24 +1,23 @@
 import logging
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from time import time
-from typing import Any, Callable, Optional, Union
+from typing import Any, Callable, Optional, Union, List
 
 import numpy as np
 import ray
 import torch
 from ray.train import Trainer
 
-from blades.client import BladesClient
+from blades.client import BladesClient, ByzantineClient
 from blades.datasets.datasets import FLDataset
 from blades.server import BladesServer
 from blades.utils import top1_accuracy, initialize_logger
 
 
 @ray.remote
-class RayActor(object):
+class _RayActor(object):
     """Ray Actor"""
-    
-    def __int__(*args, **kwargs):
+    def __init__(self, dataset: object, *args, **kwargs):
         """
        Args:
            aggregator (callable): A callable which takes a list of tensors and returns
@@ -28,14 +27,16 @@ class RayActor(object):
            use_cuda (bool): Use cuda or not
            debug (bool):
        """
-        super().__init__()
+        traindls, testdls = dataset.get_dls()
+        self.dataset = FLDataset(traindls, testdls)
     
-    def local_training(self, clients, model, data, local_round, use_actor=False):
+    def local_training(self, clients, model, local_round, use_actor=False):
         update = []
         for i in range(len(clients)):
             clients[i].set_para(model)
             clients[i].train_epoch_start()
-            clients[i].local_training(local_round, use_actor, data[i])
+            data = self.dataset.get_train_data(clients[i].id, local_round)
+            clients[i].local_training(local_round, use_actor, data)
             update.append(clients[i].get_update())
         return update
     
@@ -58,16 +59,19 @@ class Simulator(object):
     """Synchronous and parallel training with specified aggregators.
     
     :param dataset: FLDataset that consists local data of all clients
-    :param aggregator: String (name of build-in aggregation scheme) or a callable which takes a list of tensors and returns
-                an aggregated tensor.
-    :param num_byzantine: Number of Byzantine clients under build-in attack. It should be ``0`` if you have custom attack strategy.
+    :param aggregator: String (name of build-in aggregation scheme) or
+                       a callable which takes a list of tensors and returns an aggregated tensor.
+    :param num_byzantine: Number of Byzantine clients under build-in attack.
+                          It should be ``0`` if you have custom attack strategy.
     :type num_byzantine: int, optional
-    :param attack: ``None`` by default. One of the build-in attacks, i.e., ``None``, ``noise``, ``labelflipping``, ``signflipping``, ``alie``,
+    :param attack: ``None`` by default. One of the build-in attacks, i.e., ``None``, ``noise``, ``labelflipping``,
+                    ``signflipping``, ``alie``,
                     ``ipm``. It should be ``None`` if you have custom attack strategy.
     :type attack: str
     :param num_actors: Number of ``Ray actors`` that will be created for local training.
     :type num_actors: int
-    :param mode: Training mode, either ``actor`` or ``trainer``. For large scale client population, ``actor mode`` is favorable
+    :param mode: Training mode, either ``actor`` or ``trainer``. For large scale client population,
+                    ``actor mode`` is favorable
     :type mode: str
     :param log_path: The path of logging
     :type log_path: str
@@ -102,10 +106,6 @@ class Simulator(object):
         initialize_logger(log_path)
         self.use_actor = True if mode == 'actor' else False
         
-        if type(dataset) != FLDataset:
-            traindls, testdls = dataset.get_dls()
-            dataset = FLDataset(traindls, testdls)
-        self.dataset = dataset
         self.metrics = {"top1": top1_accuracy} if metrics is None else metrics
         self.use_cuda = use_cuda
         self.omniscient_callbacks = []
@@ -115,18 +115,25 @@ class Simulator(object):
         self.debug_logger = logging.getLogger("debug")
         self.debug_logger.info(self.__str__())
         
-        self._setup_clients(attack, num_byzantine=num_byzantine, **attack_para)
+        
         if metrics is None:
             metrics = {"top1": top1_accuracy}
         
         if self.use_actor:
-            self.ray_actors = [RayActor.options(num_gpus=gpu_per_actor).remote() for _ in range(num_actors)]
+            self.ray_actors = [_RayActor.options(num_gpus=gpu_per_actor).remote(dataset)
+                               for _ in range(num_actors)]
         else:
             self.executor = ThreadPoolExecutor(max_workers=num_trainers)
             self.ray_trainers = [Trainer(backend="torch", num_workers=num_actors // num_trainers, use_gpu=use_cuda,
                                          resources_per_worker={'GPU': gpu_per_actor}) for _ in range(num_trainers)]
             [trainer.start() for trainer in self.ray_trainers]
-    
+
+        if type(dataset) != FLDataset:
+            traindls, testdls = dataset.get_dls()
+            self.dataset = FLDataset(traindls, testdls)
+            
+        self._setup_clients(attack, num_byzantine=num_byzantine, **attack_para)
+        
     def _setup_clients(self, attack: str, num_byzantine, **kwargs):
         """speak some words.
 
@@ -134,7 +141,7 @@ class Simulator(object):
         :return: None
         """
         import importlib
-        if attack == None:
+        if attack is None:
             num_byzantine = 0
         users = self.dataset.get_clients()
         self._clients = []
@@ -170,7 +177,7 @@ class Simulator(object):
     def _register_omniscient_callback(self, callback):
         self.omniscient_callbacks.append(callback)
     
-    def register_attackers(self, clients):
+    def register_attackers(self, clients: List[ByzantineClient]) -> None:
         assert len(clients) < len(self._clients)
         for i in range(len(clients)):
             clients[i].set_id(self._clients[i].get_id())
@@ -178,7 +185,7 @@ class Simulator(object):
             self._register_omniscient_callback(clients[i].omniscient_callback)
     
     def parallel_call(self, clients,
-                      f: Callable[[BladesClient], None]) -> None:  # clients is added due to the changing of self.clients
+                      f: Callable[[BladesClient], None]) -> None:
         self.cache_random_state()
         _ = [f(worker) for worker in clients]
         self.restore_random_state()
@@ -194,13 +201,10 @@ class Simulator(object):
     
     def train_actor(self, global_round, num_rounds, clients):
         # TODO: randomly select a subset of clients for local training
-        # clients is added due to the changing of self.clients (Tianru)
-        # self.clients is changed to clients (Tianru)
         self.debug_logger.info(f"Train global round {global_round}")
         
         def train_function(clients, actor, model, num_rounds):
-            data = [self.dataset.get_train_data(client.id, num_rounds) for client in clients]
-            return actor.local_training.remote(clients, model, data, num_rounds, use_actor=self.use_actor)
+            return actor.local_training.remote(clients, model, num_rounds, use_actor=self.use_actor)
         
         client_per_trainer = len(clients) // len(self.ray_actors)
         all_tasks = [
@@ -293,17 +297,20 @@ class Simulator(object):
             test_batch_size: Optional[int] = 64,
             server_lr: Optional[float] = 0.1,
             client_lr: Optional[float] = 0.1,
-            lr_scheduler=None,
+            lr_scheduler: Optional[torch.optim.lr_scheduler.MultiStepLR] = None,
     ):
         """Run the adversarial training.
     
         :param model: The global model for training.
         :type model: `torch.nn.Module`
-        :param server_optimizer: Pytorch optimizer for server-side optimization. Currently, the `str` type only supports ``SGD``
+        :param server_optimizer: Pytorch optimizer for server-side optimization.
+                                    Currently, the `str` type only supports ``SGD``
         :type server_optimizer: torch.optim.Optimizer or str
-        :param client_optimizer: Pytorch optimizer for client-side optimization. Currently, the ``str`` type only supports ``SGD``
+        :param client_optimizer: Pytorch optimizer for client-side optimization.
+                                 Currently, the ``str`` type only supports ``SGD``
         :type client_optimizer: torch.optim.Optimizer or str
-        :param loss: A Pytorch Loss function. See https://pytorch.org/docs/stable/nn.html#loss-functions. Currently, the `str` type only supports ``crossentropy``
+        :param loss: A Pytorch Loss function. See https://pytorch.org/docs/stable/nn.html#loss-functions.
+                     Currently, the `str` type only supports ``crossentropy``
         :type loss: str
         :param global_rounds: Number of communication rounds in total.
         :type global_rounds: int, optional
@@ -317,6 +324,8 @@ class Simulator(object):
         :type server_lr: float, optional
         :param client_lr: Learning rate of ``client_optimizer``
         :type client_lr: float, optional
+        :param lr_scheduler: Learning rate scheduler
+        :type lr_scheduler: torch.optim.lr_scheduler.MultiStepLR, optional
         :return: None
         """
         if server_optimizer == 'SGD':
@@ -333,9 +342,10 @@ class Simulator(object):
         self.parallel_call(self._clients, lambda client: client.set_loss(loss))
         global_start = time()
         ret = []
+        global_model = self.server.get_model()
         for global_rounds in range(1, global_rounds + 1):
             self.parallel_call(self._clients,
-                               lambda client: client.set_model(self.server.get_model(), torch.optim.SGD, client_lr))
+                               lambda client: client.set_model(global_model, torch.optim.SGD, client_lr))
             round_start = time()
             if self.use_actor:
                 self.train_actor(global_rounds, local_steps, self._clients)
@@ -356,14 +366,14 @@ class Simulator(object):
             print(f"E={global_rounds}; Learning rate = {client_lr:}; Time cost = {time() - global_start}")
         return ret
     
-    def log_variance(self, round, update):
+    def log_variance(self, cur_round, update):
         var_avg = torch.mean(torch.var(torch.vstack(update), dim=0, unbiased=False)).item()
         norm = torch.norm(torch.var(torch.vstack(update), dim=0, unbiased=False)).item()
         avg_norm = torch.mean(torch.var(torch.vstack(update), dim=0, unbiased=False) / (
             torch.mean(torch.vstack(update) ** 2, dim=0))).item()
         r = {
             "_meta": {"type": "variance"},
-            "E": round,
+            "E": cur_round,
             "avg": var_avg,
             "norm": norm,
             "avg_norm": avg_norm,
