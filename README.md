@@ -53,9 +53,8 @@ pip install -e . --verbose
 
 # ⚡ Get Started
 
-
-## How fast can we train and evaluate your own GNN?
-Take `IPM Attack` and `Krum Aggregation` as an example:
+## How fast can we simulate attack and defense in federated learning?
+## Take [ALIE Attack](https://github.com/bladesteam/blades/blob/master/src/blades/attackers/alieclient.py)  and `Krum Aggregation` as an example:
 ```python
 import ray
 
@@ -69,6 +68,10 @@ mnist = MNIST(data_root="./data", train_bs=32, num_clients=10)  # built-in feder
 conf_params = {
     "dataset": mnist,
     "aggregator": "krum",  # aggregation
+    "num_byzantine": 3,  # number of Byzantine clients
+    "attack": "alie",  # attack strategy
+    "attack_para": {"n": 20,  # attacker parameters
+                    "m": 5},
     "num_actors": 4,  # number of training actors
     "seed": 1,  # reproducibility
 }
