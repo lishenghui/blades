@@ -33,20 +33,16 @@ A simulator for Byzantine-robust federated Learning with Attacks and Defenses Ex
 ```python
 import ray
 
-from blades.datasets import CIFAR10
-from blades.models.cifar10 import CCTNet
+from blades.datasets import MNIST
+from blades.models.mnist import DNN
 from blades.simulator import Simulator
 
-cifar10 = CIFAR10(num_clients=20, iid=True)  # built-in federated cifar10 dataset
+mnist = MNIST(data_root="./data", train_bs=32, num_clients=10)  # built-in federated MNIST dataset
 
 # configuration parameters
 conf_params = {
-    "dataset": cifar10,
-    "aggregator": "mean",  # defense: robust aggregation
-    "num_byzantine": 5,  # number of byzantine clients
-    "attack": "alie",  # attack strategy
-    "attack_para": {"n": 20,  # attacker parameters
-                    "m": 5},
+    "dataset": mnist,
+    "aggregator": "krum",  # aggregation
     "num_actors": 4,  # number of training actors
     "seed": 1,  # reproducibility
 }
@@ -54,17 +50,20 @@ conf_params = {
 ray.init(num_gpus=0)
 simulator = Simulator(**conf_params)
 
+model = DNN()
 # runtime parameters
 run_params = {
-    "model": CCTNet(),  # global model
-    "server_optimizer": 'SGD',  # server optimizer
+    "model": model,  # global model
+    "server_optimizer": 'SGD',  # ,server_opt  # server optimizer
     "client_optimizer": 'SGD',  # client optimizer
     "loss": "crossentropy",  # loss function
     "global_rounds": 400,  # number of global rounds
     "local_steps": 2,  # number of steps per round
-    "lr": 0.1,  # learning rate
+    "server_lr": 1,
+    "client_lr": 0.1,  # learning rate
 }
 simulator.run(**run_params)
+
 ```
 
 ```{seealso}
