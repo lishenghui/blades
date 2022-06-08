@@ -1,39 +1,48 @@
 import ray
-import torch.optim
 
+from blades.client import ByzantineClient
 from blades.datasets import CIFAR10
 from blades.models.cifar10 import CCTNet
 from blades.simulator import Simulator
 
 cifar10 = CIFAR10(num_clients=20, iid=True)  # built-in federated cifar10 dataset
 
+
+class MaliciousClient(ByzantineClient):
+    def __init__(self, *args, **kwargs):
+        super(ByzantineClient).__init__(*args, **kwargs)
+    
+    def omniscient_callback(self, simulator):
+        updates = []
+        for w in simulator._clients:
+            is_byzantine = w.get_is_byzantine()
+            if not is_byzantine:
+                updates.append(w.get_update())
+        self.save_update(-100 * (sum(updates)) / len(updates))
+
+
 # configuration parameters
 conf_params = {
     "dataset": cifar10,
     "aggregator": "mean",  # defense: robust aggregation
-    "num_byzantine": 5,  # number of byzantine clients
-    "attack": "alie",  # attack strategy
-    "attack_para": {"n": 20,  # attacker parameters
-                    "m": 5},
     "num_actors": 4,  # number of training actors
     "seed": 1,  # reproducibility
 }
 
 ray.init(num_gpus=0)
-# ray.init(num_gpus=0, local_mode=True)
 simulator = Simulator(**conf_params)
 
-model = CCTNet()
-server_opt = torch.optim.Adam(model.parameters(), lr=0.01)
+attackers = [MaliciousClient() for _ in range(5)]
+simulator.register_attackers(attackers)
+
 # runtime parameters
 run_params = {
-    "model": model,  # global model
-    "server_optimizer": 'SGD',  # ,server_opt  # server optimizer
+    "model": CCTNet(),  # global model
+    "server_optimizer": 'SGD',  # server optimizer
     "client_optimizer": 'SGD',  # client optimizer
     "loss": "crossentropy",  # loss function
     "global_rounds": 400,  # number of global rounds
     "local_steps": 2,  # number of steps per round
-    "server_lr": 1,
     "client_lr": 0.1,  # learning rate
 }
 simulator.run(**run_params)

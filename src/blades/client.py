@@ -1,54 +1,68 @@
 import copy
 import logging
 from collections import defaultdict
-from typing import Union, Callable, Tuple
+from typing import Union, Tuple, Optional
 
 import ray.train as train
 import torch
 import torch.nn as nn
-import torchvision.transforms as transforms
 from torch.utils.data import DataLoader
 
 
-class TorchClient(object):
+class BladesClient(object):
+    r"""Base class for all clients.
+    
+        .. note::
+            Your honest clients should also subclass this class.
+            
+        :param client_id: a unique id of the client.
+        :type client_id: str, optional.
+        :param device:  if specified, all parameters will be copied to that device
+        :type device: torch.device, or str
+    """
+    
+    _is_byzantine: bool = False
+    
     def __init__(
             self,
-            client_id, metrics,
-            # model: torch.nn.Module,
-            # optimizer: torch.optim.Optimizer,
-            # loss_func: torch.nn.modules.loss._Loss,
-            device: Union[torch.device, str],
+            client_id: Optional[str] = None,
+            device: Union[torch.device, str] = 'cpu',
     ):
         self.id = client_id
-        # self.model = model.to('cpu')
-        # self.optimizer = optimizer
-        # self.loss_func = loss_func
         self.device = device
         
-        self.__is_byzantine = False
         self.running = {}
         self.state = defaultdict(dict)
-        self.metrics = metrics
         self.json_logger = logging.getLogger("stats")
         self.debug_logger = logging.getLogger("debug")
     
-    def detach_model(self, lr):
-        self.model = copy.deepcopy(self.model)
-        self.optimizer = torch.optim.SGD(self.model.parameters(), lr=lr)
-        # self.optimizer = torch.optim.SGD(self.model.parameters(), lr=self.optimizer.param_groups[0]['lr'])
+    def set_id(self, id):
+        self.id = id
+    
+    def get_id(self):
+        return self.id
     
     def getattr(self, attr):
         return getattr(self, attr)
     
     def get_is_byzantine(self):
-        return self.__is_byzantine
+        return self._is_byzantine
     
-    def set_model(self, model, opt, lr):
+    def set_model(self, model: nn.Module, opt: type(torch.optim.Optimizer), lr) -> None:
+        r''' Deep copy the given model to the client.
+        
+            .. note::
+                To improve the scalability, this API may be removed in the future,
+                
+            :param model: a Torch model for current client.
+            :type model: torch.nn.Module
+            :param opt: client optimizer
+            :type opt: torch.optim.Optimizer
+            :param lr:  local learning rate
+            :type lr: float
+        '''
         self.model = copy.deepcopy(model)
         self.optimizer = opt(self.model.parameters(), lr=lr)
-    
-    def omniscient_callback(self, simulator):
-        pass
     
     def set_loss(self, loss_func='crossentropy'):
         if loss_func == 'crossentropy':
@@ -59,18 +73,18 @@ class TorchClient(object):
     def set_para(self, model):
         self.model.load_state_dict(model.state_dict())  # .to(self.device)
     
-    def add_metric(self, name: str, callback: Callable[[torch.Tensor, torch.Tensor], float]):
-        if name in self.metrics or name in ["loss", "length"]:
-            raise KeyError(f"Metrics ({name}) already added.")
-        
-        self.metrics[name] = callback
+    # def add_metric(self, name: str, callback: Callable[[torch.Tensor, torch.Tensor], float]):
+    #     if name in self.metrics or name in ["loss", "length"]:
+    #         raise KeyError(f"Metrics ({name}) already added.")
+    #
+    #     self.metrics[name] = callback
     
     def add_metrics(self, metrics: dict):
         for name in metrics:
             self.add_metric(name, metrics[name])
     
     def __str__(self) -> str:
-        return "TorchWorker"
+        return "BladesClient"
     
     def train_epoch_start(self) -> None:
         # self.running["train_loader_iterator"] = iter(self.data_loader)
@@ -81,7 +95,6 @@ class TorchClient(object):
         self.running["train_loader_iterator"] = iter(self.data_loader)
     
     def compute_gradient(self) -> Tuple[float, int]:
-        results = {}
         try:
             data, target = self.running["train_loader_iterator"].__next__()
         except StopIteration:
@@ -93,26 +106,8 @@ class TorchClient(object):
         loss = self.loss_func(output, target)
         loss.backward()
         self._save_grad()
-        
-        self.running["data"] = data
-        self.running["target"] = target
-        
-        results["loss"] = loss.item()
-        results["length"] = len(target)
-        results["metrics"] = {}
-        for name, metric in self.metrics.items():
-            results["metrics"][name] = metric(output, target)
-        return results
     
-    def evaluate(self, round_number, test_set, batch_size, use_actor=True):
-        cifar10_stats = {
-            "mean": (0.4914, 0.4822, 0.4465),
-            "std": (0.2023, 0.1994, 0.2010),
-        }
-        transform = transforms.Compose([
-            transforms.ToTensor(),
-            transforms.Normalize(cifar10_stats["mean"], cifar10_stats["std"]),
-        ])
+    def evaluate(self, round_number, test_set, batch_size, metrics, use_actor=True):
         dataloader = DataLoader(dataset=test_set, batch_size=batch_size)
         self.model.eval()
         r = {
@@ -121,7 +116,7 @@ class TorchClient(object):
             "Length": 0,
             "Loss": 0,
         }
-        for name in self.metrics:
+        for name in metrics:
             r[name] = 0
         
         with torch.no_grad():
@@ -131,24 +126,32 @@ class TorchClient(object):
                 r["Loss"] += self.loss_func(output, target).item() * len(target)
                 r["Length"] += len(target)
                 
-                for name, metric in self.metrics.items():
+                for name, metric in metrics.items():
                     r[name] += metric(output, target) * len(target)
         
-        for name in self.metrics:
+        for name in metrics:
             r[name] /= r["Length"]
         r["Loss"] /= r["Length"]
         
         self.json_logger.info(r)
         self.debug_logger.info(
             f"\n=> Eval Loss={r['Loss']:.4f} "
-            + " ".join(name + "=" + "{:>8.4f}".format(r[name]) for name in self.metrics)
+            + " ".join(name + "=" + "{:>8.4f}".format(r[name]) for name in metrics)
             + "\n"
         )
         return r
     
-    def local_training(self, num_rounds, use_actor, data_batches) -> Tuple[float, int]:
+    def local_training(self, num_rounds: int, use_actor: bool, data_batches: list) -> None:
+        r''' Local optimizaiton of the ``client``. Byzantine clients can overwrite this method to perform adversarial attack.
+        
+            :param num_rounds: Number of local optimization steps.
+            :type num_rounds: int
+            :param use_actor: Specifying the training mode, it should be ``True`` if you use ``Trainer Mode``
+            :type use_actor: bool
+            :param data_batches: A list of training batches for local training.
+            :type data_batches: list
+        '''
         self._save_para()
-        results = {}
         if use_actor:
             model = self.model
         else:
@@ -161,29 +164,19 @@ class TorchClient(object):
             output = model(data)
             loss = self.loss_func(output, target)
             loss.backward()
-            self.apply_gradient()
+            self.optimizer.step()
         
         self.model = model
-        self._save_update()
-        
-        self.running["data"] = data
-        self.running["target"] = target
-        
-        results["loss"] = loss.item()
-        results["length"] = len(target)
-        results["metrics"] = {}
-        for name, metric in self.metrics.items():
-            results["metrics"][name] = metric(output, target)
-        return results
+        update = (self._get_para(current=True) - self._get_para(current=False))
+        self.save_update(update)
     
     def get_gradient(self) -> torch.Tensor:
         return self._get_saved_grad()
     
     def get_update(self) -> torch.Tensor:
+        r''' Return the saved update of local optimization, represented as a vector.
+        '''
         return torch.nan_to_num(self._get_saved_update())
-    
-    def apply_gradient(self) -> None:
-        self.optimizer.step()
     
     def set_gradient(self, gradient: torch.Tensor) -> None:
         beg = 0
@@ -193,14 +186,6 @@ class TorchClient(object):
             p.grad.data = x.clone().detach()
             beg = end
     
-    # def set_para(self, para: torch.Tensor) -> None:
-    #     beg = 0
-    #     for p in self.model.parameters():
-    #         end = beg + len(p.grad.view(-1))
-    #         x = para[beg:end].reshape_as(p.data)
-    #         p.data = x.clone().detach()
-    #         beg = end
-    
     def _save_grad(self) -> None:
         for group in self.optimizer.param_groups:
             for p in group["params"]:
@@ -209,8 +194,8 @@ class TorchClient(object):
                 param_state = self.state[p]
                 param_state["saved_grad"] = torch.clone(p.grad).detach()
     
-    def _save_update(self) -> None:
-        self.state['saved_update'] = (self._get_para(current=True) - self._get_para(current=False)).detach()
+    def save_update(self, update: torch.Tensor) -> None:
+        self.state['saved_update'] = update.detach()
     
     def _get_saved_update(self):
         return self.state['saved_update']
@@ -246,12 +231,7 @@ class TorchClient(object):
         return torch.cat(layer_gradients)
 
 
-class ClientWithMomentum(TorchClient):
-    """
-    Note that we use `WorkerWithMomentum` instead of using multiple `torch.optim.Optimizer`
-    because we need to explicitly update the `momentum_buffer`.
-    """
-    
+class _ClientWithMomentum(BladesClient):
     def __init__(self, momentum, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.momentum = momentum
@@ -277,20 +257,26 @@ class ClientWithMomentum(TorchClient):
         return torch.cat(layer_gradients)
 
 
-class ByzantineWorker(TorchClient):
+class ByzantineClient(BladesClient):
+    r"""Base class for Byzantine clients.
+    
+            .. note::
+                Your Byzantine clients should also subclass this class, and overwrite ``local_training`` and
+                ``omniscient_callback`` to customize your attack.
+                
+        """
+    _is_byzantine = True
+    
     def __int__(self, *args, **kwargs):
-        super(ByzantineWorker).__init__(*args, **kwargs)
+        super(ByzantineClient).__init__(*args, **kwargs)
     
-    def configure(self, simulator):
-        # call configure after defining DistribtuedSimulator
-        self.simulator = simulator
-        simulator.register_omniscient_callback(self.omniscient_callback)
-    
-    def compute_gradient(self) -> Tuple[float, int]:
-        # Use self.simulator to get all other workers
-        # Note that the byzantine worker does not modify the states directly.
-        return super().compute_gradient()
-    
-    def get_gradient(self) -> torch.Tensor:
-        # Use self.simulator to get all other workers
-        return super().get_gradient()
+    def omniscient_callback(self, simulator):
+        r"""A method that will be registered by the simulator and execute after each communication round.
+            It allows a Byzantine client has full knowledge of the training system, e.g., updates from all
+            clients. Your Byzantine client can overwrite this method to access information from the server
+            and other clients.
+            
+            :param simulator: The running simulator.
+            :type simulator: Simulator
+        """
+        pass

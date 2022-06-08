@@ -1,3 +1,36 @@
+---
+html_meta:
+  description: Create functional and beautiful websites for your documentation with Sphinx and the Awesome Sphinx Theme.
+  keywords: Documentation, Sphinx, Python
+---
+
+<!-- vale Google.Headings = NO -->
+
+# Welcome to Blades documentation
+
+<!-- vale Google.Headings = YES -->
+
+```{rst-class} lead
+A simulator for Byzantine-robust federated Learning with Attacks and Defenses Experimental Simulation
+```
+
+---
+
+## Get started
+
+1. Install the simulator:
+
+   ```terminal
+   pip install blades
+   ```
+
+   ```{seealso}
+   {ref}`sec:install`
+   ```
+
+2. Test ``Blades`` with the following example:
+
+```python
 import ray
 
 from blades.datasets import MNIST
@@ -36,3 +69,35 @@ run_params = {
     "client_lr": 0.1,  # learning rate
 }
 simulator.run(**run_params)
+```
+
+```{seealso}
+{ref}`sec:attacks`
+```
+
+In the _attacks_ section, you can learn more about the 
+{ref}`Build-in Attacks <sec:buildinattacks>` and
+{ref}`Customize Attacks <sec:customattacks>`.
+
+
+## Give feedback
+
+Is something broken or missing?
+Create a [GitHub issue](https://github.com/bladesteam/blades/issues/new).
+
+<!-- vale Google.Headings = NO -->
+<!-- vale 18F.Headings = NO -->
+
+```{toctree}
+---
+hidden: true
+caption: Documentation
+glob: true
+---
+
+install
+attacks
+defenses
+references/api_reference
+```
+
