@@ -1,22 +1,16 @@
-import os
-import sys
-from pathlib import Path
-
-sys.path.append(os.path.dirname(Path(os.path.abspath(__file__)).parent))
-
-from client import ByzantineWorker
+from blades.client import ByzantineClient
 
 
-class IpmClient(ByzantineWorker):
+class IpmClient(ByzantineClient):
     def __init__(self, epsilon: float = 0.5, is_fedavg: bool = True, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.epsilon = epsilon
         self.__fedavg = is_fedavg
         self._gradient = None
-        self.__is_byzantine = True
+        self._is_byzantine = True
     
     def get_is_byzantine(self):
-        return self.__is_byzantine
+        return self._is_byzantine
     
     def get_gradient(self):
         return self._gradient
@@ -24,9 +18,9 @@ class IpmClient(ByzantineWorker):
     def omniscient_callback(self, simulator):
         # Loop over good workers and accumulate their gradients
         updates = []
-        for w in simulator._clients:
+        for w in simulator.get_clients():
             is_byzantine = w.get_is_byzantine()
-            # is_byzantine = ray.get(w.getattr.remote('__is_byzantine'))
+            # is_byzantine = ray.get(w.getattr.remote('_is_byzantine'))
             if not is_byzantine:
                 updates.append(w.get_update())
         

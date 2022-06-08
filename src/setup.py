@@ -1,20 +1,20 @@
 from setuptools import setup, find_packages
 
-requirements =[
-'torch>=1.10.2',
-'torchvision>=0.11.3',
-'numpy>=1.19.4',
-'scipy>=1.5.4',
-'ray>=1.0.0',
-'sklearn>=0.0',
-'scikit-learn>=1.0.2',
-'matplotlib>=3.4.1',
-'requests>=2.27.1',
-'setuptools~=58.0.4',
+requirements = [
+    'torch>=1.10.2',
+    'torchvision>=0.11.3',
+    'numpy>=1.19.4',
+    'scipy>=1.5.4',
+    'ray>=1.0.0',
+    'sklearn>=0.0',
+    'scikit-learn>=1.0.2',
+    'matplotlib>=3.4.1',
+    'requests>=2.27.1',
+    'setuptools~=58.0.4',
 ]
 setup(
     name='blades',
-    version='0.0.1',
+    version='0.0.5',
     description="""Blades: A simulator for Byzantine-robust federated Learning with Attacks and Defenses Experimental Simulation""",
     # long_description=open('blades/README.md').read(),
     # long_description_content_type="text/markdown",
