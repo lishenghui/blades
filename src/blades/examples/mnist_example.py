@@ -10,6 +10,10 @@ mnist = MNIST(data_root="./data", train_bs=32, num_clients=10)  # built-in feder
 conf_params = {
     "dataset": mnist,
     "aggregator": "krum",  # aggregation
+    "num_byzantine": 3,  # number of Byzantine clients
+    "attack": "alie",  # attack strategy
+    "attack_para": {"n": 20,  # attacker parameters
+                    "m": 5},
     "num_actors": 4,  # number of training actors
     "seed": 1,  # reproducibility
 }
