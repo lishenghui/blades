@@ -44,6 +44,6 @@ run_params = {
     "loss": "crossentropy",  # loss function
     "global_rounds": 400,  # number of global rounds
     "local_steps": 2,  # number of steps per round
-    "lr": 0.1,  # learning rate
+    "client_lr": 0.1,  # learning rate
 }
 simulator.run(**run_params)
