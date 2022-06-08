@@ -51,7 +51,7 @@ class BladesClient(object):
     def get_is_byzantine(self):
         return self._is_byzantine
     
-    def set_model(self, model: nn.Module, opt, lr) -> None:
+    def set_model(self, model: nn.Module, opt: type(torch.optim.Optimizer), lr) -> None:
         r''' Deep copy the given model to the client.
         
             .. note::

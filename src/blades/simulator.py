@@ -291,7 +291,8 @@ class Simulator(object):
             local_steps: Optional[int] = 1,
             validate_interval: Optional[int] = 1,
             test_batch_size: Optional[int] = 64,
-            lr: Optional[float] = 0.1,
+            server_lr: Optional[float] = 0.1,
+            client_lr: Optional[float] = 0.1,
             lr_scheduler=None,
     ):
         """Run the adversarial training.
@@ -312,12 +313,14 @@ class Simulator(object):
         :type validate_interval: int, optional
         :param test_batch_size: Batch size of evaluation
         :type test_batch_size: int, optional
-        :param lr: Learning rate of ``client_optimizer``
-        :type lr: float, optional
+        :param server_lr: Learning rate of ``server_optimizer``
+        :type server_lr: float, optional
+        :param client_lr: Learning rate of ``client_optimizer``
+        :type client_lr: float, optional
         :return: None
         """
         if server_optimizer == 'SGD':
-            self.server_opt = torch.optim.SGD(model.parameters(), lr=lr)
+            self.server_opt = torch.optim.SGD(model.parameters(), lr=server_lr)
         else:
             self.server_opt = server_optimizer
         
@@ -332,7 +335,7 @@ class Simulator(object):
         ret = []
         for global_rounds in range(1, global_rounds + 1):
             self.parallel_call(self._clients,
-                               lambda client: client.set_model(self.server.get_model(), torch.optim.SGD, lr))
+                               lambda client: client.set_model(self.server.get_model(), torch.optim.SGD, client_lr))
             round_start = time()
             if self.use_actor:
                 self.train_actor(global_rounds, local_steps, self._clients)
@@ -345,12 +348,12 @@ class Simulator(object):
             # TODO(Shenghui): When using trainer, the test function is not implemented so far.
             if lr_scheduler:
                 lr_scheduler.step()
-                lr = lr_scheduler.get_last_lr()[0]
+                client_lr = lr_scheduler.get_last_lr()[0]
             else:
-                lr = self.server_opt.param_groups[0]['lr']
+                client_lr = self.server_opt.param_groups[0]['lr']
             
             ret.append(time() - round_start)
-            print(f"E={global_rounds}; Learning rate = {lr:}; Time cost = {time() - global_start}")
+            print(f"E={global_rounds}; Learning rate = {client_lr:}; Time cost = {time() - global_start}")
         return ret
     
     def log_variance(self, round, update):
