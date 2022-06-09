@@ -17,6 +17,12 @@ The following defense strategies are currently implemented in ``Blades``:
 | **Clustering**   | *Sattler et al.* [On the byzantine robustness of clustered federated learning](https://ieeexplore.ieee.org/abstract/document/9054676), *ICASSP'20*              | [[**Example**]](https://github.com/bladesteam/blades/blob/master/src/blades/aggregators/clustering.py)   |
 | **ClippedClustering**   | *Li et al.* [An Experimental Study of Byzantine-Robust sAggregation Schemes in Federated Learning](https://www.techrxiv.org/articles/preprint/An_Experimental_Study_of_Byzantine-Robust_Aggregation_Schemes_in_Federated_Learning/19560325), *TechRxiv'22*              | [[**Example**]](https://github.com/bladesteam/blades/blob/master/src/blades/aggregators/clippedclustering.py)   |
 
+### Trust-based Methods
+
+| Methods   | Descriptions                                                                                                                               | Examples                                                                                       |
+| --------- | ------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------- |
+| **FLTrust**   | *Cao et al.* [FLTrust: Byzantine-robust Federated Learning via Trust Bootstrapping](https://arxiv.org/abs/2012.13995), *NDSS'21*              | [[**Example**]](https://github.com/bladesteam/blades/blob/master/src/blades/aggregators/fltrust.py)   |
+
 
 ## Customize Defense
 
