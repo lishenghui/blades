@@ -53,22 +53,23 @@ class Geomed(_BaseAggregator):
     def geometric_median_objective(self, median, points, alphas):
         return sum([alpha * _compute_euclidean_distance(median, p) for alpha, p in zip(alphas, points)])
     
-    def __call__(self, inputs, weights=None, maxiter=100, eps=1e-6, ftol=1e-6):
+    def __call__(self, clients, weights=None, maxiter=100, eps=1e-6, ftol=1e-6):
+        updates = list(map(lambda w: w.get_update(), clients))
         if weights is None:
-            weights = np.ones(len(inputs)) / len(inputs)
-        median = torch.stack(inputs, dim=0).mean(dim=0)
+            weights = np.ones(len(updates)) / len(updates)
+        median = torch.stack(updates, dim=0).mean(dim=0)
         num_oracle_calls = 1
-        obj_val = self.geometric_median_objective(median, inputs, weights)
+        obj_val = self.geometric_median_objective(median, updates, weights)
         for i in range(maxiter):
             prev_median, prev_obj_val = median, obj_val
             weights = np.asarray(
                 [max(eps, alpha / max(eps, _compute_euclidean_distance(median, p).item())) for alpha, p in
-                 zip(weights, inputs)],
+                 zip(weights, updates)],
                 dtype=weights.dtype)
             weights = weights / weights.sum()
-            median = torch.sum(torch.vstack([w * beta for w, beta in zip(inputs, weights)]), dim=0)
+            median = torch.sum(torch.vstack([w * beta for w, beta in zip(updates, weights)]), dim=0)
             num_oracle_calls += 1
-            obj_val = self.geometric_median_objective(median, inputs, weights)
+            obj_val = self.geometric_median_objective(median, updates, weights)
             # print('gm obj:', obj_val)
             if abs(prev_obj_val - obj_val) < ftol * obj_val:
                 break

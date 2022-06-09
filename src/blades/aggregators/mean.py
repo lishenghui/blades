@@ -58,8 +58,9 @@ class _BaseAsyncAggregator(object):
 
 
 class Mean(_BaseAggregator):
-    def __call__(self, inputs):
-        values = torch.stack(inputs, dim=0).mean(dim=0)
+    def __call__(self, clients):
+        updates = list(map(lambda w: w.get_update(), clients))
+        values = torch.stack(updates, dim=0).mean(dim=0)
         return values
     
     def __str__(self):

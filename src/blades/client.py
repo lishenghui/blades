@@ -22,6 +22,7 @@ class BladesClient(object):
     """
     
     _is_byzantine: bool = False
+    _is_trusted: bool = False
     
     def __init__(
             self,
@@ -48,7 +49,13 @@ class BladesClient(object):
     def get_is_byzantine(self):
         return self._is_byzantine
     
-    def set_model(self, model: nn.Module, opt: type(torch.optim.Optimizer), lr) -> None:
+    def get_is_trusted(self):
+        return self._is_trusted
+    
+    def set_is_trusted(self, trusted=True):
+        self._is_trusted = trusted
+    
+    def set_model(self, model: nn.Module, opt: type(torch.optim.Optimizer), lr: float) -> None:
         r''' Deep copy the given model to the client.
         
             .. note::
@@ -71,17 +78,7 @@ class BladesClient(object):
             raise NotImplementedError
     
     def set_para(self, model):
-        self.model.load_state_dict(model.state_dict())  # .to(self.device)
-    
-    # def add_metric(self, name: str, callback: Callable[[torch.Tensor, torch.Tensor], float]):
-    #     if name in self.metrics or name in ["loss", "length"]:
-    #         raise KeyError(f"Metrics ({name}) already added.")
-    #
-    #     self.metrics[name] = callback
-    
-    def add_metrics(self, metrics: dict):
-        for name in metrics:
-            self.add_metric(name, metrics[name])
+        self.model.load_state_dict(model.state_dict())
     
     def __str__(self) -> str:
         return "BladesClient"
@@ -90,23 +87,7 @@ class BladesClient(object):
         # self.running["train_loader_iterator"] = iter(self.data_loader)
         self.model = self.model.to(self.device)
         self.model.train()
-    
-    def reset_data_loader(self):
-        self.running["train_loader_iterator"] = iter(self.data_loader)
-    
-    def compute_gradient(self) -> Tuple[float, int]:
-        try:
-            data, target = self.running["train_loader_iterator"].__next__()
-        except StopIteration:
-            self.reset_data_loader()
-            data, target = self.running["train_loader_iterator"].__next__()
-        data, target = data.to(self.device), target.to(self.device)
-        self.optimizer.zero_grad()
-        output = self.model(data)
-        loss = self.loss_func(output, target)
-        loss.backward()
-        self._save_grad()
-    
+        
     def evaluate(self, round_number, test_set, batch_size, metrics, use_actor=True):
         dataloader = DataLoader(dataset=test_set, batch_size=batch_size)
         self.model.eval()
@@ -170,36 +151,17 @@ class BladesClient(object):
         update = (self._get_para(current=True) - self._get_para(current=False))
         self.save_update(update)
     
-    def get_gradient(self) -> torch.Tensor:
-        return self._get_saved_grad()
-    
     def get_update(self) -> torch.Tensor:
         r''' Return the saved update of local optimization, represented as a vector.
         '''
         return torch.nan_to_num(self._get_saved_update())
     
-    def set_gradient(self, gradient: torch.Tensor) -> None:
-        beg = 0
-        for p in self.model.parameters():
-            end = beg + len(p.grad.view(-1))
-            x = gradient[beg:end].reshape_as(p.grad.data)
-            p.grad.data = x.clone().detach()
-            beg = end
-    
-    def _save_grad(self) -> None:
-        for group in self.optimizer.param_groups:
-            for p in group["params"]:
-                if p.grad is None:
-                    continue
-                param_state = self.state[p]
-                param_state["saved_grad"] = torch.clone(p.grad).detach()
-    
     def save_update(self, update: torch.Tensor) -> None:
         self.state['saved_update'] = update.detach()
-    
-    def _get_saved_update(self):
+
+    def _get_saved_update(self) -> torch.Tensor:
         return self.state['saved_update']
-    
+
     def _save_para(self) -> None:
         for group in self.optimizer.param_groups:
             for p in group["params"]:
@@ -221,40 +183,6 @@ class BladesClient(object):
                     param_state = self.state[p]
                     layer_parameters.append(param_state["saved_para"].data.view(-1))
         return torch.cat(layer_parameters).to('cpu')
-    
-    def _get_saved_grad(self) -> torch.Tensor:
-        layer_gradients = []
-        for group in self.optimizer.param_groups:
-            for p in group["params"]:
-                param_state = self.state[p]
-                layer_gradients.append(param_state["saved_grad"].data.view(-1))
-        return torch.cat(layer_gradients)
-
-
-class _ClientWithMomentum(BladesClient):
-    def __init__(self, momentum, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.momentum = momentum
-    
-    def _save_grad(self) -> None:
-        for group in self.optimizer.param_groups:
-            for p in group["params"]:
-                if p.grad is None:
-                    continue
-                
-                param_state = self.state[p]
-                if "momentum_buffer" not in param_state:
-                    param_state["momentum_buffer"] = torch.clone(p.grad).detach()
-                else:
-                    param_state["momentum_buffer"].mul_(self.momentum).add_(p.grad.mul_(1 - self.momentum))
-    
-    def _get_saved_grad(self) -> torch.Tensor:
-        layer_gradients = []
-        for group in self.optimizer.param_groups:
-            for p in group["params"]:
-                param_state = self.state[p]
-                layer_gradients.append(param_state["momentum_buffer"].data.view(-1))
-        return torch.cat(layer_gradients)
 
 
 class ByzantineClient(BladesClient):

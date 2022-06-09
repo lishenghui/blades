@@ -142,6 +142,11 @@ To run `blades` on a cluster, you only need to deploy `Ray cluster` according to
 ## 📘️ [Documentation](https://bladesteam.github.io/)
 
 
+
+## Ref
+
+* Part of the code is from *Karimireddy*'s [repository](https://github.com/epfml/byzantine-robust-optimizer). **Paper:** *Karimireddy et al.* [Learning from History for Byzantine Robust Optimization](http://proceedings.mlr.press/v139/karimireddy21a.html)
+
 # ❓ Known Issues
 + In the current version, communication across machines is a bottleneck as the dataset is centrialized, we will fix this issue soon.
 <!-- + Untargeted attacks are suffering from performance degradation, as also in DeepRobust, when a validation set is used during training with model picking. Such phenomenon has also been revealed in [Black-box Gradient Attack on Graph Neural Networks: Deeper Insights in Graph-based Attack and Defense](https://arxiv.org/abs/2104.15061). -->

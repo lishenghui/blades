@@ -9,10 +9,11 @@ class Clustering():
     def __init__(self) -> None:
         pass
     
-    def __call__(self, inputs):
-        stacked_models = torch.vstack(inputs)
+    def __call__(self, clients):
+        updates = list(map(lambda w: w.get_update(), clients))
+        stacked_models = torch.vstack(updates)
         np_models = stacked_models.cpu().detach().numpy()
-        num = len(inputs)
+        num = len(updates)
         dis_max = np.zeros((num, num))
         for i in range(num):
             for j in range(num):
@@ -28,6 +29,6 @@ class Clustering():
         clustering = AgglomerativeClustering(affinity='precomputed', linkage='average', n_clusters=2)
         clustering.fit(dis_max)
         flag = 1 if np.sum(clustering.labels_) > num // 2 else 0
-        values = torch.vstack(list(model for model, label in zip(inputs, clustering.labels_) if label == flag)).mean(
+        values = torch.vstack(list(model for model, label in zip(updates, clustering.labels_) if label == flag)).mean(
             dim=0)
         return values
