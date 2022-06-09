@@ -55,6 +55,11 @@ pip install -e . --verbose
 
 How fast can we simulate attack and defense in federated learning?
 Take [ALIE Attack](https://github.com/bladesteam/blades/blob/master/src/blades/attackers/alieclient.py)  and `Krum Aggregation` as an example:
+
+```
+{{./src/examples.mnist_example.py}}
+```
+
 ```python
 import ray
 
