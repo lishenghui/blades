@@ -3,7 +3,7 @@ API Reference
 
 ```{toctree}
 ---
-hidden: true
+hidden: True
 caption: API
 glob: true
 ---
