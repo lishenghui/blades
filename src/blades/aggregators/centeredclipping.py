@@ -13,7 +13,7 @@ class Centeredclipping(_BaseAggregator):
     def __init__(self, options):
         self.tau = options.clipping_tau
         self.n_iter = 1
-        super(Clipping, self).__init__()
+        super(Centeredclipping, self).__init__()
         self.momentum = None
     
     def clip(self, v):
@@ -21,13 +21,14 @@ class Centeredclipping(_BaseAggregator):
         scale = min(1, self.tau / v_norm)
         return v * scale
     
-    def __call__(self, inputs):
+    def __call__(self, clients):
+        updates = list(map(lambda w: w.get_update(), clients))
         if self.momentum is None:
-            self.momentum = torch.zeros_like(inputs[0])
+            self.momentum = torch.zeros_like(updates[0])
         
         for _ in range(self.n_iter):
             self.momentum = (
-                    sum(self.clip(v - self.momentum) for v in inputs) / len(inputs)
+                    sum(self.clip(v - self.momentum) for v in updates) / len(updates)
                     + self.momentum
             )
         

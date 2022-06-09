@@ -21,19 +21,20 @@ class Clippedclustering():
     def __init__(self) -> None:
         self.l2norm_his = []
     
-    def __call__(self, inputs):
-        l2norms = [torch.norm(update).item() for update in inputs]
+    def __call__(self, clients):
+        updates = list(map(lambda w: w.get_update(), clients))
+        l2norms = [torch.norm(update).item() for update in updates]
         self.l2norm_his.extend(l2norms)
         threshold = np.median(self.l2norm_his)
         # threshold = min(threshold, 5.0)
         
         for idx, l2 in enumerate(l2norms):
             if l2 > threshold:
-                inputs[idx] = torch_utils.clip_tensor_norm_(inputs[idx], threshold)
+                updates[idx] = torch_utils.clip_tensor_norm_(updates[idx], threshold)
         
-        stacked_models = torch.vstack(inputs)
+        stacked_models = torch.vstack(updates)
         np_models = stacked_models.cpu().detach().numpy()
-        num = len(inputs)
+        num = len(updates)
         dis_max = np.zeros((num, num))
         for i in range(num):
             for j in range(num):
@@ -47,6 +48,6 @@ class Clippedclustering():
         clustering = AgglomerativeClustering(affinity='precomputed', linkage='average', n_clusters=2)
         clustering.fit(dis_max)
         flag = 1 if np.sum(clustering.labels_) > num // 2 else 0
-        values = torch.vstack(list(model for model, label in zip(inputs, clustering.labels_) if label == flag)).mean(
+        values = torch.vstack(list(model for model, label in zip(updates, clustering.labels_) if label == flag)).mean(
             dim=0)
         return values

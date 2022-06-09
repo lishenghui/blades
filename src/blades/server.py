@@ -23,6 +23,8 @@ class BladesServer(object):
                  optimizer: torch.optim.Optimizer,
                  model: torch.nn.Module,
                  aggregator: Callable[[list], torch.Tensor],
+                 *args,
+                 **kwargs,
                  ):
         self.optimizer = optimizer
         self.model = model

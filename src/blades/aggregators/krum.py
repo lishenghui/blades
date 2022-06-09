@@ -100,10 +100,11 @@ class Krum(_BaseAggregator):
         self.m = 1
         super(Krum, self).__init__()
     
-    def __call__(self, inputs):
-        distances = pairwise_euclidean_distances(inputs)
+    def __call__(self, clients):
+        updates = list(map(lambda w: w.get_update(), clients))
+        distances = pairwise_euclidean_distances(updates)
         top_m_indices = multi_krum(distances, self.n, self.f, self.m)
-        values = sum(inputs[i] for i in top_m_indices)
+        values = sum(updates[i] for i in top_m_indices)
         return values
     
     def __str__(self):

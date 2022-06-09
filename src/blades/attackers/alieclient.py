@@ -29,7 +29,7 @@ class AlieClient(ByzantineClient):
     def omniscient_callback(self, simulator):
         # Loop over good workers and accumulate their gradients
         updates = []
-        for client in simulator._clients:
+        for client in simulator._clients.values():
             if not client.get_is_byzantine():
                 updates.append(client.get_update())
         
