@@ -3,7 +3,7 @@ Welcome to Blades documentation
 ================================
 
 
-.. include:: ../../READ.rst
+.. include:: ../../README.rst
 
 
 

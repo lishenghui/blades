@@ -1,4 +1,10 @@
 
+**Blades**: A simulator for **B**\ yzantine-robust federated **L**\ earning with **A**\ ttacks and **D**\ efenses **E**\ xperimental **S**\ imulation
+
+    | Know thy self, know thy enemy. A thousand battles, a thousand victories. --Sun Tzu
+
+    | 知己知彼，百战百胜 ——孙武
+
 .. raw:: html
 
     <p align=center>
@@ -18,11 +24,7 @@
     </p>
 
 
-**Blades**: A simulator for **B**\ yzantine-robust federated **L**\ earning with **A**\ ttacks and **D**\ efenses **E**\ xperimental **S**\ imulation
 
-    Know thy self, know thy enemy. A thousand battles, a thousand victories.
-
-    知己知彼，百战百胜」 ——《孙子兵法•谋攻篇》
 
 NOTE: More features are under development and the API are subject to change.
 If you are interested in this project, don't hesitate to contact me or make a PR directly.
