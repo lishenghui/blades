@@ -39,15 +39,15 @@ Get Started
 
 How fast can we simulate attack and defense in federated learning?
 Take `ALIE Attack <https://github.com/bladesteam/blades/blob/master/src/blades/attackers/alieclient.py>`_ and
-`Trimmedmean Aggregation <https://github.com/bladesteam/blades/blob/master/src/blades/aggregators/trimmedmean.py>`_ as an example:
+`Trimmedmean Aggregation <https://github.com/bladesteam/blades/blob/master/src/blades/aggregators/trimmedmean.py>`_ as an `example <https://github.com/bladesteam/blades/blob/master/src/blades/examples/mini_example.py>`_.
 
 
 .. include:: ../../src/blades/examples/mini_example.py
    :code: python
 
 
-# Build-in Implementations
-
+Build-in Implementations
+--------------------------
 In detail, the following strategies are currently implemented:
 
 
