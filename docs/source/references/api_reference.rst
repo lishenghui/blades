@@ -1,14 +1,12 @@
+
 API Reference
-==============
+===================
 
-```{toctree}
----
-hidden: True
-caption: API
-glob: true
----
+.. toctree::
+   :maxdepth: 2
+   :caption: Contents:
+   :titlesonly:
 
-simulator
-server
-client
-```
+   simulator
+   server
+   client
