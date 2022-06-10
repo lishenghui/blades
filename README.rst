@@ -29,6 +29,12 @@
 NOTE: More features are under development and the API are subject to change.
 If you are interested in this project, don't hesitate to contact me or make a PR directly.
 
+
+`Documentation <https://bladesteam.github.io/>`_
+==================================================
+
+
+
 Installation
 -------------
 
@@ -114,10 +120,6 @@ Trust-based Strategies
 Cluster Deployment
 ===================
 To run **blades** on a cluster, you only need to deploy ``Ray cluster`` according to the `official guide <https://docs.ray.io/en/latest/cluster/user-guide.html>`_
-
-
-`Documentation <https://bladesteam.github.io/>`_
-==================================================
 
 
 Reference
