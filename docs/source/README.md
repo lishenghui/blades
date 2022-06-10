@@ -56,9 +56,13 @@ pip install -e . --verbose
 How fast can we simulate attack and defense in federated learning?
 Take [ALIE Attack](https://github.com/bladesteam/blades/blob/master/src/blades/attackers/alieclient.py)  and `Krum Aggregation` as an example:
 
+
+
+```{eval-rst}
+.. include:: ../../src/blades/examples/mini_example.py
+   :code: python
 ```
-{{./src/examples.mnist_example.py}}
-```
+
 
 ```python
 import ray
@@ -110,13 +114,13 @@ In detail, the following methods are currently implemented:
 
 #### Untargeted Attack
 
-| Strategy          | Descriptions                                                                                                                                           | Examples                                                                                                        |
+| Strategy          | Descriptions                                                                                                                                           | Source                                                                                                        |
 | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------- |
-| **Noise** | Put random noise to the updates. | [[**Example**]](https://github.com/bladesteam/blades/blob/master/src/blades/attackers/noiseclient.py) |
-| **Labelflipping** | *Fang et al.* [Local Model Poisoning Attacks to Byzantine-Robust Federated Learning](https://www.usenix.org/conference/usenixsecurity20/presentation/fang), *USENIX Security' 20* | [[**Example**]](https://github.com/bladesteam/blades/blob/master/src/blades/attackers/labelflippingclient.py) |
-| **Signflipping** | *Li et al.* [RSA: Byzantine-Robust Stochastic Aggregation Methods for Distributed Learning from Heterogeneous Datasets](https://ojs.aaai.org/index.php/AAAI/article/view/3968), *AAAI' 19* | [[**Example**]](https://github.com/bladesteam/blades/blob/master/src/blades/attackers/signflippingclient.py) |
-| **ALIE** | *Baruch et al.* [A little is enough: Circumventing defenses for distributed learning](https://proceedings.neurips.cc/paper/2019/hash/ec1c59141046cd1866bbbcdfb6ae31d4-Abstract.html), *NeurIPS' 19* | [[**Example**]](https://github.com/bladesteam/blades/blob/master/src/blades/attackers/alieclient.py) |
-| **IPM** | *Xie et al.* [Fall of empires: Breaking byzantine- tolerant sgd by inner product manipulation](https://arxiv.org/abs/1903.03936), *UAI' 20* | [[**Example**]](https://github.com/bladesteam/blades/blob/master/src/blades/attackers/ipmclient.py) |
+| **Noise** | Put random noise to the updates. | [Source](https://github.com/bladesteam/blades/blob/master/src/blades/attackers/noiseclient.py) |
+| **Labelflipping** | *Fang et al.* [Local Model Poisoning Attacks to Byzantine-Robust Federated Learning](https://www.usenix.org/conference/usenixsecurity20/presentation/fang), *USENIX Security' 20* | [Source](https://github.com/bladesteam/blades/blob/master/src/blades/attackers/labelflippingclient.py) |
+| **Signflipping** | *Li et al.* [RSA: Byzantine-Robust Stochastic Aggregation Methods for Distributed Learning from Heterogeneous Datasets](https://ojs.aaai.org/index.php/AAAI/article/view/3968), *AAAI' 19* | [Source](https://github.com/bladesteam/blades/blob/master/src/blades/attackers/signflippingclient.py) |
+| **ALIE** | *Baruch et al.* [A little is enough: Circumventing defenses for distributed learning](https://proceedings.neurips.cc/paper/2019/hash/ec1c59141046cd1866bbbcdfb6ae31d4-Abstract.html), *NeurIPS' 19* | [Source](https://github.com/bladesteam/blades/blob/master/src/blades/attackers/alieclient.py) |
+| **IPM** | *Xie et al.* [Fall of empires: Breaking byzantine- tolerant sgd by inner product manipulation](https://arxiv.org/abs/1903.03936), *UAI' 20* | [Source](https://github.com/bladesteam/blades/blob/master/src/blades/attackers/ipmclient.py) |
 
 
 
@@ -129,20 +133,20 @@ In detail, the following methods are currently implemented:
 
 | Methods   | Descriptions                                                                                                                               | Examples                                                                                       |
 | --------- | ------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------- |
-| **Krum**   | *Blanchard et al.* [Machine Learning with Adversaries: Byzantine Tolerant Gradient Descent](https://proceedings.neurips.cc/paper/2017/hash/f4b9ec30ad9f68f89b29639786cb62ef-Abstract.html), *NIPS'17*              | [[**Example**]](https://github.com/bladesteam/blades/blob/master/src/blades/aggregators/krum.py)   |
-| **GeoMed**   | *Chen et al.* [Distributed Statistical Machine Learning in Adversarial Settings: Byzantine Gradient Descent](https://arxiv.org/abs/1705.05491), *POMACS'18*              | [[**Example**]](https://github.com/bladesteam/blades/blob/master/src/blades/aggregators/geomed.py)   |
-| **AutoGM**   | *Li et al.* [Byzantine-Robust Aggregation in Federated Learning Empowered Industrial IoT](https://ieeexplore.ieee.org/abstract/document/9614992), *IEEE TII'22*              | [[**Example**]](https://github.com/bladesteam/blades/blob/master/src/blades/aggregators/autogm.py)   |
-| **Median**   | *Yin et al.* [Byzantine-robust distributed learning: Towards optimal statistical rates](https://proceedings.mlr.press/v80/yin18a), *ICML'18*              | [[**Example**]](https://github.com/bladesteam/blades/blob/master/src/blades/aggregators/median.py)   |
-| **TrimmedMean**   | *Yin et al.* [Byzantine-robust distributed learning: Towards optimal statistical rates](https://proceedings.mlr.press/v80/yin18a), *ICML'18*              | [[**Example**]](https://github.com/bladesteam/blades/blob/master/src/blades/aggregators/trimmedmean.py)   |
-| **CenteredClipping**   | *Karimireddy et al.* [Learning from History for Byzantine Robust Optimization](http://proceedings.mlr.press/v139/karimireddy21a.html), *ICML'21*              | [[**Example**]](https://github.com/bladesteam/blades/blob/master/src/blades/aggregators/centeredclipping.py)   |
-| **Clustering**   | *Sattler et al.* [On the byzantine robustness of clustered federated learning](https://ieeexplore.ieee.org/abstract/document/9054676), *ICASSP'20*              | [[**Example**]](https://github.com/bladesteam/blades/blob/master/src/blades/aggregators/clustering.py)   |
-| **ClippedClustering**   | *Li et al.* [An Experimental Study of Byzantine-Robust sAggregation Schemes in Federated Learning](https://www.techrxiv.org/articles/preprint/An_Experimental_Study_of_Byzantine-Robust_Aggregation_Schemes_in_Federated_Learning/19560325), *TechRxiv'22*              | [[**Example**]](https://github.com/bladesteam/blades/blob/master/src/blades/aggregators/clippedclustering.py)   |
+| **Krum**   | *Blanchard et al.* [Machine Learning with Adversaries: Byzantine Tolerant Gradient Descent](https://proceedings.neurips.cc/paper/2017/hash/f4b9ec30ad9f68f89b29639786cb62ef-Abstract.html), *NIPS'17*              | [Source](https://github.com/bladesteam/blades/blob/master/src/blades/aggregators/krum.py)   |
+| **GeoMed**   | *Chen et al.* [Distributed Statistical Machine Learning in Adversarial Settings: Byzantine Gradient Descent](https://arxiv.org/abs/1705.05491), *POMACS'18*              | [Source](https://github.com/bladesteam/blades/blob/master/src/blades/aggregators/geomed.py)   |
+| **AutoGM**   | *Li et al.* [Byzantine-Robust Aggregation in Federated Learning Empowered Industrial IoT](https://ieeexplore.ieee.org/abstract/document/9614992), *IEEE TII'22*              | [Source](https://github.com/bladesteam/blades/blob/master/src/blades/aggregators/autogm.py)   |
+| **Median**   | *Yin et al.* [Byzantine-robust distributed learning: Towards optimal statistical rates](https://proceedings.mlr.press/v80/yin18a), *ICML'18*              | [Source](https://github.com/bladesteam/blades/blob/master/src/blades/aggregators/median.py)   |
+| **TrimmedMean**   | *Yin et al.* [Byzantine-robust distributed learning: Towards optimal statistical rates](https://proceedings.mlr.press/v80/yin18a), *ICML'18*              | [Source](https://github.com/bladesteam/blades/blob/master/src/blades/aggregators/trimmedmean.py)   |
+| **CenteredClipping**   | *Karimireddy et al.* [Learning from History for Byzantine Robust Optimization](http://proceedings.mlr.press/v139/karimireddy21a.html), *ICML'21*              | [Source](https://github.com/bladesteam/blades/blob/master/src/blades/aggregators/centeredclipping.py)   |
+| **Clustering**   | *Sattler et al.* [On the byzantine robustness of clustered federated learning](https://ieeexplore.ieee.org/abstract/document/9054676), *ICASSP'20*              | [Source](https://github.com/bladesteam/blades/blob/master/src/blades/aggregators/clustering.py)   |
+| **ClippedClustering**   | *Li et al.* [An Experimental Study of Byzantine-Robust sAggregation Schemes in Federated Learning](https://www.techrxiv.org/articles/preprint/An_Experimental_Study_of_Byzantine-Robust_Aggregation_Schemes_in_Federated_Learning/19560325), *TechRxiv'22*              | [Source](https://github.com/bladesteam/blades/blob/master/src/blades/aggregators/clippedclustering.py)   |
 
 ### Trust-based Methods
 
 | Methods   | Descriptions                                                                                                                               | Examples                                                                                       |
 | --------- | ------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------- |
-| **FLTrust**   | *Cao et al.* [FLTrust: Byzantine-robust Federated Learning via Trust Bootstrapping](https://arxiv.org/abs/2012.13995), *NDSS'21*              | [[**Example**]](https://github.com/bladesteam/blades/blob/master/src/blades/aggregators/fltrust.py)   |
+| **FLTrust**   | *Cao et al.* [FLTrust: Byzantine-robust Federated Learning via Trust Bootstrapping](https://arxiv.org/abs/2012.13995), *NDSS'21*              | [Source](https://github.com/bladesteam/blades/blob/master/src/blades/aggregators/fltrust.py)   |
 
 
 ## ☁️ Cluster Deployment
