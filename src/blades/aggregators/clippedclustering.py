@@ -1,7 +1,3 @@
-'''
-    S. Li, C. H. E. Ngai and T. Voigt,“An Experimental Study of Byzantine-Robust Aggregation Schemes in Federated Learning”.
-    TechRxiv,11-Apr-2022,doi:10.36227/techrxiv.19560325.v1.
-'''
 import os
 import sys
 
@@ -18,6 +14,12 @@ import torch_utils
 
 
 class Clippedclustering():
+    r"""
+         A robust aggregator from paper `"An Experimental Study of Byzantine-Robust sAggregation Schemes in Federated Learning" <https://www.techrxiv.org/articles/preprint/An_Experimental_Study_of_Byzantine-Robust_Aggregation_Schemes_in_Federated_Learning/19560325>`_
+
+         it separates the client population into two groups based on the cosine similarities
+    """
+    
     def __init__(self) -> None:
         self.l2norm_his = []
     

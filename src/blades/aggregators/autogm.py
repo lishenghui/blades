@@ -1,10 +1,6 @@
-'''
-    Byzantine-Robust Aggregation in Federated Learning Empowered Industrial IoT
-    S Li, E Ngai, T Voigt - IEEE Transactions on Industrial Informatics, 2022
-'''
 import numpy as np
 import torch
-
+from typing import Any, Callable, Optional, Union, List
 from .geomed import Geomed
 from .mean import _BaseAggregator
 
@@ -14,26 +10,33 @@ def _compute_euclidean_distance(v1, v2):
 
 
 class Autogm(_BaseAggregator):
-    def __init__(self):
+    r"""
+        A robust aggregator from paper `"Byzantine-Robust Aggregation in Federated Learning Empowered Industrial IoT" <https://ieeexplore.ieee.org/abstract/document/9614992>`_
+        
+        :param maxiter: Maximum number of Weiszfeld iterations. Default 100
+        :param eps: Smallest allowed value of denominator, to avoid divide by zero. Equivalently, this is a smoothing parameter. Default 1e-6.
+        :param ftol: If objective value does not improve by at least this `ftol` fraction, terminate the algorithm. Default 1e-10.
+    """
+    def __init__(self, maxiter: Optional[int] =100, eps: Optional[float] = 1e-6, ftol: Optional[float] = 1e-10):
         super(Autogm, self).__init__()
-        self.gm_agg = Geomed()
-        self.momentum = None
+        self.maxiter=maxiter
+        self.eps=eps
+        self.ftol=ftol
+        self.gm_agg = Geomed(maxiter=maxiter, eps=eps, ftol=ftol)
     
     def geometric_median_objective(self, median, points, alphas):
         return sum([alpha * _compute_euclidean_distance(median, p) for alpha, p in zip(alphas, points)])
     
-    def __call__(self, clients, weights=None, maxiter=100, eps=1e-6, ftol=1e-6):
+    def __call__(self, clients, weights=None):
         updates = list(map(lambda w: w.get_update(), clients))
-        if self.momentum is None:
-            self.momentum = torch.zeros_like(updates[0])
         
         lamb = 1 * len(updates)
         alpha = np.ones(len(updates)) / len(updates)
-        median = self.gm_agg(updates, alpha)
+        median = self.gm_agg(clients, alpha)
         obj_val = self.geometric_median_objective(median, updates, alpha)
         global_obj = obj_val + lamb * np.linalg.norm(alpha) ** 2 / 2
         distance = np.zeros_like(alpha)
-        for i in range(maxiter):
+        for i in range(self.maxiter):
             prev_global_obj = global_obj
             for idx, local_model in enumerate(updates):
                 distance[idx] = _compute_euclidean_distance(local_model, median)
@@ -48,10 +51,9 @@ class Autogm(_BaseAggregator):
                     eta_optimal = eta
             alpha = np.array([max(eta_optimal - d, 0) / lamb for d in distance])
             
-            median = self.gm_agg(updates, alpha)
+            median = self.gm_agg(clients, alpha)
             gm_sum = self.geometric_median_objective(median, updates, alpha)
             global_obj = gm_sum + lamb * np.linalg.norm(alpha) ** 2 / 2
-            if abs(prev_global_obj - global_obj) < ftol * global_obj:
+            if abs(prev_global_obj - global_obj) < self.ftol * global_obj:
                 break
-        self.momentum = median
-        return self.momentum
+        return median

@@ -14,7 +14,7 @@ class BladesClient(object):
     
         .. note::
             Your honest clients should also subclass this class.
-            
+    
         :param client_id: a unique id of the client.
         :type client_id: str, optional.
         :param device:  if specified, all parameters will be copied to that device

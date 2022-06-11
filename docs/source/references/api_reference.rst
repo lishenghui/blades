@@ -3,10 +3,11 @@ API Reference
 ===================
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 3
    :caption: Contents:
    :titlesonly:
 
    simulator
    server
    client
+   aggregators

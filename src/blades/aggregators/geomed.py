@@ -1,6 +1,6 @@
 import numpy as np
 import torch
-
+from typing import Any, Callable, Optional, Union, List
 from .mean import _BaseAggregator
 
 
@@ -28,50 +28,53 @@ def smoothed_weiszfeld(weights, alphas, z, eps=1e-6, T=5):
         z /= sum(betas)
     return z
 
+class Geomed(_BaseAggregator):
+    r"""
 
-class RFA_back(_BaseAggregator):
-    r""""""
+    A robust aggregator from paper `"Distributed Statistical Machine Learning in Adversarial Settings: Byzantine Gradient Descent" <https://arxiv.org/abs/1705.05491>`_
     
-    def __init__(self, T, nu=0.1):
-        self.T = T
-        self.nu = nu
+    ``GeoMed`` aims to find a vector that minimizes the sum of its Euclidean distances to all the update vectors:
+    
+    .. math::
+        GeoMed := \arg\min_{\boldsymbol{z}}  \sum_{k \in [K]} \lVert \boldsymbol{z} -  {\Delta}_i \rVert.
+    
+    
+    There is no closed-form solution to the ``GeoMed`` problem. It is approximately solved using
+    Weiszfeld's algorithm in this implementation to.
+    
+    :param maxiter: Maximum number of Weiszfeld iterations. Default 100
+    :param eps: Smallest allowed value of denominator, to avoid divide by zero.
+    	Equivalently, this is a smoothing parameter. Default 1e-6.
+    :param ftol: If objective value does not improve by at least this `ftol` fraction, terminate the algorithm. Default 1e-10.
+    """
+    def __init__(self, maxiter: Optional[int] =100, eps: Optional[float] = 1e-6, ftol: Optional[float] = 1e-10):
+        self.maxiter = maxiter
+        self.eps = eps
+        self.ftol = ftol
         super(Geomed, self).__init__()
     
-    def __call__(self, inputs):
-        alphas = [1 / len(inputs) for _ in inputs]
-        z = torch.zeros_like(inputs[0])
-        return smoothed_weiszfeld(inputs, alphas, z=z, nu=self.nu, T=self.T)
-    
-    def __str__(self):
-        return "RFA(T={},nu={})".format(self.T, self.nu)
-
-
-class Geomed(_BaseAggregator):
-    def __init__(self, *args, **kwargs):
-        super(Geomed, self).__init__(*args, **kwargs)
-    
-    def geometric_median_objective(self, median, points, alphas):
+    def _geometric_median_objective(self, median, points, alphas):
         return sum([alpha * _compute_euclidean_distance(median, p) for alpha, p in zip(alphas, points)])
     
-    def __call__(self, clients, weights=None, maxiter=100, eps=1e-6, ftol=1e-6):
+    def __call__(self, clients, weights=None):
         updates = list(map(lambda w: w.get_update(), clients))
         if weights is None:
             weights = np.ones(len(updates)) / len(updates)
         median = torch.stack(updates, dim=0).mean(dim=0)
         num_oracle_calls = 1
-        obj_val = self.geometric_median_objective(median, updates, weights)
-        for i in range(maxiter):
+        obj_val = self._geometric_median_objective(median, updates, weights)
+        for i in range(self.maxiter):
             prev_median, prev_obj_val = median, obj_val
             weights = np.asarray(
-                [max(eps, alpha / max(eps, _compute_euclidean_distance(median, p).item())) for alpha, p in
+                [max(self.eps, alpha / max(self.eps, _compute_euclidean_distance(median, p).item())) for alpha, p in
                  zip(weights, updates)],
                 dtype=weights.dtype)
             weights = weights / weights.sum()
             median = torch.sum(torch.vstack([w * beta for w, beta in zip(updates, weights)]), dim=0)
             num_oracle_calls += 1
-            obj_val = self.geometric_median_objective(median, updates, weights)
+            obj_val = self._geometric_median_objective(median, updates, weights)
             # print('gm obj:', obj_val)
-            if abs(prev_obj_val - obj_val) < ftol * obj_val:
+            if abs(prev_obj_val - obj_val) < self.ftol * obj_val:
                 break
         
         return median

@@ -3,22 +3,23 @@ Welcome to Blades documentation
 ================================
 
 
-.. include:: ../../README.rst
-
-
-
-
-
 Indices and tables
 ===================
 
 .. toctree::
-   :maxdepth: 2
+   :numbered:
+   :maxdepth: 3
    :caption: Contents:
    :titlesonly:
 
+   install
    attacks
    defenses
    references/api_reference
+
+
+
+.. include:: ../../README.rst
+
 
 
