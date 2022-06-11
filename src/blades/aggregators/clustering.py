@@ -6,6 +6,11 @@ from sklearn.cluster import AgglomerativeClustering
 
 
 class Clustering():
+    r"""
+     A robust aggregator from paper `"On the byzantine robustness of clustered federated learning" <https://ieeexplore.ieee.org/abstract/document/9054676>`_
+     
+     it separates the client population into two groups based on the cosine similarities
+    """
     def __init__(self) -> None:
         pass
     

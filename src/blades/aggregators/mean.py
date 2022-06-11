@@ -1,16 +1,6 @@
-"""
-Aggregators which takes in weights and gradients.
-"""
 import logging
 
 import torch
-
-
-# currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
-# parentdir = os.path.dirname(currentdir)
-# sys.path.insert(0, parentdir)
-
-# from simulator.utils import log, log_dict
 
 
 class _BaseAggregator(object):
@@ -58,6 +48,12 @@ class _BaseAsyncAggregator(object):
 
 
 class Mean(_BaseAggregator):
+    r"""
+    Computes the ``sample mean`` over the updates from all give clients.
+    """
+    def __int__(self):
+        super(Mean, self).__init__()
+        
     def __call__(self, clients):
         updates = list(map(lambda w: w.get_update(), clients))
         values = torch.stack(updates, dim=0).mean(dim=0)
@@ -67,17 +63,17 @@ class Mean(_BaseAggregator):
         return "Mean"
 
 
-class AsyncMean(_BaseAsyncAggregator):
+class _AsyncMean(_BaseAsyncAggregator):
     def __call__(self, inputs):
         filtered = list(filter(lambda x: x is not None, inputs))
         values = torch.stack(filtered, dim=0).sum(dim=0) / len(inputs)
         return values
     
     def __str__(self):
-        return "AsyncMean"
+        return "_AsyncMean"
 
 
-class DecentralizedAggregator(_BaseAggregator):
+class _DecentralizedAggregator(_BaseAggregator):
     """
     This aggregators is applied to all nodes. It has access to the node information and a row of mixing matrix.
     """
@@ -104,4 +100,4 @@ class DecentralizedAggregator(_BaseAggregator):
         return s
     
     def __str__(self):
-        return "DecentralizedAggregator"
+        return "_DecentralizedAggregator"

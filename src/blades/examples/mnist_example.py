@@ -9,9 +9,7 @@ mnist = MNIST(data_root="./data", train_bs=32, num_clients=10)  # built-in feder
 # configuration parameters
 conf_params = {
     "dataset": mnist,
-    "aggregator": "trimmedmean",  # aggregation
-    # "agg_param": {"num_clients": 10,  # attacker parameters
-    #                 "num_byzantine": 3},
+    "aggregator": "autogm",  # aggregation
     "num_byzantine": 3,  # number of Byzantine clients
     "attack": "alie",  # attack strategy
     "attack_param": {"num_clients": 10,  # attacker parameters
@@ -20,7 +18,7 @@ conf_params = {
     "seed": 1,  # reproducibility
 }
 
-ray.init(num_gpus=0, local_mode=True)
+ray.init(num_gpus=0)
 simulator = Simulator(**conf_params)
 
 model = DNN()

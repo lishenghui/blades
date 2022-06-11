@@ -1,9 +1,9 @@
 
 **Blades**: A simulator for **B**\ yzantine-robust federated **L**\ earning with **A**\ ttacks and **D**\ efenses **E**\ xperimental **S**\ imulation
-
     | Know thy self, know thy enemy. A thousand battles, a thousand victories. --Sun Tzu
 
     | 知己知彼，百战百胜 ——孙武
+
 
 .. raw:: html
 
@@ -24,10 +24,9 @@
     </p>
 
 
-
-
-NOTE: More features are under development and the API are subject to change.
+NOTE: More features are under development and the APIs are subject to change.
 If you are interested in this project, don't hesitate to contact me or make a PR directly.
+
 
 
 `Documentation <https://bladesteam.github.io/>`_
@@ -64,7 +63,7 @@ Attacks
 Untargeted Attack
 ^^^^^^^^^^^^^^^^^
 +--------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+-----------------------------------------------------------------------------------------------------------+
-| Strategy           | Descriptions                                                                                                                                                                                             | Sourse                                                                                                    |
+| Strategy           | Description                                                                                                                                                                                              | Sourse                                                                                                    |
 +====================+==========================================================================================================================================================================================================+===========================================================================================================+
 | **Noise**          |  Put random noise to the updates.                                                                                                                                                                        | `Sourse <https://github.com/bladesteam/blades/blob/master/src/blades/attackers/noiseclient.py>`_          |
 +--------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+-----------------------------------------------------------------------------------------------------------+
@@ -72,7 +71,7 @@ Untargeted Attack
 +--------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+-----------------------------------------------------------------------------------------------------------+
 | **Signflipping**   | `Li et al. RSA: Byzantine-Robust Stochastic Aggregation Methods for Distributed Learning from Heterogeneous Datasets <https://ojs.aaai.org/index.php/AAAI/article/view/3968>`_, *AAAI' 19*               | `Sourse <https://github.com/bladesteam/blades/blob/master/src/blades/attackers/signflippingclient.py>`_   |
 +--------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+-----------------------------------------------------------------------------------------------------------+
-| **ALIE**           | `Baruch et al. A little is enough: Circumventing defenses for distributed learning <https://proceedings.neurips.cc/paper/2019/hash/ec1c59141046cd1866bbbcdfb6ae31d4-Abstract.html)>`_ *NeurIPS' 19*      | `Sourse <https://github.com/bladesteam/blades/blob/master/src/blades/attackers/alieclient.py>`_           |
+| **ALIE**           | `Baruch et al. A little is enough: Circumventing defenses for distributed learning <https://proceedings.neurips.cc/paper/2019/hash/ec1c59141046cd1866bbbcdfb6ae31d4-Abstract.html>`_ *NeurIPS' 19*       | `Sourse <https://github.com/bladesteam/blades/blob/master/src/blades/attackers/alieclient.py>`_           |
 +--------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+-----------------------------------------------------------------------------------------------------------+
 | **IPM**            | `Xie et al. Fall of empires: Breaking byzantine- tolerant sgd by inner product manipulation <https://arxiv.org/abs/1903.03936>`_, *UAI' 20*                                                              | `Sourse <https://github.com/bladesteam/blades/blob/master/src/blades/attackers/ipmclient.py>`_            |
 +--------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+-----------------------------------------------------------------------------------------------------------+
@@ -110,7 +109,7 @@ Trust-based Strategies
 ^^^^^^^^^^^^^^^^^^^^^^^
 
 +-----------------------+-----------------------------------------------------------------------------------------------------------------------------------------------+----------------------------------------------------------------------------------------------------------+
-| Strategy              | Descriptions                                                                                                                                  | Source                                                                                                   |
+| Strategy              | Description                                                                                                                                   | Source                                                                                                   |
 +=======================+===============================================================================================================================================+==========================================================================================================+
 | **FLTrust**           | `Cao et al. FLTrust: Byzantine-robust Federated Learning via Trust Bootstrapping <https://arxiv.org/abs/2012.13995>`_, NDSS'21                | `Source <https://github.com/bladesteam/blades/blob/master/src/blades/aggregators/fltrust.py>`_           |
 +-----------------------+-----------------------------------------------------------------------------------------------------------------------------------------------+----------------------------------------------------------------------------------------------------------+
@@ -119,10 +118,10 @@ Trust-based Strategies
 
 Cluster Deployment
 ===================
-To run **blades** on a cluster, you only need to deploy ``Ray cluster`` according to the `official guide <https://docs.ray.io/en/latest/cluster/user-guide.html>`_
+To run **blades** on a cluster, you only need to deploy ``Ray cluster`` according to the `official guide <https://docs.ray.io/en/latest/cluster/user-guide.html>`_.
 
 
 Reference
 ==========
 
-* Part of the code is from *Karimireddy*'s `repository <https://github.com/epfml/byzantine-robust-optimizer>`_. *Paper:* `Karimireddy et al. Learning from History for Byzantine Robust Optimization <http://proceedings.mlr.press/v139/karimireddy21a.html>`_
+* Part of the code is from *Karimireddy*'s `repository <https://github.com/epfml/byzantine-robust-optimizer>`_. *Paper:* `Karimireddy et al. Learning from History for Byzantine Robust Optimization <http://proceedings.mlr.press/v139/karimireddy21a.html>`_.

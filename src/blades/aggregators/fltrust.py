@@ -6,7 +6,11 @@ from blades.client import BladesClient
 
 
 class Fltrust(object):
-    
+    r"""
+         ``Fltrust`` it a trusted-based aggregator from paper `FLTrust: Byzantine-robust Federated Learning via Trust Bootstrapping <https://arxiv.org/abs/2012.13995>`_
+
+         
+        """
     def __call__(self, clients: List[BladesClient]):
         trusted_clients = [client for client in clients if client.get_is_trusted()]
         assert len(trusted_clients) == 1

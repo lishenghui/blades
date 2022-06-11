@@ -4,6 +4,18 @@ from .mean import _BaseAggregator
 
 
 class Trimmedmean(_BaseAggregator):
+    r"""
+    A robust aggregator from paper `Byzantine-robust distributed learning: Towards optimal statistical rates <https://proceedings.mlr.press/v80/yin18a>`_
+
+    It computes the coordinate-wise trimmed average of the model updates, which can be expressed by:
+    
+    .. math::
+             trmean := TrimmedMean( \{ \Delta_k : k \in [K] \} ),
+             
+    where the :math:`i`-th coordinate :math:`trmean_i = \frac{1}{(1-2\beta)m} \sum_{x \in U_k}x`, and :math:`U_k`
+    is a subset obtained by removing the largest and smallest :math:`\beta` fraction of its elements.
+
+    """
     def __init__(self, num_byzantine=5):
         self.b = num_byzantine
         super(Trimmedmean, self).__init__()
