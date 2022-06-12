@@ -7,12 +7,11 @@ from blades.client import ByzantineClient
 
 class AlieClient(ByzantineClient):
     """
-    Args:
-        num_clients (int): Total number of clients
-        num_byzantine (int): Number of Byzantine clients
+        :param num_clients: Total number of input
+        :param num_byzantine: Number of Byzantine input
     """
     
-    def __init__(self, num_clients, num_byzantine, z=None, *args, **kwargs):
+    def __init__(self, num_clients: int, num_byzantine: int, z=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
         # Number of supporters
         if z is not None:
@@ -23,14 +22,11 @@ class AlieClient(ByzantineClient):
             self.z_max = norm.ppf(cdf_value)
         self.n_good = num_clients - num_byzantine
     
-    def get_gradient(self):
-        return self._gradient
-    
     def omniscient_callback(self, simulator):
         # Loop over good workers and accumulate their gradients
         updates = []
         for client in simulator._clients.values():
-            if not client.get_is_byzantine():
+            if not client.is_byzantine():
                 updates.append(client.get_update())
         
         stacked_updates = torch.stack(updates, 1)

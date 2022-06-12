@@ -12,7 +12,7 @@ conf_params = {
     "aggregator": "fltrust",  # aggregation
     # "agg_param": {"num_clients": 10,  # attacker parameters
     #                 "num_byzantine": 3},
-    "num_byzantine": 3,  # number of Byzantine clients
+    "num_byzantine": 3,  # number of Byzantine input
     "attack": "alie",  # attack strategy
     "attack_param": {"num_clients": 10,  # attacker parameters
                     "num_byzantine": 3},

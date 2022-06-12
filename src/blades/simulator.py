@@ -37,7 +37,7 @@ class _RayActor(object):
         for i in range(len(clients)):
             clients[i].set_para(model)
             clients[i].train_epoch_start()
-            data = self.dataset.get_train_data(clients[i].id, local_round)
+            data = self.dataset.get_train_data(clients[i].id(), local_round)
             clients[i].local_training(local_round, use_actor=True, data_batches=data)
             update.append(clients[i].get_update())
         return update
@@ -46,7 +46,7 @@ class _RayActor(object):
         update = []
         for i in range(len(clients)):
             clients[i].set_para(model)
-            data = self.dataset.get_all_test_data(clients[i].id)
+            data = self.dataset.get_all_test_data(clients[i].id())
             result = clients[i].evaluate(
                 round_number=round_number,
                 test_set=data,
@@ -61,10 +61,10 @@ class _RayActor(object):
 class Simulator(object):
     """Synchronous and parallel training with specified aggregators.
     
-    :param dataset: FLDataset that consists local data of all clients
+    :param dataset: FLDataset that consists local data of all input
     :param aggregator: String (name of build-in aggregation scheme) or
                        a callable which takes a list of tensors and returns an aggregated tensor.
-    :param num_byzantine: Number of Byzantine clients under build-in attack.
+    :param num_byzantine: Number of Byzantine input under build-in attack.
                           It should be ``0`` if you have custom attack strategy.
     :type num_byzantine: int, optional
     :param attack: ``None`` by default. One of the build-in attacks, i.e., ``None``, ``noise``, ``labelflipping``,
@@ -143,29 +143,29 @@ class Simulator(object):
         users = self.dataset.get_clients()
         self._clients = {}
         for i, u in enumerate(users):
+            # u = str(u)
             if i < num_byzantine:
                 module_path = importlib.import_module('blades.attackers.%sclient' % attack)
                 attack_scheme = getattr(module_path, '%sClient' % attack.capitalize())
-                client = attack_scheme(client_id=u, device=self.device, **attack_param)
+                client = attack_scheme(id=u, device=self.device, **attack_param)
                 self._register_omniscient_callback(client.omniscient_callback)
             else:
-                client = BladesClient(u, device=self.device)
+                client = BladesClient(id=u, device=self.device)
             self._clients[u] = client
     
     def get_clients(self):
-        r"""Return all clients.
+        r"""Return all input.
         """
         return self._clients
     
     def set_trusted_clients(self, ids: List[str]) -> None:
-        """Set a list of clients as trusted. This is usable for trusted-based algorithms that assume
-           some clients are known as not Byzantine.
+        """Set a list of input as trusted. This is usable for trusted-based algorithms that assume some input are known as not Byzantine.
     
         :param ids: a list of client ids that are trusted
         :type ids: list
         """
         for id in ids:
-            self._clients[id].set_is_trusted()
+            self._clients[id].trust()
             
     
     def cache_random_state(self) -> None:
@@ -189,7 +189,7 @@ class Simulator(object):
         assert len(clients) < len(self._clients)
         client_li = list(self._clients.values())
         for i in range(len(clients)):
-            id = client_li[i].get_id()
+            id = client_li[i]._id()
             clients[i].set_id(id)
             self._clients[id] = clients[i]
             self._register_omniscient_callback(clients[i].omniscient_callback)
@@ -209,10 +209,10 @@ class Simulator(object):
         return results
     
     def train_actor(self, global_round, num_rounds, clients):
-        # TODO: randomly select a subset of clients for local training
+        # TODO: randomly select a subset of input for local training
         self.debug_logger.info(f"Train global round {global_round}")
         
-        # Allocate clients to actors:
+        # Allocate input to actors:
         global_model = self.server.get_model().to('cpu')
         client_groups = np.array_split(list(self._clients.values()), len(self.ray_actors))
         all_results = self.actor_pool.map(
@@ -253,7 +253,7 @@ class Simulator(object):
             return update
         
         def train_function(clients, trainer, model, num_rounds):
-            data = [self.dataset.get_train_data(client.id, num_rounds) for client in clients]
+            data = [self.dataset.get_train_data(client._id, num_rounds) for client in clients]
             return trainer.run(local_training,
                                config={'client': clients, 'data': data, 'model': model, 'use_actor': self.use_actor,
                                        'local_round': num_rounds})
@@ -319,7 +319,7 @@ class Simulator(object):
         :param client_optimizer: Pytorch optimizer for client-side optimization.
                                  Currently, the ``str`` type only supports ``SGD``
         :type client_optimizer: torch.optim.Optimizer or str
-        :param loss: A Pytorch Loss function. See https://pytorch.org/docs/stable/nn.html#loss-functions.
+        :param loss: A Pytorch Loss function. See `Python documentation <https://pytorch.org/docs/stable/nn.html#loss-functions>`_.
                      Currently, the `str` type only supports ``crossentropy``
         :type loss: str
         :param global_rounds: Number of communication rounds in total.

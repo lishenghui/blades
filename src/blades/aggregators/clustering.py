@@ -2,22 +2,24 @@ import numpy as np
 import torch
 from numpy import inf
 from scipy import spatial
+from typing import Union, Tuple, Optional, List
+from blades.client import BladesClient
 from sklearn.cluster import AgglomerativeClustering
+from .mean import _BaseAggregator
 
-
-class Clustering():
+class Clustering(_BaseAggregator):
     r"""
      A robust aggregator from paper `"On the byzantine robustness of clustered federated learning" <https://ieeexplore.ieee.org/abstract/document/9054676>`_
      
      it separates the client population into two groups based on the cosine similarities
     """
-    def __init__(self) -> None:
-        pass
-    
-    def __call__(self, clients):
-        updates = list(map(lambda w: w.get_update(), clients))
-        stacked_models = torch.vstack(updates)
-        np_models = stacked_models.cpu().detach().numpy()
+
+    def __init__(self):
+        super(Clustering, self).__init__()
+
+    def __call__(self, inputs: Union[List[BladesClient], List[torch.Tensor], torch.Tensor]):
+        updates = self._get_updates(inputs)
+        np_models = updates.cpu().detach().numpy()
         num = len(updates)
         dis_max = np.zeros((num, num))
         for i in range(num):
@@ -31,7 +33,7 @@ class Clustering():
         dis_max[np.isnan(dis_max)] = -1
         # with open('../notebooks/updates_fedsgd_ipm.npy', 'wb') as f:
         #     np.save(f, dis_max)
-        clustering = AgglomerativeClustering(affinity='precomputed', linkage='average', n_clusters=2)
+        clustering = AgglomerativeClustering(affinity='precomputed', linkage='complete', n_clusters=2)
         clustering.fit(dis_max)
         flag = 1 if np.sum(clustering.labels_) > num // 2 else 0
         values = torch.vstack(list(model for model, label in zip(updates, clustering.labels_) if label == flag)).mean(

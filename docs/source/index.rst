@@ -13,8 +13,7 @@ Indices and tables
    :titlesonly:
 
    install
-   attacks
-   defenses
+   examples/gallery
    references/api_reference
 
 

@@ -10,4 +10,5 @@ API Reference
    simulator
    server
    client
+   attacks
    aggregators

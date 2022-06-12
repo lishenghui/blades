@@ -12,11 +12,11 @@ class Fltrust(object):
          
         """
     def __call__(self, clients: List[BladesClient]):
-        trusted_clients = [client for client in clients if client.get_is_trusted()]
+        trusted_clients = [client for client in clients if client.is_trusted()]
         assert len(trusted_clients) == 1
         trusted_client = trusted_clients[0]
         
-        untrusted_clients = [client for client in clients if not client.get_is_trusted()]
+        untrusted_clients = [client for client in clients if not client.is_trusted()]
         trusted_update = trusted_client.get_update()
         trusted_norm = torch.norm(trusted_update).item()
         untrusted_updates = list(map(lambda w: w.get_update(), untrusted_clients))

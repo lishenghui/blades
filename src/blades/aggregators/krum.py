@@ -1,5 +1,7 @@
 from .mean import _BaseAggregator
-
+from typing import Union, Tuple, Optional, List
+from blades.client import BladesClient
+import torch
 
 def _compute_scores(distances, i, n, f):
     """Compute scores for node i.
@@ -98,8 +100,8 @@ class Krum(_BaseAggregator):
                     {\Delta}_j \rVert^2 \}
     
       where :math:`i \rightarrow j` is the indices of the :math:`K-M-2` nearest neighbours of :math:`{\Delta}_i`
-      measured by squared ``Euclidean distance``,  :math:`K` is the number of clients in total, and :math:`M`
-      is the number of Byzantine clients.
+      measured by squared ``Euclidean distance``,  :math:`K` is the number of input in total, and :math:`M`
+      is the number of Byzantine input.
       
     """
     
@@ -109,8 +111,8 @@ class Krum(_BaseAggregator):
         self.m = 1
         super(Krum, self).__init__()
     
-    def __call__(self, clients):
-        updates = list(map(lambda w: w.get_update(), clients))
+    def __call__(self, inputs: Union[List[BladesClient], List[torch.Tensor]]):
+        updates = self._get_updates(inputs)
         distances = _pairwise_euclidean_distances(updates)
         top_m_indices = _multi_krum(distances, self.n, self.f, self.m)
         values = sum(updates[i] for i in top_m_indices)
