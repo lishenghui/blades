@@ -112,7 +112,7 @@ esac
 done
 
 # --------------------
-# check if running in verification mode
+# check if _running in verification mode
 
 if [ -n "${VERIFICATION_FILE}" ]; then
     pushd ../$NAME >/dev/null 2>/dev/null

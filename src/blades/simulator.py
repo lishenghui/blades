@@ -156,7 +156,7 @@ class Simulator(object):
     def get_clients(self):
         r"""Return all input.
         """
-        return self._clients
+        return self._clients.values()
     
     def set_trusted_clients(self, ids: List[str]) -> None:
         """Set a list of input as trusted. This is usable for trusted-based algorithms that assume some input are known as not Byzantine.
@@ -189,7 +189,7 @@ class Simulator(object):
         assert len(clients) < len(self._clients)
         client_li = list(self._clients.values())
         for i in range(len(clients)):
-            id = client_li[i]._id()
+            id = client_li[i].id()
             clients[i].set_id(id)
             self._clients[id] = clients[i]
             self._register_omniscient_callback(clients[i].omniscient_callback)
