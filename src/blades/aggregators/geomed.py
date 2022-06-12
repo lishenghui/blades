@@ -3,6 +3,9 @@ import torch
 from typing import Any, Callable, Optional, Union, List
 from .mean import _BaseAggregator
 
+from typing import Union, Tuple, Optional, List
+from blades.client import BladesClient
+
 
 def _compute_euclidean_distance(v1, v2):
     return (v1 - v2).norm()
@@ -56,11 +59,11 @@ class Geomed(_BaseAggregator):
     def _geometric_median_objective(self, median, points, alphas):
         return sum([alpha * _compute_euclidean_distance(median, p) for alpha, p in zip(alphas, points)])
     
-    def __call__(self, clients, weights=None):
-        updates = list(map(lambda w: w.get_update(), clients))
+    def __call__(self, inputs: Union[List[BladesClient], List[torch.Tensor]], weights=None):
+        updates = self._get_updates(inputs)
         if weights is None:
             weights = np.ones(len(updates)) / len(updates)
-        median = torch.stack(updates, dim=0).mean(dim=0)
+        median = updates.mean(dim=0)
         num_oracle_calls = 1
         obj_val = self._geometric_median_objective(median, updates, weights)
         for i in range(self.maxiter):

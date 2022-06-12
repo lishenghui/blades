@@ -1,5 +1,6 @@
 import torch
-
+from typing import Union, Tuple, Optional, List
+from blades.client import BladesClient
 from .mean import _BaseAggregator
 
 
@@ -19,9 +20,9 @@ class Trimmedmean(_BaseAggregator):
     def __init__(self, num_byzantine=5):
         self.b = num_byzantine
         super(Trimmedmean, self).__init__()
-    
-    def __call__(self, clients):
-        updates = list(map(lambda w: w.get_update(), clients))
+
+    def __call__(self, inputs: Union[List[BladesClient], List[torch.Tensor], torch.Tensor]):
+        updates = self._get_updates(inputs)
         if len(updates) - 2 * self.b > 0:
             b = self.b
         else:
@@ -31,10 +32,9 @@ class Trimmedmean(_BaseAggregator):
             if b < 0:
                 raise RuntimeError
         
-        stacked = torch.stack(updates, dim=0)
-        largest, _ = torch.topk(stacked, b, 0)
-        neg_smallest, _ = torch.topk(-stacked, b, 0)
-        new_stacked = torch.cat([stacked, -largest, neg_smallest]).sum(0)
+        largest, _ = torch.topk(updates, b, 0)
+        neg_smallest, _ = torch.topk(-updates, b, 0)
+        new_stacked = torch.cat([updates, -largest, neg_smallest]).sum(0)
         new_stacked /= len(updates) - 2 * b
         return new_stacked
     

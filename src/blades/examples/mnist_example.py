@@ -9,8 +9,10 @@ mnist = MNIST(data_root="./data", train_bs=32, num_clients=10)  # built-in feder
 # configuration parameters
 conf_params = {
     "dataset": mnist,
-    "aggregator": "autogm",  # aggregation
-    "num_byzantine": 3,  # number of Byzantine clients
+    "aggregator": "median",  # aggregation
+    # "agg_param": {"num_clients": 10,  # attacker parameters
+    #               "num_byzantine": 3},
+    "num_byzantine": 3,  # number of Byzantine input
     "attack": "alie",  # attack strategy
     "attack_param": {"num_clients": 10,  # attacker parameters
                     "num_byzantine": 3},

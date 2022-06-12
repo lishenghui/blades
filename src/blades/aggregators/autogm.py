@@ -4,6 +4,8 @@ from typing import Any, Callable, Optional, Union, List
 from .geomed import Geomed
 from .mean import _BaseAggregator
 
+from typing import Union, Tuple, Optional, List
+from blades.client import BladesClient
 
 def _compute_euclidean_distance(v1, v2):
     return (v1 - v2).norm()
@@ -17,8 +19,9 @@ class Autogm(_BaseAggregator):
         :param eps: Smallest allowed value of denominator, to avoid divide by zero. Equivalently, this is a smoothing parameter. Default 1e-6.
         :param ftol: If objective value does not improve by at least this `ftol` fraction, terminate the algorithm. Default 1e-10.
     """
-    def __init__(self, maxiter: Optional[int] =100, eps: Optional[float] = 1e-6, ftol: Optional[float] = 1e-10):
+    def __init__(self, lamb: Optional[float]=None, maxiter: Optional[int] =100, eps: Optional[float] = 1e-6, ftol: Optional[float] = 1e-10):
         super(Autogm, self).__init__()
+        self.lamb = lamb
         self.maxiter=maxiter
         self.eps=eps
         self.ftol=ftol
@@ -26,13 +29,13 @@ class Autogm(_BaseAggregator):
     
     def geometric_median_objective(self, median, points, alphas):
         return sum([alpha * _compute_euclidean_distance(median, p) for alpha, p in zip(alphas, points)])
-    
-    def __call__(self, clients, weights=None):
-        updates = list(map(lambda w: w.get_update(), clients))
+
+    def __call__(self, inputs: Union[List[BladesClient], List[torch.Tensor]], weights=None):
+        updates = self._get_updates(inputs)
         
-        lamb = 1 * len(updates)
+        lamb = 1 * len(updates) if self.lamb is None else self.lamb
         alpha = np.ones(len(updates)) / len(updates)
-        median = self.gm_agg(clients, alpha)
+        median = self.gm_agg(updates, alpha)
         obj_val = self.geometric_median_objective(median, updates, alpha)
         global_obj = obj_val + lamb * np.linalg.norm(alpha) ** 2 / 2
         distance = np.zeros_like(alpha)
@@ -51,7 +54,7 @@ class Autogm(_BaseAggregator):
                     eta_optimal = eta
             alpha = np.array([max(eta_optimal - d, 0) / lamb for d in distance])
             
-            median = self.gm_agg(clients, alpha)
+            median = self.gm_agg(updates, alpha)
             gm_sum = self.geometric_median_objective(median, updates, alpha)
             global_obj = gm_sum + lamb * np.linalg.norm(alpha) ** 2 / 2
             if abs(prev_global_obj - global_obj) < self.ftol * global_obj:

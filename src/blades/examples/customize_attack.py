@@ -15,7 +15,7 @@ class MaliciousClient(ByzantineClient):
     def omniscient_callback(self, simulator):
         updates = []
         for w in simulator._clients:
-            is_byzantine = w.get_is_byzantine()
+            is_byzantine = w.is_byzantine()
             if not is_byzantine:
                 updates.append(w.get_update())
         self.save_update(-100 * (sum(updates)) / len(updates))

@@ -10,15 +10,13 @@ from torch.utils.data import DataLoader
 
 
 class BladesClient(object):
-    r"""Base class for all clients.
+    r"""Base class for all input.
     
         .. note::
-            Your honest clients should also subclass this class.
+            Your honest input should also subclass this class.
     
-        :param client_id: a unique id of the client.
-        :type client_id: str, optional.
+        :param id: a unique id of the client.
         :param device:  if specified, all parameters will be copied to that device
-        :type device: torch.device, or str
     """
     
     _is_byzantine: bool = False
@@ -26,10 +24,10 @@ class BladesClient(object):
     
     def __init__(
             self,
-            client_id: Optional[str] = None,
+            id: Optional[str] = None,
             device: Union[torch.device, str] = 'cpu',
     ):
-        self.id = client_id
+        self.set_id(id)
         self.device = device
         
         self.running = {}
@@ -37,22 +35,41 @@ class BladesClient(object):
         self.json_logger = logging.getLogger("stats")
         self.debug_logger = logging.getLogger("debug")
     
-    def set_id(self, id):
-        self.id = id
+    def set_id(self, id: str) -> None:
+        r"""Sets the unique id of the client.
+        """
+        # if not isinstance(id,str):
+        #     raise TypeError(f'Client _id must be str, but got {type(id)}')
+        self._id = id
     
-    def get_id(self):
-        return self.id
+    def id(self) -> str:
+        r"""Returns the unique id of the client.
+        
+        :Example:
+        
+        >>> from blades.client import BladesClient
+        >>> client = BladesClient(id='1')
+        >>> client.id()
+        '1'
+
+        """
+        return self._id
     
     def getattr(self, attr):
         return getattr(self, attr)
     
-    def get_is_byzantine(self):
+    def is_byzantine(self):
+        r"""Return a boolean value specifying if the client is Byzantine"""
         return self._is_byzantine
     
-    def get_is_trusted(self):
+    def is_trusted(self):
         return self._is_trusted
     
-    def set_is_trusted(self, trusted=True):
+    def trust(self, trusted: Optional[bool]=True) -> None:
+        r"""
+        Trusts the client as an honest participant. This property is useful
+        for trust-based algorithms.
+        """
         self._is_trusted = trusted
     
     def set_model(self, model: nn.Module, opt: type(torch.optim.Optimizer), lr: float) -> None:
@@ -62,11 +79,8 @@ class BladesClient(object):
                 To improve the scalability, this API may be removed in the future,
                 
             :param model: a Torch model for current client.
-            :type model: torch.nn.Module
             :param opt: client optimizer
-            :type opt: torch.optim.Optimizer
             :param lr:  local learning rate
-            :type lr: float
         '''
         self.model = copy.deepcopy(model)
         self.optimizer = opt(self.model.parameters(), lr=lr)
@@ -123,14 +137,11 @@ class BladesClient(object):
         return r
     
     def local_training(self, num_rounds: int, use_actor: bool, data_batches: list) -> None:
-        r''' Local optimizaiton of the ``client``. Byzantine clients can overwrite this method to perform adversarial attack.
+        r''' Local optimizaiton of the ``client``. Byzantine input can overwrite this method to perform adversarial attack.
         
             :param num_rounds: Number of local optimization steps.
-            :type num_rounds: int
-            :param use_actor: Specifying the training mode, it should be ``True`` if you use ``Trainer Mode``
-            :type use_actor: bool
+            :param use_actor: Specifyinmodelg the training mode, it should be ``True`` if you use ``Trainer Mode``
             :param data_batches: A list of training batches for local training.
-            :type data_batches: list
         '''
         self._save_para()
         if use_actor:
@@ -152,11 +163,15 @@ class BladesClient(object):
         self.save_update(update)
     
     def get_update(self) -> torch.Tensor:
-        r''' Return the saved update of local optimization, represented as a vector.
+        r'''Returns the saved update of local optimization, represented as a vector.
         '''
         return torch.nan_to_num(self._get_saved_update())
     
     def save_update(self, update: torch.Tensor) -> None:
+        r"""Sets the update of the client,.
+        
+        :param update: a vector of local update
+        """
         self.state['saved_update'] = update.detach()
 
     def _get_saved_update(self) -> torch.Tensor:
@@ -186,10 +201,10 @@ class BladesClient(object):
 
 
 class ByzantineClient(BladesClient):
-    r"""Base class for Byzantine clients.
+    r"""Base class for Byzantine input.
     
             .. note::
-                Your Byzantine clients should also subclass this class, and overwrite ``local_training`` and
+                Your Byzantine input should also subclass this class, and overwrite ``local_training`` and
                 ``omniscient_callback`` to customize your attack.
                 
         """
@@ -201,8 +216,8 @@ class ByzantineClient(BladesClient):
     def omniscient_callback(self, simulator):
         r"""A method that will be registered by the simulator and execute after each communication round.
             It allows a Byzantine client has full knowledge of the training system, e.g., updates from all
-            clients. Your Byzantine client can overwrite this method to access information from the server
-            and other clients.
+            input. Your Byzantine client can overwrite this method to access information from the server
+            and other input.
             
             :param simulator: The running simulator.
             :type simulator: Simulator
