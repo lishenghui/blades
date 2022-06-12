@@ -21,18 +21,19 @@ class BladesClient(object):
     
     _is_byzantine: bool = False
     _is_trusted: bool = False
-    
+    device: str = 'cpu'
+    _state = defaultdict(dict)
     def __init__(
             self,
             id: Optional[str] = None,
-            device: Union[torch.device, str] = 'cpu',
+            device: Optional[Union[torch.device, str]] = 'cpu',
     ):
         self.set_id(id)
         self.device = device
         
-        self.running = {}
-        self.state = defaultdict(dict)
-        self.json_logger = logging.getLogger("stats")
+        self._running = {}
+        
+        self._json_logger = logging.getLogger("stats")
         self.debug_logger = logging.getLogger("debug")
     
     def set_id(self, id: str) -> None:
@@ -98,7 +99,7 @@ class BladesClient(object):
         return "BladesClient"
     
     def train_epoch_start(self) -> None:
-        # self.running["train_loader_iterator"] = iter(self.data_loader)
+        # self._running["train_loader_iterator"] = iter(self.data_loader)
         self.model = self.model.to(self.device)
         self.model.train()
         
@@ -128,7 +129,7 @@ class BladesClient(object):
             r[name] /= r["Length"]
         r["Loss"] /= r["Length"]
         
-        self.json_logger.info(r)
+        self._json_logger.info(r)
         self.debug_logger.info(
             f"\n=> Eval Loss={r['Loss']:.4f} "
             + " ".join(name + "=" + "{:>8.4f}".format(r[name]) for name in metrics)
@@ -172,17 +173,17 @@ class BladesClient(object):
         
         :param update: a vector of local update
         """
-        self.state['saved_update'] = update.detach()
+        self._state['saved_update'] = update.detach()
 
     def _get_saved_update(self) -> torch.Tensor:
-        return self.state['saved_update']
+        return self._state['saved_update']
 
     def _save_para(self) -> None:
         for group in self.optimizer.param_groups:
             for p in group["params"]:
                 if not p.requires_grad:
                     continue
-                param_state = self.state[p]
+                param_state = self._state[p]
                 param_state["saved_para"] = torch.clone(p.data).detach()
     
     def _get_para(self, current=True) -> None:
@@ -195,7 +196,7 @@ class BladesClient(object):
                 if current:
                     layer_parameters.append(p.data.view(-1))
                 else:
-                    param_state = self.state[p]
+                    param_state = self._state[p]
                     layer_parameters.append(param_state["saved_para"].data.view(-1))
         return torch.cat(layer_parameters).to('cpu')
 
@@ -219,7 +220,7 @@ class ByzantineClient(BladesClient):
             input. Your Byzantine client can overwrite this method to access information from the server
             and other input.
             
-            :param simulator: The running simulator.
+            :param simulator: The _running simulator.
             :type simulator: Simulator
         """
         pass

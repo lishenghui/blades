@@ -34,4 +34,4 @@ class AlieClient(ByzantineClient):
         std = torch.std(stacked_updates, 1)
         
         self._gradient = mu - std * self.z_max
-        self.state['saved_update'] = self._gradient
+        self._state['saved_update'] = self._gradient

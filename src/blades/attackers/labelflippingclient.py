@@ -45,8 +45,8 @@ class LableflippingClient(ByzantineClient):
     
     def train_epoch_start(self) -> None:
         super().train_epoch_start()
-        self.running["train_loader_iterator"].__next__ = self._wrap_iterator(
-            self.running["train_loader_iterator"].__next__
+        self._running["train_loader_iterator"].__next__ = self._wrap_iterator(
+            self._running["train_loader_iterator"].__next__
         )
     
     def _wrap_iterator(self, func):

@@ -26,4 +26,4 @@ class IpmClient(ByzantineClient):
         
         self._gradient = -self.epsilon * (sum(updates)) / len(updates)
         if self.__fedavg:
-            self.state['saved_update'] = self._gradient
+            self._state['saved_update'] = self._gradient
