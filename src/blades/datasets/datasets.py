@@ -5,8 +5,8 @@ class FLDataset(object):
     """ Federated Larning dataset
 
     Args:
-        train_dataloaders (list): dataloaders of training data for clients
-        test_dataloaders (list, optional): dataloaders of test data for clients. Two lists of dataloders should be
+        train_dataloaders (list): dataloaders of training data for input
+        test_dataloaders (list, optional): dataloaders of test data for input. Two lists of dataloders should be
             in corresponding order to the client they belong to.
     """
     

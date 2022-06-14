@@ -14,7 +14,7 @@ cifar10 = CIFAR10(num_clients=20, iid=True)  # built-in federated cifar10 datase
 conf_params = {
     "dataset": cifar10,
     "aggregator": "krum",  # defense: robust aggregation
-    "num_byzantine": 5,  # number of byzantine clients
+    "num_byzantine": 5,  # number of byzantine input
     "use_cuda": True,
     "attack": "noise",  # attack strategy
     # "attack_para":{"n": 20, # attacker parameters

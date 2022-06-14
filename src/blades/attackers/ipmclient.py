@@ -9,7 +9,7 @@ class IpmClient(ByzantineClient):
         self._gradient = None
         self._is_byzantine = True
     
-    def get_is_byzantine(self):
+    def is_byzantine(self):
         return self._is_byzantine
     
     def get_gradient(self):
@@ -19,11 +19,11 @@ class IpmClient(ByzantineClient):
         # Loop over good workers and accumulate their gradients
         updates = []
         for w in simulator.get_clients():
-            is_byzantine = w.get_is_byzantine()
+            is_byzantine = w.is_byzantine()
             # is_byzantine = ray.get(w.getattr.remote('_is_byzantine'))
             if not is_byzantine:
                 updates.append(w.get_update())
         
         self._gradient = -self.epsilon * (sum(updates)) / len(updates)
         if self.__fedavg:
-            self.state['saved_update'] = self._gradient
+            self._state['saved_update'] = self._gradient

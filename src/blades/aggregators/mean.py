@@ -1,17 +1,9 @@
-"""
-Aggregators which takes in weights and gradients.
-"""
 import logging
 
 import torch
-
-
-# currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
-# parentdir = os.path.dirname(currentdir)
-# sys.path.insert(0, parentdir)
-
-# from simulator.utils import log, log_dict
-
+from typing import Any, Callable, Optional, Union, List
+from blades.client import BladesClient
+from typing import Union, Tuple, Optional, List
 
 class _BaseAggregator(object):
     """Base class of aggregators.
@@ -25,6 +17,15 @@ class _BaseAggregator(object):
         # log("Init aggregators: " + self.__str__())
         # log_dict({"Aggregator": self.__str__(), "Type": "Setup"})
     
+    def _get_updates(self, inputs: Union[List[BladesClient], List[torch.Tensor], torch.Tensor]):
+        if all(isinstance(element, BladesClient) for element in inputs):
+            updates = torch.stack(list(map(lambda w: w.get_update(), inputs)))
+        elif isinstance(inputs, List) and all(isinstance(element, torch.Tensor) for element in inputs):
+            updates = torch.stack(inputs, dim=0)
+        else:
+            updates = inputs
+        return updates
+            
     def __call__(self, inputs):
         """Aggregate the inputs and update in-place.
 
@@ -58,25 +59,32 @@ class _BaseAsyncAggregator(object):
 
 
 class Mean(_BaseAggregator):
-    def __call__(self, inputs):
-        values = torch.stack(inputs, dim=0).mean(dim=0)
+    r"""
+    Computes the ``sample mean`` over the updates from all give input.
+    """
+    def __int__(self):
+        super(Mean, self).__init__()
+        
+    def __call__(self, inputs: Union[List[BladesClient], List[torch.Tensor], torch.Tensor]):
+        updates = self._get_updates(inputs)
+        values = updates.mean(dim=0)
         return values
     
     def __str__(self):
         return "Mean"
 
 
-class AsyncMean(_BaseAsyncAggregator):
+class _AsyncMean(_BaseAsyncAggregator):
     def __call__(self, inputs):
         filtered = list(filter(lambda x: x is not None, inputs))
         values = torch.stack(filtered, dim=0).sum(dim=0) / len(inputs)
         return values
     
     def __str__(self):
-        return "AsyncMean"
+        return "_AsyncMean"
 
 
-class DecentralizedAggregator(_BaseAggregator):
+class _DecentralizedAggregator(_BaseAggregator):
     """
     This aggregators is applied to all nodes. It has access to the node information and a row of mixing matrix.
     """
@@ -103,4 +111,4 @@ class DecentralizedAggregator(_BaseAggregator):
         return s
     
     def __str__(self):
-        return "DecentralizedAggregator"
+        return "_DecentralizedAggregator"

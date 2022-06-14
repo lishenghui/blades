@@ -5,15 +5,26 @@ import torch
 
 from .mean import _BaseAggregator
 from .mean import _BaseAsyncAggregator
+from typing import Any, Callable, Optional, Union, List
+
 
 debug_logger = logging.getLogger("debug")
 
 
 class Centeredclipping(_BaseAggregator):
-    def __init__(self, options):
-        self.tau = options.clipping_tau
-        self.n_iter = 1
-        super(Clipping, self).__init__()
+    r"""
+
+      A robust aggregator from paper `Learning from History for Byzantine Robust Optimization <http://proceedings.mlr.press/v139/karimireddy21a.html>`_
+      
+      It iteratively clips the updates around the center while updating the center accordingly.
+      
+      :param tau: The threshold of clipping. Default 10.0
+      :param n_iter: The number of clipping iterations. Default 5
+    """
+    def __init__(self, tau: Optional[float]=10.0, n_iter: Optional[int]=5):
+        self.tau = tau
+        self.n_iter = n_iter
+        super(Centeredclipping, self).__init__()
         self.momentum = None
     
     def clip(self, v):
@@ -21,27 +32,26 @@ class Centeredclipping(_BaseAggregator):
         scale = min(1, self.tau / v_norm)
         return v * scale
     
-    def __call__(self, inputs):
+    def __call__(self, clients):
+        updates = list(map(lambda w: w.get_update(), clients))
         if self.momentum is None:
-            self.momentum = torch.zeros_like(inputs[0])
+            self.momentum = torch.zeros_like(updates[0])
         
         for _ in range(self.n_iter):
             self.momentum = (
-                    sum(self.clip(v - self.momentum) for v in inputs) / len(inputs)
+                    sum(self.clip(v - self.momentum) for v in updates) / len(updates)
                     + self.momentum
             )
         
-        # print(self.momentum[:5])
-        # raise NotImplementedError
         return torch.clone(self.momentum).detach()
     
     def __str__(self):
         return "Clipping (tau={}, n_iter={})".format(self.tau, self.n_iter)
 
 
-class AnchorClipping(Clipping):
+class _AnchorClipping(Centeredclipping):
     def __init__(self, node, weights, opt, model, tau, n_iter=1):
-        super(AnchorClipping, self).__init__(tau, n_iter)
+        super(_AnchorClipping, self).__init__(tau, n_iter)
         self._anchor_buffer = self._vectorize_model(model)
         self.opt = self._wrap_step(opt, model)
         assert n_iter == 1
@@ -90,12 +100,12 @@ class AnchorClipping(Clipping):
         return s
     
     def __str__(self):
-        return "AnchorClipping(tau={}, n_iter={})".format(self.tau, self.n_iter)
+        return "_AnchorClipping(tau={}, n_iter={})".format(self.tau, self.n_iter)
 
 
-class AsyncCenteredClipping(_BaseAsyncAggregator):
+class _AsyncCenteredClipping(_BaseAsyncAggregator):
     """
-    Comparing to Clipping, AsyncCenteredClipping does not average the clipped gradient but use
+    Comparing to Clipping, _AsyncCenteredClipping does not average the clipped gradient but use
     fraction $1 / n$ where `n` is the number of total gradients.
 
     """
@@ -103,7 +113,7 @@ class AsyncCenteredClipping(_BaseAsyncAggregator):
     def __init__(self, tau, n_iter=1):
         self.tau = tau
         self.n_iter = n_iter
-        super(AsyncCenteredClipping, self).__init__()
+        super(_AsyncCenteredClipping, self).__init__()
         
         self.momentum = 0
     
@@ -124,4 +134,4 @@ class AsyncCenteredClipping(_BaseAsyncAggregator):
         return torch.clone(self.momentum).detach()
     
     def __str__(self):
-        return "AsyncCenteredClipping (tau={}, n_iter={})".format(self.tau, self.n_iter)
+        return "_AsyncCenteredClipping (tau={}, n_iter={})".format(self.tau, self.n_iter)

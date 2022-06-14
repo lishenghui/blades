@@ -2,7 +2,7 @@ import logging
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from time import time
 from typing import Any, Callable, Optional, Union, List
-
+import importlib
 import numpy as np
 import ray
 import torch
@@ -37,7 +37,7 @@ class _RayActor(object):
         for i in range(len(clients)):
             clients[i].set_para(model)
             clients[i].train_epoch_start()
-            data = self.dataset.get_train_data(clients[i].id, local_round)
+            data = self.dataset.get_train_data(clients[i].id(), local_round)
             clients[i].local_training(local_round, use_actor=True, data_batches=data)
             update.append(clients[i].get_update())
         return update
@@ -46,7 +46,7 @@ class _RayActor(object):
         update = []
         for i in range(len(clients)):
             clients[i].set_para(model)
-            data = self.dataset.get_all_test_data(clients[i].id)
+            data = self.dataset.get_all_test_data(clients[i].id())
             result = clients[i].evaluate(
                 round_number=round_number,
                 test_set=data,
@@ -61,10 +61,10 @@ class _RayActor(object):
 class Simulator(object):
     """Synchronous and parallel training with specified aggregators.
     
-    :param dataset: FLDataset that consists local data of all clients
+    :param dataset: FLDataset that consists local data of all input
     :param aggregator: String (name of build-in aggregation scheme) or
                        a callable which takes a list of tensors and returns an aggregated tensor.
-    :param num_byzantine: Number of Byzantine clients under build-in attack.
+    :param num_byzantine: Number of Byzantine input under build-in attack.
                           It should be ``0`` if you have custom attack strategy.
     :type num_byzantine: int, optional
     :param attack: ``None`` by default. One of the build-in attacks, i.e., ``None``, ``noise``, ``labelflipping``,
@@ -94,33 +94,23 @@ class Simulator(object):
             use_cuda: Optional[bool] = False,
             **kwargs,
     ):
-        if type(aggregator) == str:
-            import importlib
-            agg_path = importlib.import_module('blades.aggregators.%s' % aggregator)
-            agg_scheme = getattr(agg_path, aggregator.capitalize())
-            agg_kwarg = kwargs["agg_param"] if "agg_param" in kwargs else {}
-            self.aggregator = agg_scheme(**agg_kwarg)
-        else:
-            self.aggregator = aggregator
+        
         num_trainers = kwargs["num_trainers"] if "num_trainers" in kwargs else 1
         gpu_per_actor = kwargs["gpu_per_actor"] if "gpu_per_actor" in kwargs else 0
+        self.use_actor = True if mode == 'actor' else False
         self.device = torch.device("cuda" if use_cuda or "gpu_per_actor" in kwargs else "cpu")
         attack_param = kwargs["attack_param"] if "attack_param" in kwargs else {}
-        self.log_path = log_path
         initialize_logger(log_path)
-        self.use_actor = True if mode == 'actor' else False
+        agg_param = kwargs["agg_param"] if "agg_param" in kwargs else {}
+        self._init_aggregator(aggregator=aggregator, agg_param=agg_param)
         
         self.metrics = {"top1": top1_accuracy} if metrics is None else metrics
-        self.use_cuda = use_cuda
         self.omniscient_callbacks = []
         self.random_states = {}
         
         self.json_logger = logging.getLogger("stats")
         self.debug_logger = logging.getLogger("debug")
         self.debug_logger.info(self.__str__())
-        
-        if metrics is None:
-            metrics = {"top1": top1_accuracy}
         
         if self.use_actor:
             self.ray_actors = [_RayActor.options(num_gpus=gpu_per_actor).remote(dataset)
@@ -138,37 +128,56 @@ class Simulator(object):
         
         self._setup_clients(attack, num_byzantine=num_byzantine, attack_param=attack_param)
     
+    def _init_aggregator(self, aggregator, agg_param):
+        if type(aggregator) == str:
+            agg_path = importlib.import_module('blades.aggregators.%s' % aggregator)
+            agg_scheme = getattr(agg_path, aggregator.capitalize())
+            self.aggregator = agg_scheme(**agg_param)
+        else:
+            self.aggregator = aggregator
+        
     def _setup_clients(self, attack: str, num_byzantine, attack_param):
         import importlib
         if attack is None:
             num_byzantine = 0
         users = self.dataset.get_clients()
-        self._clients = []
+        self._clients = {}
         for i, u in enumerate(users):
+            # u = str(u)
             if i < num_byzantine:
                 module_path = importlib.import_module('blades.attackers.%sclient' % attack)
                 attack_scheme = getattr(module_path, '%sClient' % attack.capitalize())
-                client = attack_scheme(client_id=u, device=self.device, **attack_param)
+                client = attack_scheme(id=u, device=self.device, **attack_param)
                 self._register_omniscient_callback(client.omniscient_callback)
             else:
-                client = BladesClient(u, device=self.device)
-            self._clients.append(client)
+                client = BladesClient(id=u, device=self.device)
+            self._clients[u] = client
     
     def get_clients(self):
-        r"""Return all clients.
+        r"""Return all input.
         """
-        return self._clients
+        return self._clients.values()
+    
+    def set_trusted_clients(self, ids: List[str]) -> None:
+        """Set a list of input as trusted. This is usable for trusted-based algorithms that assume some input are known as not Byzantine.
+    
+        :param ids: a list of client ids that are trusted
+        :type ids: list
+        """
+        for id in ids:
+            self._clients[id].trust()
+            
     
     def cache_random_state(self) -> None:
         # This function should be used for reproducibility
-        if self.use_cuda:
+        if self.device != torch.device('cpu'):
             self.random_states["torch_cuda"] = torch.cuda.get_rng_state()
         self.random_states["torch"] = torch.get_rng_state()
         self.random_states["numpy"] = np.random.get_state()
     
     def restore_random_state(self) -> None:
         # This function should be used for reproducibility
-        if self.use_cuda:
+        if self.device != torch.device('cpu'):
             torch.cuda.set_rng_state(self.random_states["torch_cuda"])
         torch.set_rng_state(self.random_states["torch"])
         np.random.set_state(self.random_states["numpy"])
@@ -178,9 +187,11 @@ class Simulator(object):
     
     def register_attackers(self, clients: List[ByzantineClient]) -> None:
         assert len(clients) < len(self._clients)
+        client_li = list(self._clients.values())
         for i in range(len(clients)):
-            clients[i].set_id(self._clients[i].get_id())
-            self._clients[i] = clients[i]
+            id = client_li[i].id()
+            clients[i].set_id(id)
+            self._clients[id] = clients[i]
             self._register_omniscient_callback(clients[i].omniscient_callback)
     
     def parallel_call(self, clients,
@@ -198,40 +209,38 @@ class Simulator(object):
         return results
     
     def train_actor(self, global_round, num_rounds, clients):
-        # TODO: randomly select a subset of clients for local training
+        # TODO: randomly select a subset of input for local training
         self.debug_logger.info(f"Train global round {global_round}")
         
-        # Allocate clients to actors:
+        # Allocate input to actors:
         global_model = self.server.get_model().to('cpu')
-        client_groups = np.array_split(self._clients, len(self.ray_actors))
-        
+        client_groups = np.array_split(list(self._clients.values()), len(self.ray_actors))
         all_results = self.actor_pool.map(
             lambda actor, clients:
-            actor.local_training.remote(
-                clients=clients,
-                model=global_model,
-                local_round=num_rounds,
-            ),
+                actor.local_training.remote(
+                    clients=clients,
+                    model=global_model,
+                    local_round=num_rounds,
+                ),
             client_groups
         )
         
         updates = [update for returns in list(all_results) for update in returns]
-        for client, update in zip(clients, updates):
+        for client, update in zip(clients.values(), updates):
             client.save_update(update)
         
         # If there are Byzantine workers, ask them to craft attackers based on the updated settings.
         for omniscient_attacker_callback in self.omniscient_callbacks:
             omniscient_attacker_callback(self)
         
-        updates = self.parallel_get(clients, lambda w: w.get_update())
-        aggregated = self.server.aggregator(updates)
+        updates = self.parallel_get(clients.values(), lambda w: w.get_update())
+        # aggregated = self.server.aggregator(updates)
+        aggregated = self.server.aggregator(clients.values())
         self.server.apply_update(aggregated)
         
         self.log_variance(global_round, updates)
     
     def train_trainer(self, epoch, num_rounds, clients):
-        # clients is added due to the changing of self.clients (Tianru)
-        # self.clients is changed to clients (Tianru)
         self.debug_logger.info(f"Train epoch {epoch}")
         
         def local_training(config):
@@ -244,7 +253,7 @@ class Simulator(object):
             return update
         
         def train_function(clients, trainer, model, num_rounds):
-            data = [self.dataset.get_train_data(client.id, num_rounds) for client in clients]
+            data = [self.dataset.get_train_data(client._id, num_rounds) for client in clients]
             return trainer.run(local_training,
                                config={'client': clients, 'data': data, 'model': model, 'use_actor': self.use_actor,
                                        'local_round': num_rounds})
@@ -267,7 +276,7 @@ class Simulator(object):
     
     def test_actor(self, global_round, batch_size, clients):
         global_model = self.server.get_model().to('cpu')
-        client_groups = np.array_split(self._clients, len(self.ray_actors))
+        client_groups = np.array_split(list(self._clients.values()), len(self.ray_actors))
         
         all_results = self.actor_pool.map(
             lambda actor, clients:
@@ -310,7 +319,7 @@ class Simulator(object):
         :param client_optimizer: Pytorch optimizer for client-side optimization.
                                  Currently, the ``str`` type only supports ``SGD``
         :type client_optimizer: torch.optim.Optimizer or str
-        :param loss: A Pytorch Loss function. See https://pytorch.org/docs/stable/nn.html#loss-functions.
+        :param loss: A Pytorch Loss function. See `Python documentation <https://pytorch.org/docs/stable/nn.html#loss-functions>`_.
                      Currently, the `str` type only supports ``crossentropy``
         :type loss: str
         :param global_rounds: Number of communication rounds in total.
@@ -340,12 +349,12 @@ class Simulator(object):
                                    aggregator=self.aggregator,
                                    )
         
-        self.parallel_call(self._clients, lambda client: client.set_loss(loss))
+        self.parallel_call(self._clients.values(), lambda client: client.set_loss(loss))
         global_start = time()
         ret = []
         global_model = self.server.get_model()
         for global_rounds in range(1, global_rounds + 1):
-            self.parallel_call(self._clients,
+            self.parallel_call(self._clients.values(),
                                lambda client: client.set_model(global_model, torch.optim.SGD, client_lr))
             round_start = time()
             if self.use_actor:
@@ -356,7 +365,7 @@ class Simulator(object):
             if self.use_actor and global_rounds % validate_interval == 0:
                 self.test_actor(global_round=global_rounds, batch_size=test_batch_size, clients=self._clients)
             
-            # TODO(Shenghui): When using trainer, the test function is not implemented so far.
+            # TODO(Shenghui): When using trainer, the test method is not implemented so far.
             if lr_scheduler:
                 lr_scheduler.step()
                 client_lr = lr_scheduler.get_last_lr()[0]
@@ -413,7 +422,7 @@ class Simulator(object):
             )
         
         # Output to console
-        total = len(self._clients[0].data_loader.dataset)
+        total = len(self._clients.values()[0].data_loader.dataset)
         pct = 100 * progress / total
         self.debug_logger.info(
             f"[E{r['E']:2}B{r['B']:<3}| {progress:6}/{total} ({pct:3.0f}%) ] Loss: {r['Loss']:.4f} "
