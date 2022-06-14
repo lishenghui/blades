@@ -10,13 +10,12 @@ cifar10 = CIFAR10(num_clients=20, iid=True)  # built-in federated cifar10 datase
 
 class MaliciousClient(ByzantineClient):
     def __init__(self, *args, **kwargs):
-        super(ByzantineClient).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
     
     def omniscient_callback(self, simulator):
         updates = []
-        for w in simulator._clients:
-            is_byzantine = w.get_is_byzantine()
-            if not is_byzantine:
+        for w in simulator.get_clients():
+            if not w.is_byzantine():
                 updates.append(w.get_update())
         self.save_update(-100 * (sum(updates)) / len(updates))
 
@@ -29,7 +28,7 @@ conf_params = {
     "seed": 1,  # reproducibility
 }
 
-ray.init(num_gpus=0)
+ray.init(num_gpus=0, local_mode=True)
 simulator = Simulator(**conf_params)
 
 attackers = [MaliciousClient() for _ in range(5)]

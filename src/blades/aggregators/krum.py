@@ -1,5 +1,7 @@
 from .mean import _BaseAggregator
-
+from typing import Union, Tuple, Optional, List
+from blades.client import BladesClient
+import torch
 
 def _compute_scores(distances, i, n, f):
     """Compute scores for node i.
@@ -20,7 +22,7 @@ def _compute_scores(distances, i, n, f):
     return sum(_s)
 
 
-def multi_krum(distances, n, f, m):
+def _multi_krum(distances, n, f, m):
     """Multi_Krum algorithm
 
     Arguments:
@@ -65,7 +67,7 @@ def _compute_euclidean_distance(v1, v2):
     return (v1 - v2).norm()
 
 
-def pairwise_euclidean_distances(vectors):
+def _pairwise_euclidean_distances(vectors):
     """Compute the pairwise euclidean distance.
 
     Arguments:
@@ -87,11 +89,20 @@ def pairwise_euclidean_distances(vectors):
 
 class Krum(_BaseAggregator):
     r"""
-    This script implements Multi-KRUM algorithm.
-
-    Blanchard, Peva, Rachid Guerraoui, and Julien Stainer.
-    "Machine learning with adversaries: Byzantine tolerant gradient descent."
-    Advances in Neural Information Processing Systems. 2017.
+    
+      A robust aggregator from paper `"Machine Learning with Adversaries: Byzantine Tolerant Gradient Descent" <https://proceedings.neurips.cc/paper/2017/hash/f4b9ec30ad9f68f89b29639786cb62ef-Abstract.html>`_
+      
+      Given a collection of vectors, ``Krum`` strives to find one of the vector that is closest
+      to another :math:`K-M-2` ones with respect to squared Euclidean distance, which can be expressed by:
+    
+        .. math::
+           Krum := \{{\Delta}_i | i = \arg\min_{i \in [K]} \sum_{i \rightarrow j}  \lVert {\Delta}_i -
+                    {\Delta}_j \rVert^2 \}
+    
+      where :math:`i \rightarrow j` is the indices of the :math:`K-M-2` nearest neighbours of :math:`{\Delta}_i`
+      measured by squared ``Euclidean distance``,  :math:`K` is the number of input in total, and :math:`M`
+      is the number of Byzantine input.
+      
     """
     
     def __init__(self, num_clients=20, num_byzantine=5):
@@ -100,10 +111,11 @@ class Krum(_BaseAggregator):
         self.m = 1
         super(Krum, self).__init__()
     
-    def __call__(self, inputs):
-        distances = pairwise_euclidean_distances(inputs)
-        top_m_indices = multi_krum(distances, self.n, self.f, self.m)
-        values = sum(inputs[i] for i in top_m_indices)
+    def __call__(self, inputs: Union[List[BladesClient], List[torch.Tensor]]):
+        updates = self._get_updates(inputs)
+        distances = _pairwise_euclidean_distances(updates)
+        top_m_indices = _multi_krum(distances, self.n, self.f, self.m)
+        values = sum(updates[i] for i in top_m_indices)
         return values
     
     def __str__(self):

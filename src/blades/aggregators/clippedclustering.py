@@ -1,7 +1,3 @@
-'''
-    S. Li, C. H. E. Ngai and T. Voigt,“An Experimental Study of Byzantine-Robust Aggregation Schemes in Federated Learning”.
-    TechRxiv,11-Apr-2022,doi:10.36227/techrxiv.19560325.v1.
-'''
 import os
 import sys
 
@@ -10,6 +6,14 @@ import torch
 from numpy import inf
 from scipy import spatial
 from sklearn.cluster import AgglomerativeClustering
+import numpy as np
+import torch
+from numpy import inf
+from scipy import spatial
+from typing import Union, Tuple, Optional, List
+from blades.client import BladesClient
+from sklearn.cluster import AgglomerativeClustering
+from .mean import _BaseAggregator
 
 file_dir = os.path.dirname(__file__)
 sys.path.append(file_dir)
@@ -17,23 +21,31 @@ sys.path.append(file_dir)
 import torch_utils
 
 
-class Clippedclustering():
-    def __init__(self) -> None:
-        self.l2norm_his = []
+class Clippedclustering(_BaseAggregator):
+    r"""
+         A robust aggregator from paper `"An Experimental Study of Byzantine-Robust sAggregation Schemes in Federated Learning" <https://www.techrxiv.org/articles/preprint/An_Experimental_Study_of_Byzantine-Robust_Aggregation_Schemes_in_Federated_Learning/19560325>`_
+
+         it separates the client population into two groups based on the cosine similarities
+    """
     
-    def __call__(self, inputs):
-        l2norms = [torch.norm(update).item() for update in inputs]
+    def __init__(self) -> None:
+        super(Clippedclustering, self).__init__()
+        self.l2norm_his = []
+
+    def __call__(self, inputs: Union[List[BladesClient], List[torch.Tensor], torch.Tensor]):
+        updates = self._get_updates(inputs)
+        l2norms = [torch.norm(update).item() for update in updates]
         self.l2norm_his.extend(l2norms)
         threshold = np.median(self.l2norm_his)
         # threshold = min(threshold, 5.0)
         
         for idx, l2 in enumerate(l2norms):
             if l2 > threshold:
-                inputs[idx] = torch_utils.clip_tensor_norm_(inputs[idx], threshold)
+                updates[idx] = torch_utils.clip_tensor_norm_(updates[idx], threshold)
         
-        stacked_models = torch.vstack(inputs)
-        np_models = stacked_models.cpu().detach().numpy()
-        num = len(inputs)
+        # stacked_models = torch.vstack(updates)
+        np_models = updates.cpu().detach().numpy()
+        num = len(updates)
         dis_max = np.zeros((num, num))
         for i in range(num):
             for j in range(num):
@@ -44,9 +56,9 @@ class Clippedclustering():
         dis_max[dis_max == -inf] = -1
         dis_max[dis_max == inf] = 1
         dis_max[np.isnan(dis_max)] = -1
-        clustering = AgglomerativeClustering(affinity='precomputed', linkage='average', n_clusters=2)
+        clustering = AgglomerativeClustering(affinity='precomputed', linkage='complete', n_clusters=2)
         clustering.fit(dis_max)
         flag = 1 if np.sum(clustering.labels_) > num // 2 else 0
-        values = torch.vstack(list(model for model, label in zip(inputs, clustering.labels_) if label == flag)).mean(
+        values = torch.vstack(list(model for model, label in zip(updates, clustering.labels_) if label == flag)).mean(
             dim=0)
         return values
