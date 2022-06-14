@@ -121,6 +121,20 @@ Cluster Deployment
 To run **blades** on a cluster, you only need to deploy ``Ray cluster`` according to the `official guide <https://docs.ray.io/en/latest/cluster/user-guide.html>`_.
 
 
+Citation
+========
+
+If you use Blades in your research, please cite:
+
+::
+
+   @article{2022arXiv220605359L,
+     title={Blades: A Simulator for Attacks and Defenses in Federated Learning},
+     author= {Li, Shenghui and Ju, Li and Zhang, Tianru and Ngai, Edith and Voigt, Thiemo},
+     journal={arXiv preprint arXiv:2206.05359},
+     year={2022}
+   }
+
 Reference
 ==========
 
