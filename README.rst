@@ -51,6 +51,15 @@ Take `ALIE Attack <https://github.com/bladesteam/blades/blob/master/src/blades/a
    :code: python
 
 
+Illustration of Blades
+--------------------------
+<p align="center">
+  <img width = "700" src="https://github.com/bladesteam/blades/blob/master/docs/source/_static/blade_architecture.pdf" alt="banner"/>
+  <br/>
+</p>
+
+
+
 Build-in Implementations
 --------------------------
 In detail, the following strategies are currently implemented:
@@ -124,7 +133,7 @@ To run **blades** on a cluster, you only need to deploy ``Ray cluster`` accordin
 Citation
 ========
 
-If you use Blades in your research, please cite:
+Please cite our `paper <https://arxiv.org/abs/2206.05359>`_ (and the respective papers of the methods used) if you use this code in your own work:
 
 ::
 
