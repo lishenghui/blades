@@ -54,14 +54,8 @@ Take `ALIE Attack <https://github.com/bladesteam/blades/blob/master/src/blades/a
 Illustration of Blades
 ==================================================
 
-.. raw:: html
-
-    <p align="center">
-      <img width = "700" src="https://github.com/bladesteam/blades/blob/master/docs/source/_static/blade_architecture.png" alt="architecture"/>
-      <br/>
-    </p>
-
-
+.. figure:: https://i.postimg.cc/Xq73SgxS/blade-architecture.png
+   :alt: Blades architecture
 
 
 Build-in Implementations
