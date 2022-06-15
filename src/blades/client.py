@@ -98,10 +98,26 @@ class BladesClient(object):
     def __str__(self) -> str:
         return "BladesClient"
     
-    def train_epoch_start(self) -> None:
-        # self._running["train_loader_iterator"] = iter(self.data_loader)
+    def on_train_round_start(self) -> None:
+        """Called at the beginning of each local training round in `local_training` methods.
+
+        Subclasses should override for any actions to run.
+
+        :param logs: Dict. Aggregated metric results up until this batch.
+        """
         self.model = self.model.to(self.device)
         self.model.train()
+
+    def on_train_batch_begin(self, data, target, logs=None):
+        """Called at the beginning of a training batch in `local_training` methods.
+
+         Subclasses should override for any actions to run.
+
+         :param data: input of the batch data.
+         :param target: target of the batch data.
+         :param logs: Dict. Aggregated metric results up until this batch.
+         """
+        return data, target
         
     def evaluate(self, round_number, test_set, batch_size, metrics, use_actor=True):
         dataloader = DataLoader(dataset=test_set, batch_size=batch_size)
@@ -152,6 +168,7 @@ class BladesClient(object):
         
         for data, target in data_batches:
             data, target = data.to(self.device), target.to(self.device)
+            data, target = self.on_train_batch_begin(data=data, target=target)
             self.optimizer.zero_grad()
             
             output = model(data)
