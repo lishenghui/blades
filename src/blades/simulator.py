@@ -36,7 +36,7 @@ class _RayActor(object):
         update = []
         for i in range(len(clients)):
             clients[i].set_para(model)
-            clients[i].train_epoch_start()
+            clients[i].on_train_round_start()
             data = self.dataset.get_train_data(clients[i].id(), local_round)
             clients[i].local_training(local_round, use_actor=True, data_batches=data)
             update.append(clients[i].get_update())
@@ -247,7 +247,7 @@ class Simulator(object):
             update = []
             for i in range(len(config['client'])):
                 config['client'][i].set_para(config['model'])
-                config['client'][i].train_epoch_start()
+                config['client'][i].on_train_round_start()
                 config['client'][i].local_training(config['local_round'], config['use_actor'], config['data'][i])
                 update.append(config['client'][i].get_update())
             return update
