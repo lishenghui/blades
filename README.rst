@@ -35,12 +35,12 @@ If you are interested in this project, don't hesitate to contact me or make a PR
 
 
 Installation
--------------
+==================================================
 
 >>> pip install blades
 
 Get Started
--------------
+==================================================
 
 How fast can we simulate attack and defense in federated learning?
 Take `ALIE Attack <https://github.com/bladesteam/blades/blob/master/src/blades/attackers/alieclient.py>`_ and
@@ -52,16 +52,20 @@ Take `ALIE Attack <https://github.com/bladesteam/blades/blob/master/src/blades/a
 
 
 Illustration of Blades
---------------------------
-<p align="center">
-  <img width = "700" src="https://github.com/bladesteam/blades/blob/master/docs/source/_static/blade_architecture.pdf" alt="banner"/>
-  <br/>
-</p>
+==================================================
+
+.. raw:: html
+
+    <p align="center">
+      <img width = "700" src="https://github.com/bladesteam/blades/blob/master/docs/source/_static/blade_architecture.png" alt="architecture"/>
+      <br/>
+    </p>
+
 
 
 
 Build-in Implementations
---------------------------
+==================================================
 In detail, the following strategies are currently implemented:
 
 
@@ -127,11 +131,12 @@ Trust-based Strategies
 
 Cluster Deployment
 ===================
+
 To run **blades** on a cluster, you only need to deploy ``Ray cluster`` according to the `official guide <https://docs.ray.io/en/latest/cluster/user-guide.html>`_.
 
 
 Citation
-========
+=========
 
 Please cite our `paper <https://arxiv.org/abs/2206.05359>`_ (and the respective papers of the methods used) if you use this code in your own work:
 
