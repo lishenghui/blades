@@ -1,9 +1,10 @@
 
-**Blades**: A simulator for **B**\ yzantine-robust federated **L**\ earning with **A**\ ttacks and **D**\ efenses **E**\ xperimental **S**\ imulation
     | Know thy self, know thy enemy. A thousand battles, a thousand victories. --Sun Tzu
 
     | 知己知彼，百战百胜 ——孙武
 
+**Blades** is a simulator for **B**\ yzantine-robust federated **L**\ earning with **A**\ ttacks and **D**\ efenses
+**E**\ xperimental **S**\ imulation.
 
 .. raw:: html
 
@@ -23,6 +24,15 @@
       </a>
     </p>
 
+
+**Blades** is designed to simulate federated learning attacks and defense with high performance and fast evaluation
+of existing strategies and new techniques. Key features of **Blades** include:
+
+   * **Specificity:** Different from existing federated learning simulators, **Blades** is specifically designed to simulate attacks and defenses. Thus we provide built-in implementations of representative attack strategies as well as robust aggregation schemes, so that users can efficiently validate their approaches and compare with existing solutions.
+
+   * **Scalability:** **Blades** is scalable in terms of both clients and computing resources. In resource-constrained systems, it allows each trainer/actor to deal with multiple clients' requests sequentially, thus the scale of experiments is not limited by the number of trainers/actors. Based on Ray, **Blades** is deployable either on a single machine or a computing cluster.
+
+   * **Extensibility:** **Blades** is highly compatible with Pytorch, allowing any combination of model, dataset and optimizer. It supports diverse federated learning  configurations, including standardized implementations such as **fedsgd** and **fedavg**, with Pytorch being the framework of choice for implementing the models. **Blades** allows the end users to incorporate new types of attacks, defenses, and optimization algorithms in a straightforward fashion.
 
 NOTE: More features are under development and the APIs are subject to change.
 If you are interested in this project, don't hesitate to contact me or make a PR directly.
@@ -55,6 +65,7 @@ Illustration of Blades
 ==================================================
 
 .. figure:: https://i.postimg.cc/Xq73SgxS/blade-architecture.png
+   :width: 800
    :alt: Blades architecture
 
 
@@ -136,12 +147,13 @@ Please cite our `paper <https://arxiv.org/abs/2206.05359>`_ (and the respective 
 
 ::
 
-   @article{2022arXiv220605359L,
+   @article{li2022blades,
      title={Blades: A Simulator for Attacks and Defenses in Federated Learning},
      author= {Li, Shenghui and Ju, Li and Zhang, Tianru and Ngai, Edith and Voigt, Thiemo},
      journal={arXiv preprint arXiv:2206.05359},
      year={2022}
    }
+
 
 Reference
 ==========
