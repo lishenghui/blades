@@ -1,72 +1,45 @@
-import importlib
+import sys
 
-import numpy as np
+import ray
 import torch
-from torch.nn.modules.loss import CrossEntropyLoss
 
-from args import parse_arguments
-from blades.datasets.datasets import FLDataset
+sys.path.insert(0, '../..')
 from blades.simulator import Simulator
-from blades.utils import top1_accuracy, initialize_logger
-from datasets.cifar10 import CIFAR10
+from blades.datasets import CIFAR10
+from blades.models.cifar10 import CCTNet
 
-options = parse_arguments()
+cifar10 = CIFAR10(num_clients=20, iid=True)  # built-in federated cifar10 dataset
 
-agg_path = importlib.import_module('aggregators.%s' % options.agg)
-agg_scheme = getattr(agg_path, options.agg.capitalize())
+# configuration parameters
+conf_params = {
+    "dataset": cifar10,
+    "aggregator": "clippedclustering",  # defense: robust aggregation
+    "num_byzantine": 0,  # number of byzantine input
+    "use_cuda": False,
+    "attack": "alie",  # attack strategy
+    "attack_param": {"num_clients": 20,  # attacker parameters
+                     "num_byzantine": 0},
+    "num_actors": 4,  # number of training actors
+    "gpu_per_actor": 0.0,
+    "seed": 1,  # reproducibility
+}
 
+ray.init(num_gpus=4)
+simulator = Simulator(**conf_params)
 
-def main(args):
-    '''This is an example'''
-    initialize_logger(options.log_dir)
-    device = torch.device("cuda" if args.use_cuda else "cpu")
-    kwargs = {"pin_memory": True} if args.use_cuda else {}
+model = CCTNet()
+server_opt = torch.optim.Adam(model.parameters(), lr=0.01)
+# runtime parameters
+run_params = {
+    "model": model,  # global model
+    "server_optimizer": 'SGD',  # ,server_opt  # server optimizer
+    "client_optimizer": 'SGD',  # client optimizer
+    "loss": "crossentropy",  # loss function
+    "global_rounds": 7500,  # number of global rounds
+    "local_steps": 1,  # number of s"client_lr": 0.1,  # learning rateteps per round
+    "server_lr": 0.1,
+    "client_lr": 1.0,  # learning rate
+    "validate_interval": 10,
     
-    torch.manual_seed(args.seed)
-    np.random.seed(args.seed)
-    
-    model_path = importlib.import_module(options.model_path)
-    Model = getattr(model_path, "Net")
-    model = Model()
-    loss_func = CrossEntropyLoss()
-    opt = torch.optim.SGD(model.parameters(), lr=0.2)
-    lr_scheduler = torch.optim.lr_scheduler.MultiStepLR(
-        opt, milestones=[100, 200, 400], gamma=0.5
-    )
-    metrics = {"top1": top1_accuracy}
-    
-    train_dls, testdls = CIFAR10(data_root=options.data_dir, train_bs=options.batch_size).get_dls()
-    dataset = FLDataset(train_dls, testdls)
-    trainer = Simulator(
-        aggregator=agg_scheme(options),
-        model=model,
-        dataset=dataset,
-        log_interval=args.log_interval,
-        metrics=metrics,
-        use_cuda=args.use_cuda,
-        debug=False,
-        num_trainers=args.num_trainers,
-        gpu_per_actor=args.gpu_per_actor,
-        num_actors=args.num_actors,
-        device=device,
-        mode=args.mode,
-    )
-    
-    trainer.run(model=model,
-                loss=loss_func,
-                validate_interval=20,
-                optimizer=opt,
-                lr_scheduler=lr_scheduler,
-                global_rounds=600,
-                local_steps=50,
-                )
-
-
-if __name__ == "__main__":
-    import ray
-    
-    if not ray.is_initialized():
-        ray.init(local_mode=True, include_dashboard=True, num_gpus=options.num_gpus)
-        ray.init(local_mode=True, include_dashboard=True, num_gpus=options.num_gpus)
-        # ray.init(include_dashboard=True, num_gpus=options.num_gpus)
-    main(options)
+}
+simulator.run(**run_params)
