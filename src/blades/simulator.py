@@ -98,7 +98,9 @@ class Simulator(object):
         num_trainers = kwargs["num_trainers"] if "num_trainers" in kwargs else 1
         gpu_per_actor = kwargs["gpu_per_actor"] if "gpu_per_actor" in kwargs else 0
         self.use_actor = True if mode == 'actor' else False
-        self.device = torch.device("cuda" if use_cuda or "gpu_per_actor" in kwargs else "cpu")
+        self.device = torch.device("cuda" if use_cuda or
+                                             ("gpu_per_actor" in kwargs and kwargs["gpu_per_actor"] > 0.0)
+                                   else "cpu")
         attack_param = kwargs["attack_param"] if "attack_param" in kwargs else {}
         initialize_logger(log_path)
         agg_param = kwargs["agg_param"] if "agg_param" in kwargs else {}

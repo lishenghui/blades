@@ -25,7 +25,7 @@
     </p>
 
 
-**Blades** is designed to simulate federated learning attacks and defense with high performance and fast evaluation
+**Blades** is designed to simulate attacks and defenses in federated learning with high performance and fast evaluation
 of existing strategies and new techniques. Key features of **Blades** include:
 
    * **Specificity:** Different from existing federated learning simulators, **Blades** is specifically designed to simulate attacks and defenses. Thus we provide built-in implementations of representative attack strategies as well as robust aggregation schemes, so that users can efficiently validate their approaches and compare with existing solutions.

@@ -32,3 +32,6 @@ src/blades/mnist_output/*
 *.egg
 *.vscode
 /docs/build
+*data_batch_*
+*.meta
+*test_batch
