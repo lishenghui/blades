@@ -2,6 +2,9 @@ import sys
 
 import ray
 import torch
+import os
+os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
+os.environ["CUDA_VISIBLE_DEVICES"]="2,3"
 
 sys.path.insert(0, '../..')
 from blades.simulator import Simulator
@@ -24,7 +27,7 @@ conf_params = {
     "seed": 1,  # reproducibility
 }
 
-ray.init(num_gpus=4)
+ray.init(num_gpus=2)
 simulator = Simulator(**conf_params)
 
 model = CCTNet()

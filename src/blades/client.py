@@ -22,13 +22,13 @@ class BladesClient(object):
     _is_byzantine: bool = False
     _is_trusted: bool = False
     device: str = 'cpu'
-    _state = defaultdict(dict)
     
     def __init__(
             self,
             id: Optional[str] = None,
             device: Optional[Union[torch.device, str]] = 'cpu',
     ):
+        self._state = defaultdict(dict)
         self.set_id(id)
         self.device = device
         
@@ -174,6 +174,7 @@ class BladesClient(object):
             
             output = model(data)
             loss = self.loss_func(output, target)
+            print(loss)
             loss.backward()
             self.optimizer.step()
         
@@ -191,7 +192,7 @@ class BladesClient(object):
         
         :param update: a vector of local update
         """
-        self._state['saved_update'] = update.detach()
+        self._state['saved_update'] = torch.clone(update).detach()
     
     def _get_saved_update(self) -> torch.Tensor:
         return self._state['saved_update']

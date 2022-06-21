@@ -9,10 +9,10 @@ mnist = MNIST(data_root="./data", train_bs=32, num_clients=10)  # built-in feder
 # configuration parameters
 conf_params = {
     "dataset": mnist,
-    "aggregator": "trimmedmean",  # aggregation
+    "aggregator": "mean",  # aggregation
     "num_byzantine": 0,  # number of Byzantine input
     "attack": "alie",  # attack strategy
-    "attack_param": {"num_clients": 10,  # attacker parameters
+    "attack_param": {"num_clients": 1,  # attacker parameters
                      "num_byzantine": 0},
     "num_actors": 4,  # number of training actors
     "seed": 1,  # reproducibility
@@ -29,8 +29,8 @@ run_params = {
     "client_optimizer": 'SGD',  # client optimizer
     "loss": "crossentropy",  # loss function
     "global_rounds": 400,  # number of global rounds
-    "local_steps": 2,  # number of steps per round
+    "local_steps": 1,  # number of steps per round
     "server_lr": 0.1,
-    "client_lr": 1,  # learning rate
+    "client_lr": 1.0,  # learning rate
 }
 simulator.run(**run_params)
