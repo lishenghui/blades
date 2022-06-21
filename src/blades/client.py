@@ -1,7 +1,7 @@
 import copy
 import logging
 from collections import defaultdict
-from typing import Union, Tuple, Optional
+from typing import Union, Optional
 
 import ray.train as train
 import torch
@@ -23,6 +23,7 @@ class BladesClient(object):
     _is_trusted: bool = False
     device: str = 'cpu'
     _state = defaultdict(dict)
+    
     def __init__(
             self,
             id: Optional[str] = None,
@@ -66,7 +67,7 @@ class BladesClient(object):
     def is_trusted(self):
         return self._is_trusted
     
-    def trust(self, trusted: Optional[bool]=True) -> None:
+    def trust(self, trusted: Optional[bool] = True) -> None:
         r"""
         Trusts the client as an honest participant. This property is useful
         for trust-based algorithms.
@@ -107,7 +108,7 @@ class BladesClient(object):
         """
         self.model = self.model.to(self.device)
         self.model.train()
-
+    
     def on_train_batch_begin(self, data, target, logs=None):
         """Called at the beginning of a training batch in `local_training` methods.
 
@@ -118,7 +119,7 @@ class BladesClient(object):
          :param logs: Dict. Aggregated metric results up until this batch.
          """
         return data, target
-        
+    
     def evaluate(self, round_number, test_set, batch_size, metrics, use_actor=True):
         dataloader = DataLoader(dataset=test_set, batch_size=batch_size)
         self.model.eval()
@@ -191,30 +192,44 @@ class BladesClient(object):
         :param update: a vector of local update
         """
         self._state['saved_update'] = update.detach()
-
+    
     def _get_saved_update(self) -> torch.Tensor:
         return self._state['saved_update']
-
+    
     def _save_para(self) -> None:
-        for group in self.optimizer.param_groups:
-            for p in group["params"]:
-                if not p.requires_grad:
-                    continue
-                param_state = self._state[p]
-                param_state["saved_para"] = torch.clone(p.data).detach()
+        for name, param in self.model.named_parameters():
+            if not param.requires_grad:
+                continue
+            self._state['saved_para'][name] = torch.clone(param.data).detach()
+        
+        # for group in self.optimizer.param_groups:
+        #     for p in group["params"]:
+        #         if not p.requires_grad:
+        #             continue
+        #         param_state = self._state[p]
+        #         param_state["saved_para"] = torch.clone(p.data).detach()
     
     def _get_para(self, current=True) -> None:
         layer_parameters = []
         
-        for group in self.optimizer.param_groups:
-            for p in group["params"]:
-                if p.grad is None:
-                    continue
-                if current:
-                    layer_parameters.append(p.data.view(-1))
-                else:
-                    param_state = self._state[p]
-                    layer_parameters.append(param_state["saved_para"].data.view(-1))
+        for name, param in self.model.named_parameters():
+            if not param.requires_grad:
+                continue
+            if current:
+                layer_parameters.append(param.data.view(-1))
+            else:
+                saved_param = self._state['saved_para'][name]
+                layer_parameters.append(saved_param.data.view(-1))
+        
+        # for group in self.optimizer.param_groups:
+        #     for p in group["params"]:
+        #         if p.grad is None:
+        #             continue
+        #         if current:
+        #             layer_parameters.append(p.data.view(-1))
+        #         else:
+        #             param_state = self._state[p]
+        #             layer_parameters.append(param_state["saved_para"].data.view(-1))
         return torch.cat(layer_parameters).to('cpu')
 
 

@@ -1,5 +1,7 @@
+from typing import Optional
+
 import torch
-from typing import Union, Tuple, Optional
+
 from blades.client import ByzantineClient
 
 
@@ -10,7 +12,8 @@ class NoiseClient(ByzantineClient):
     :param mean: the mean for all distributions
     :param std: the standard deviation for all distributions
     """
-    def __init__(self, mean: Optional[float]=0.1, std: Optional[float]=0.1, *args, **kwargs):
+    
+    def __init__(self, mean: Optional[float] = 0.1, std: Optional[float] = 0.1, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._noise_mean = mean
         self._noise_std = std

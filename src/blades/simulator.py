@@ -1,8 +1,9 @@
+import importlib
 import logging
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from time import time
 from typing import Any, Callable, Optional, Union, List
-import importlib
+
 import numpy as np
 import ray
 import torch
@@ -137,7 +138,7 @@ class Simulator(object):
             self.aggregator = agg_scheme(**agg_param)
         else:
             self.aggregator = aggregator
-        
+    
     def _setup_clients(self, attack: str, num_byzantine, attack_param):
         import importlib
         if attack is None:
@@ -168,7 +169,6 @@ class Simulator(object):
         """
         for id in ids:
             self._clients[id].trust()
-            
     
     def cache_random_state(self) -> None:
         # This function should be used for reproducibility
@@ -219,11 +219,11 @@ class Simulator(object):
         client_groups = np.array_split(list(self._clients.values()), len(self.ray_actors))
         all_results = self.actor_pool.map(
             lambda actor, clients:
-                actor.local_training.remote(
-                    clients=clients,
-                    model=global_model,
-                    local_round=num_rounds,
-                ),
+            actor.local_training.remote(
+                clients=clients,
+                model=global_model,
+                local_round=num_rounds,
+            ),
             client_groups
         )
         
@@ -371,8 +371,10 @@ class Simulator(object):
             if lr_scheduler:
                 lr_scheduler.step()
                 client_lr = lr_scheduler.get_last_lr()[0]
-            else:
-                client_lr = self.server_opt.param_groups[0]['lr']
+            # else:
+            
+            # client_lr = self.server_opt.param_groups[0]['lr']
+            # client_lr = self.server_opt.param_groups[0]['lr']
             
             ret.append(time() - round_start)
             print(f"E={global_rounds}; Learning rate = {client_lr:}; Time cost = {time() - global_start}")
