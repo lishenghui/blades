@@ -1,5 +1,7 @@
+from typing import Union, List
+
 import torch
-from typing import Union, Tuple, Optional, List
+
 from blades.client import BladesClient
 from .mean import _BaseAggregator
 
@@ -17,10 +19,11 @@ class Trimmedmean(_BaseAggregator):
     is a subset obtained by removing the largest and smallest :math:`\beta` fraction of its elements.
 
     """
+    
     def __init__(self, num_byzantine=5):
         self.b = num_byzantine
         super(Trimmedmean, self).__init__()
-
+    
     def __call__(self, inputs: Union[List[BladesClient], List[torch.Tensor], torch.Tensor]):
         updates = self._get_updates(inputs)
         if len(updates) - 2 * self.b > 0:

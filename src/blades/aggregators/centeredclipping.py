@@ -1,12 +1,11 @@
 import logging
 import types
+from typing import Optional
 
 import torch
 
 from .mean import _BaseAggregator
 from .mean import _BaseAsyncAggregator
-from typing import Any, Callable, Optional, Union, List
-
 
 debug_logger = logging.getLogger("debug")
 
@@ -21,7 +20,8 @@ class Centeredclipping(_BaseAggregator):
       :param tau: The threshold of clipping. Default 10.0
       :param n_iter: The number of clipping iterations. Default 5
     """
-    def __init__(self, tau: Optional[float]=10.0, n_iter: Optional[int]=5):
+    
+    def __init__(self, tau: Optional[float] = 10.0, n_iter: Optional[int] = 5):
         self.tau = tau
         self.n_iter = n_iter
         super(Centeredclipping, self).__init__()

@@ -40,6 +40,5 @@ run_params = {
     "server_lr": 0.1,
     "client_lr": 1.0,  # learning rate
     "validate_interval": 10,
-    
 }
 simulator.run(**run_params)

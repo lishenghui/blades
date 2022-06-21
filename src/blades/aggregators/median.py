@@ -1,7 +1,10 @@
+from typing import Union, List
+
 import torch
-from typing import Union, Tuple, Optional, List
-from .mean import _BaseAggregator
+
 from blades.client import BladesClient
+from .mean import _BaseAggregator
+
 
 class Median(_BaseAggregator):
     r"""
@@ -14,7 +17,7 @@ class Median(_BaseAggregator):
     
     def __int__(self):
         super(Median, self).__init__()
-
+    
     def __call__(self, inputs: Union[List[BladesClient], List[torch.Tensor]]):
         updates = self._get_updates(inputs)
         values_upper, _ = updates.median(dim=0)

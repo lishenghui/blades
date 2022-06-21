@@ -1,10 +1,10 @@
+from typing import Union, Optional, List
+
 import numpy as np
 import torch
-from typing import Any, Callable, Optional, Union, List
-from .mean import _BaseAggregator
 
-from typing import Union, Tuple, Optional, List
 from blades.client import BladesClient
+from .mean import _BaseAggregator
 
 
 def _compute_euclidean_distance(v1, v2):
@@ -31,6 +31,7 @@ def smoothed_weiszfeld(weights, alphas, z, eps=1e-6, T=5):
         z /= sum(betas)
     return z
 
+
 class Geomed(_BaseAggregator):
     r"""
 
@@ -50,7 +51,8 @@ class Geomed(_BaseAggregator):
     	Equivalently, this is a smoothing parameter. Default 1e-6.
     :param ftol: If objective value does not improve by at least this `ftol` fraction, terminate the algorithm. Default 1e-10.
     """
-    def __init__(self, maxiter: Optional[int] =100, eps: Optional[float] = 1e-6, ftol: Optional[float] = 1e-10):
+    
+    def __init__(self, maxiter: Optional[int] = 100, eps: Optional[float] = 1e-6, ftol: Optional[float] = 1e-10):
         self.maxiter = maxiter
         self.eps = eps
         self.ftol = ftol
