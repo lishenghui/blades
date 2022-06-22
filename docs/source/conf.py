@@ -22,24 +22,41 @@ copyright = '2022, Blades Team'
 author = 'Blades Team'
 
 
+
+intersphinx_mapping = {
+    'python': ('https://docs.python.org/3/', None),
+    'numpy': ('https://numpy.org/doc/stable/', None),
+    'scipy': ('https://docs.scipy.org/doc/scipy/', None),
+    'numba': ('https://numba.readthedocs.io/en/stable', None),
+    'torch': ('https://pytorch.org/docs/stable', None),
+}
+
 # -- General configuration ---------------------------------------------------
 
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 napoleon_use_param = True
-extensions = ['sphinx.ext.autodoc', 
-              'sphinx.ext.viewcode',
+
+extensions = ['sphinx.ext.autodoc',
+              'sphinx.ext.autosummary',
+              'sphinx.ext.doctest',
+              'sphinx.ext.extlinks',
+              'sphinx.ext.intersphinx',
+              'sphinx.ext.mathjax',
               'sphinx.ext.napoleon',
-              'sphinx_autodoc_typehints',
-              # 'myst_parser',
+              'sphinx_gallery.gen_gallery',
+              # 'sphinx.ext.linkcode',
+              'sphinx_copybutton',
+              'sphinx.ext.viewcode',
+#               'sphinx_autodoc_typehints',
+#               # 'myst_parser',
               "nbsphinx",
               'sphinx_gallery.load_style',
-              'sphinx_rtd_theme',
+#               'sphinx_rtd_theme',
               'm2r2',
               # 'sphinx.ext.pngmath',
               ]
-
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -50,8 +67,12 @@ templates_path = ['_templates']
 exclude_patterns = []
 
 
+
 sphinx_gallery_conf = {
     'line_numbers': True,
+    'ignore_pattern': '/todo_',
+    'examples_dirs': '../../src/blades/examples',   # path to your example scripts
+    'gallery_dirs': 'auto_examples',  # path to where to save gallery generated output
 }
 
 # -- Options for HTML output -------------------------------------------------
@@ -59,17 +80,24 @@ sphinx_gallery_conf = {
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-# html_theme = 'alabaster'
-html_theme = 'sphinx_rtd_theme'
-# html_theme = 'furo'
+# html_theme = 'sphinx_rtd_theme'
 # Add any paths that contain custom static files (such as style sheets) here,
+html_theme = 'pydata_sphinx_theme'
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ['_static']
 
+
 html_theme_options = {
     'navigation_depth': 5,
     'collapse_navigation': False,
+    "icon_links": [
+            {
+                "name": "GitHub",
+                "url": "https://github.com/bladesteam/blades",
+                "icon": "fab fa-github-square",
+            },
+        ],
 }
 
 import os
