@@ -22,8 +22,8 @@ conf_params = {
     "attack": "alie",  # attack strategy
     "attack_params": {"num_clients": 20,  # attacker parameters
                      "num_byzantine": 0},
-    "num_actors": 4,  # number of training actors
-    "gpu_per_actor": 0.0,
+    "num_actors": 10,  # number of training actors
+    "gpu_per_actor": 0.19,
     "seed": 1,  # reproducibility
 }
 
@@ -35,13 +35,13 @@ server_opt = torch.optim.Adam(model.parameters(), lr=0.01)
 # runtime parameters
 run_params = {
     "model": model,  # global model
-    "server_optimizer": 'SGD',  # ,server_opt  # server optimizer
+    "server_optimizer": server_opt, #'SGD', server optimizer
     "client_optimizer": 'SGD',  # client optimizer
     "loss": "crossentropy",  # loss function
-    "global_rounds": 7500,  # number of global rounds
-    "local_steps": 1,  # number of s"client_lr": 0.1,  # learning rateteps per round
-    "server_lr": 0.1,
-    "client_lr": 1.0,  # learning rate
+    "global_rounds": 400,  # number of global rounds
+    "local_steps": 50,  # number of s"client_lr": 0.1,  # learning rateteps per round
+    "server_lr": 1.0,
+    "client_lr": 0.1,  # learning rate
     "validate_interval": 10,
 }
 simulator.run(**run_params)
