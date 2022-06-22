@@ -1,3 +1,10 @@
+"""
+"This" is my example-script
+===========================
+
+This example doesn't do much, it just makes a simple plot
+"""
+
 import ray
 
 from blades.datasets import MNIST
@@ -10,11 +17,11 @@ mnist = MNIST(data_root="./data", train_bs=32, num_clients=10)  # built-in feder
 conf_params = {
     "dataset": mnist,
     "aggregator": "fltrust",  # aggregation
-    # "agg_param": {"num_clients": 10,  # attacker parameters
+    # "aggregator_params": {"num_clients": 10,  # attacker parameters
     #                 "num_byzantine": 3},
     "num_byzantine": 3,  # number of Byzantine input
     "attack": "alie",  # attack strategy
-    "attack_param": {"num_clients": 10,  # attacker parameters
+    "attack_params": {"num_clients": 10,  # attacker parameters
                      "num_byzantine": 3},
     "num_actors": 4,  # number of training actors
     "seed": 1,  # reproducibility
