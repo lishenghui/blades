@@ -1,5 +1,10 @@
-import ray
+"""
+A mini example
+===========================
 
+"""
+
+import ray
 from blades.datasets import MNIST
 from blades.models.mnist import DNN
 from blades.simulator import Simulator
@@ -12,7 +17,7 @@ conf_params = {
     "aggregator": "mean",  # aggregation
     "num_byzantine": 0,  # number of Byzantine input
     "attack": "alie",  # attack strategy
-    "attack_param": {"num_clients": 1,  # attacker parameters
+    "attack_params": {"num_clients": 1,  # attacker parameters
                      "num_byzantine": 0},
     "num_actors": 4,  # number of training actors
     "seed": 1,  # reproducibility

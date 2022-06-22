@@ -7,13 +7,12 @@ Indices and tables
 ===================
 
 .. toctree::
-   :numbered:
    :maxdepth: 3
    :caption: Contents:
    :titlesonly:
 
    install
-   examples/gallery
+   auto_examples/index
    references/api_reference
 
 

@@ -174,7 +174,6 @@ class BladesClient(object):
             
             output = model(data)
             loss = self.loss_func(output, target)
-            print(loss)
             loss.backward()
             self.optimizer.step()
         
