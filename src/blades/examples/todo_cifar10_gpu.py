@@ -25,7 +25,7 @@ conf_params = {
     "num_byzantine": 5,  # number of byzantine input
     "use_cuda": True,
     "attack": "noise",  # attack strategy
-    # "attack_para":{"n": 20, # attacker parameters
+    # "attack_params":{"n": 20, # attacker parameters
     #                "m": 5},
     "num_actors": 20,  # number of training actors
     "gpu_per_actor": 0.19,

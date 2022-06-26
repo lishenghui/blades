@@ -269,7 +269,7 @@ class Simulator(object):
         aggregated = self.server.aggregator(clients)
         self.server.apply_update(aggregated)
         
-        self.log_variance(global_round, updates)
+        # self.log_variance(global_round, updates)
     
     def train_trainer(self, epoch, num_rounds, clients):
         self.debug_logger.info(f"Train epoch {epoch}")

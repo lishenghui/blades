@@ -13,7 +13,7 @@ from blades.datasets import CIFAR10
 from blades.models.cifar10 import CCTNet
 from blades.simulator import Simulator
 
-cifar10 = CIFAR10(num_clients=20, iid=True)  # built-in federated cifar10 dataset
+cifar10 = CIFAR10(num_clients=40, iid=True)  # built-in federated cifar10 dataset
 
 # configuration parameters
 conf_params = {
@@ -21,8 +21,8 @@ conf_params = {
     "aggregator": "mean",  # defense: robust aggregation
     "num_byzantine": 5,  # number of byzantine input
     "attack": "alie",  # attack strategy
-    "attack_para": {"n": 20,  # attacker parameters
-                    "m": 5},
+    "attack_params": {"num_clients": 20,  # attacker parameters
+                    "num_byzantine": 5},
     "num_actors": 4,  # number of training actors
     "seed": 1,  # reproducibility
 }
