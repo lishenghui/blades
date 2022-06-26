@@ -1,7 +1,7 @@
 import logging
 import os
 import shutil
-
+from importlib import reload
 
 class BColors(object):
     HEADER = "\033[95m"
@@ -58,6 +58,8 @@ def log_dict(*args, **kwargs):
 
 
 def initialize_logger(log_root):
+    logging.shutdown()
+    reload(logging)
     if not os.path.exists(log_root):
         os.makedirs(log_root)
     else:
