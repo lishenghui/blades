@@ -39,8 +39,8 @@ If you are interested in this project, don't hesitate to contact me or make a PR
 
 
 
-`Documentation <https://bladesteam.github.io/>`_
-==================================================
+`Documentation <https://bladesteam.github.io/>`_ | `Examples <https://bladesteam.github.io/auto_examples/index.html>`_ | `API Reference  <https://bladesteam.github.io/references/api_reference.html>`_
+======================================================================================================================================================
 
 
 
