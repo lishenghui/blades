@@ -10,7 +10,7 @@ This example doesn't do much, it just makes a simple plot
 import ray
 
 from blades.datasets import MNIST
-from blades.models.mnist import DNN
+from blades.models.mnist import MLP
 from blades.simulator import Simulator
 
 mnist = MNIST(data_root="./data", train_bs=32, num_clients=10)  # built-in federated MNIST dataset
@@ -32,7 +32,7 @@ conf_params = {
 ray.init(num_gpus=0)
 simulator = Simulator(**conf_params)
 
-model = DNN()
+model = MLP()
 # runtime parameters
 run_params = {
     "model": model,  # global model

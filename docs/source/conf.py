@@ -13,7 +13,7 @@
 # import os
 # import sys
 # sys.path.insert(0, os.path.abspath('.'))
-import sphinx_rtd_theme
+# import sphinx_rtd_theme
 
 # -- Project information -----------------------------------------------------
 
@@ -69,7 +69,7 @@ exclude_patterns = []
 
 
 sphinx_gallery_conf = {
-    'line_numbers': True,
+    'line_numbers': False,
     'ignore_pattern': '/todo_',
     'examples_dirs': '../../src/blades/examples',   # path to your example scripts
     'gallery_dirs': 'auto_examples',  # path to where to save gallery generated output

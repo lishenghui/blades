@@ -61,7 +61,7 @@ class _BaseAsyncAggregator(object):
 
 class Mean(_BaseAggregator):
     r"""
-    Computes the ``sample mean`` over the updates from all give input.
+    Computes the ``sample mean`` over the updates from all give clients.
     """
     
     def __int__(self):
