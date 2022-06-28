@@ -6,7 +6,7 @@ A mini example
 
 import ray
 from blades.datasets import MNIST
-from blades.models.mnist import DNN
+from blades.models.mnist import MLP
 from blades.simulator import Simulator
 
 
@@ -26,15 +26,15 @@ conf_params = {
     "attack_params": {"num_clients": 1,  # attacker parameters
                      "num_byzantine": 0},
     "num_actors": 10,  # number of training actors
-    "use_cuda": True,
-    "gpu_per_actor": 0.19,
+    "use_cuda": False,
+    "gpu_per_actor": 0.,
     "seed": 1,  # reproducibility
 }
 
-ray.init(num_gpus=2, local_mode=False)
+ray.init(num_gpus=0, local_mode=False)
 simulator = Simulator(**conf_params)
 
-model = DNN()
+model = MLP()
 # runtime parameters
 run_params = {
     "model": model,  # global model

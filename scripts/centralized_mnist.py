@@ -9,7 +9,7 @@ from torch.optim.lr_scheduler import StepLR
 import sys
 sys.path.insert(0, '../..')
 
-from blades.models.mnist import DNN
+from blades.models.mnist import MLP
 
 
 class Net(nn.Module):
@@ -124,7 +124,7 @@ def main():
     train_loader = torch.utils.data.DataLoader(dataset1,**train_kwargs)
     test_loader = torch.utils.data.DataLoader(dataset2, **test_kwargs)
 
-    model = DNN().to(device)
+    model = MLP().to(device)
     optimizer = optim.Adadelta(model.parameters(), lr=args.lr)
     optimizer = optim.SGD(model.parameters(), lr=args.lr)
 

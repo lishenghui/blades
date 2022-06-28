@@ -10,7 +10,7 @@ import ray
 from blades.client import ByzantineClient
 from blades.simulator import Simulator
 from blades.datasets import MNIST
-from blades.models.mnist import DNN
+from blades.models.mnist import MLP
 
 mnist = MNIST(data_root="./data", train_bs=32, num_clients=10)  # built-in federated MNIST dataset
 
@@ -43,7 +43,7 @@ simulator.register_attackers(attackers)
 
 # runtime parameters
 run_params = {
-    "model": DNN(),  # global model
+    "model": MLP(),  # global model
     "server_optimizer": 'SGD',  # server optimizer
     "client_optimizer": 'SGD',  # client optimizer
     "loss": "crossentropy",  # loss function

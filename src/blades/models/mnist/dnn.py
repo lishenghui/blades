@@ -2,9 +2,9 @@ import torch.nn.functional as F
 from torch import nn
 
 
-class DNN(nn.Module):
+class MLP(nn.Module):
     def __init__(self):
-        super(DNN, self).__init__()
+        super(MLP, self).__init__()
         self.flatten = nn.Flatten()
         self.layer1 = nn.Linear(28 * 28, 64)
         self.layer2 = nn.Linear(64, 128)
@@ -19,4 +19,4 @@ class DNN(nn.Module):
 
 
 def create_model():
-    return DNN(), nn.modules.loss.CrossEntropyLoss()
+    return MLP(), nn.modules.loss.CrossEntropyLoss()

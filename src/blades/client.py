@@ -10,13 +10,13 @@ from torch.utils.data import DataLoader
 
 
 class BladesClient(object):
-    r"""Base class for all input.
+    r"""Base class for all clients.
     
         .. note::
-            Your honest input should also subclass this class.
-    
-        :param id: a unique id of the client.
-        :param device:  if specified, all parameters will be copied to that device
+            Your honest clients should also subclass this class.
+    Args:
+        id (str): a unique id of the client.
+        device (str): target device if specified, all parameters will be copied to that device
     """
     
     _is_byzantine: bool = False
@@ -26,7 +26,7 @@ class BladesClient(object):
     def __init__(
             self,
             id: Optional[str] = None,
-            device: Optional[Union[torch.device, str]] = 'cpu',
+            device: Optional[str] = 'cpu',
     ):
         self._state = defaultdict(dict)
         self.set_id(id)
@@ -252,7 +252,7 @@ class ByzantineClient(BladesClient):
             input. Your Byzantine client can overwrite this method to access information from the server
             and other input.
             
-            :param simulator: The _running simulator.
+            :param simulator: The running simulator.
             :type simulator: Simulator
         """
         pass

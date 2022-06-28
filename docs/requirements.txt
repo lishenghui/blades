@@ -1,0 +1,4 @@
+sphinx_copybutton
+nbsphinx
+m2r2
+pydata_sphinx_theme
