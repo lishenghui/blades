@@ -21,10 +21,10 @@ mnist = MNIST(data_root="./data", train_bs=32, num_clients=10)  # built-in feder
 conf_params = {
     "dataset": mnist,
     "aggregator": "mean",  # aggregation
-    "num_byzantine": 0,  # number of Byzantine input
+    "num_byzantine": 4,  # number of Byzantine input
     "attack": "alie",  # attack strategy
-    "attack_params": {"num_clients": 1,  # attacker parameters
-                     "num_byzantine": 0},
+    "attack_params": {"num_clients": 10,  # attacker parameters
+                     "num_byzantine": 4},
     "num_actors": 10,  # number of training actors
     "use_cuda": False,
     "gpu_per_actor": 0.,

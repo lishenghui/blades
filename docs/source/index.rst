@@ -1,5 +1,5 @@
 ================================
-Welcome to Blades documentation
+Blades documentation
 ================================
 
 
