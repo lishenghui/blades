@@ -7,9 +7,7 @@
 .. raw:: html
 
     <p align=center>
-      <a href="https://i.postimg.cc/NGKWNjk3/Blades-title-g.png">
-        <img src="https://i.postimg.cc/NGKWNjk3/Blades-title-g.png" width="600" alt="Blades Logo">
-      </a>
+        <img src="https://github.com/bladesteam/blades/blob/master/docs/source/_static/blades_logo.png" width="600" alt="Blades Logo">
     </p>
     
 
