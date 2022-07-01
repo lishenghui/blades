@@ -1,9 +1,10 @@
 import logging
+from typing import Union, List
 
 import torch
-from typing import Any, Callable, Optional, Union, List
+
 from blades.client import BladesClient
-from typing import Union, Tuple, Optional, List
+
 
 class _BaseAggregator(object):
     """Base class of aggregators.
@@ -25,7 +26,7 @@ class _BaseAggregator(object):
         else:
             updates = inputs
         return updates
-            
+    
     def __call__(self, inputs):
         """Aggregate the inputs and update in-place.
 
@@ -60,11 +61,12 @@ class _BaseAsyncAggregator(object):
 
 class Mean(_BaseAggregator):
     r"""
-    Computes the ``sample mean`` over the updates from all give input.
+    Computes the ``sample mean`` over the updates from all give clients.
     """
+    
     def __int__(self):
         super(Mean, self).__init__()
-        
+    
     def __call__(self, inputs: Union[List[BladesClient], List[torch.Tensor], torch.Tensor]):
         updates = self._get_updates(inputs)
         values = updates.mean(dim=0)

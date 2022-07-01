@@ -1,11 +1,14 @@
+from typing import Union, List
+
 import numpy as np
 import torch
 from numpy import inf
 from scipy import spatial
-from typing import Union, Tuple, Optional, List
-from blades.client import BladesClient
 from sklearn.cluster import AgglomerativeClustering
+
+from blades.client import BladesClient
 from .mean import _BaseAggregator
+
 
 class Clustering(_BaseAggregator):
     r"""
@@ -13,10 +16,10 @@ class Clustering(_BaseAggregator):
      
      it separates the client population into two groups based on the cosine similarities
     """
-
+    
     def __init__(self):
         super(Clustering, self).__init__()
-
+    
     def __call__(self, inputs: Union[List[BladesClient], List[torch.Tensor], torch.Tensor]):
         updates = self._get_updates(inputs)
         np_models = updates.cpu().detach().numpy()

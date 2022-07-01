@@ -1,7 +1,7 @@
 import logging
 import os
 import shutil
-
+from importlib import reload
 
 class BColors(object):
     HEADER = "\033[95m"
@@ -58,6 +58,8 @@ def log_dict(*args, **kwargs):
 
 
 def initialize_logger(log_root):
+    logging.shutdown()
+    reload(logging)
     if not os.path.exists(log_root):
         os.makedirs(log_root)
     else:
@@ -76,10 +78,11 @@ def initialize_logger(log_root):
     
     debug_logger = logging.getLogger("debug")
     debug_logger.setLevel(logging.INFO)
-    ch = logging.StreamHandler()
-    ch.setLevel(logging.INFO)
-    ch.setFormatter(logging.Formatter("%(message)s"))
-    debug_logger.addHandler(ch)
+    # ch = logging.StreamHandler()
+    # ch.setLevel(logging.INFO)
+    # ch.setFormatter(logging.Formatter("%(message)s"))
+    # debug_logger.addHandler(ch)
     fh = logging.FileHandler(os.path.join(log_root, "debug"))
     fh.setLevel(logging.INFO)
+    fh.setFormatter(logging.Formatter("%(message)s"))
     debug_logger.addHandler(fh)

@@ -1,1 +1,1 @@
-from .dnn import DNN
+from .dnn import MLP

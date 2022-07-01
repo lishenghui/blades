@@ -1,9 +1,18 @@
 
-**Blades**: A simulator for **B**\ yzantine-robust federated **L**\ earning with **A**\ ttacks and **D**\ efenses **E**\ xperimental **S**\ imulation
     | Know thy self, know thy enemy. A thousand battles, a thousand victories. --Sun Tzu
 
     | 知己知彼，百战百胜 ——孙武
 
+
+.. raw:: html
+
+    <p align=center>
+        <img src="https://github.com/bladesteam/blades/blob/master/docs/source/_static/blades_logo.png" width="600" alt="Blades Logo">
+    </p>
+    
+
+**Blades** is a simulator for **B**\ yzantine-robust federated **L**\ earning with **A**\ ttacks and **D**\ efenses
+**E**\ xperimental **S**\ imulation.
 
 .. raw:: html
 
@@ -24,23 +33,32 @@
     </p>
 
 
+**Blades** is designed to simulate attacks and defenses in federated learning with high performance and fast evaluation
+of existing strategies and new techniques. Key features of **Blades** include:
+
+   * **Specificity:** Different from existing federated learning simulators, **Blades** is specifically designed to simulate attacks and defenses. Thus we provide built-in implementations of representative attack strategies as well as robust aggregation schemes, so that users can efficiently validate their approaches and compare with existing solutions.
+
+   * **Scalability:** **Blades** is scalable in terms of both clients and computing resources. In resource-constrained systems, it allows each trainer/actor to deal with multiple clients' requests sequentially, thus the scale of experiments is not limited by the number of trainers/actors. Based on Ray, **Blades** is deployable either on a single machine or a computing cluster.
+
+   * **Extensibility:** **Blades** is highly compatible with Pytorch, allowing any combination of model, dataset and optimizer. It supports diverse federated learning  configurations, including standardized implementations such as **fedsgd** and **fedavg**, with Pytorch being the framework of choice for implementing the models. **Blades** allows the end users to incorporate new types of attacks, defenses, and optimization algorithms in a straightforward fashion.
+
 NOTE: More features are under development and the APIs are subject to change.
 If you are interested in this project, don't hesitate to contact me or make a PR directly.
 
 
 
-`Documentation <https://bladesteam.github.io/>`_
-==================================================
+`Documentation <https://bladesteam.github.io/>`_ | `Examples <https://bladesteam.github.io/auto_examples/index.html>`_ | `API Reference  <https://bladesteam.github.io/references/api_reference.html>`_
+======================================================================================================================================================
 
 
 
 Installation
--------------
+==================================================
 
 >>> pip install blades
 
 Get Started
--------------
+==================================================
 
 How fast can we simulate attack and defense in federated learning?
 Take `ALIE Attack <https://github.com/bladesteam/blades/blob/master/src/blades/attackers/alieclient.py>`_ and
@@ -51,8 +69,16 @@ Take `ALIE Attack <https://github.com/bladesteam/blades/blob/master/src/blades/a
    :code: python
 
 
+Illustration of Blades
+==================================================
+
+.. figure:: https://i.postimg.cc/Xq73SgxS/blade-architecture.png
+   :width: 800
+   :alt: Blades architecture
+
+
 Build-in Implementations
---------------------------
+==================================================
 In detail, the following strategies are currently implemented:
 
 
@@ -118,7 +144,23 @@ Trust-based Strategies
 
 Cluster Deployment
 ===================
+
 To run **blades** on a cluster, you only need to deploy ``Ray cluster`` according to the `official guide <https://docs.ray.io/en/latest/cluster/user-guide.html>`_.
+
+
+Citation
+=========
+
+Please cite our `paper <https://arxiv.org/abs/2206.05359>`_ (and the respective papers of the methods used) if you use this code in your own work:
+
+::
+
+   @article{li2022blades,
+     title={Blades: A Simulator for Attacks and Defenses in Federated Learning},
+     author= {Li, Shenghui and Ju, Li and Zhang, Tianru and Ngai, Edith and Voigt, Thiemo},
+     journal={arXiv preprint arXiv:2206.05359},
+     year={2022}
+   }
 
 
 Reference

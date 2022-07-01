@@ -25,5 +25,6 @@ class SignflippingClient(ByzantineClient):
             for name, p in self.model.named_parameters():
                 p.grad.data = -p.grad.data
             self.optimizer.step()
-        
-        self.save_update()
+
+        update = (self._get_para(current=True) - self._get_para(current=False))
+        self.save_update(update)
