@@ -1,40 +1,36 @@
 """
-A mini example
+"This" is my example-script
 ===========================
 
+This example doesn't do much, it just makes a simple plot
 """
 
 import ray
+
 from blades.datasets import MNIST
 from blades.models.mnist import MLP
 from blades.simulator import Simulator
-
-
-
-# os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
-# os.environ["CUDA_VISIBLE_DEVICES"]="2,3"
-
 
 mnist = MNIST(data_root="./data", train_bs=32, num_clients=10)  # built-in federated MNIST dataset
 
 # configuration parameters
 conf_params = {
     "dataset": mnist,
-    "aggregator": "mean",  # aggregation
-    "num_byzantine": 4,  # number of Byzantine input
+    "aggregator": "fltrust",  # aggregation
+    # "aggregator_params": {"num_clients": 10,  # attacker parameters
+    #                 "num_byzantine": 3},
+    "num_byzantine": 3,  # number of Byzantine input
     "attack": "alie",  # attack strategy
     "attack_params": {"num_clients": 10,  # attacker parameters
-                     "num_byzantine": 4},
+                     "num_byzantine": 3},
     "num_actors": 4,  # number of training actors
-    # "num_actors": 10,  # number of training actors
-    "use_cuda": False,
-    "gpu_per_actor": 0.,
     "seed": 1,  # reproducibility
 }
 
-ray.init(num_gpus=0, local_mode=False)
+ray.init(num_gpus=0, local_mode=True)
 simulator = Simulator(**conf_params)
-
+trusted_id = list(simulator.get_clients().keys())[-1]
+simulator.set_trusted_clients([trusted_id])
 model = MLP()
 # runtime parameters
 run_params = {
@@ -42,9 +38,9 @@ run_params = {
     "server_optimizer": 'SGD',  # ,server_opt  # server optimizer
     "client_optimizer": 'SGD',  # client optimizer
     "loss": "crossentropy",  # loss function
-    "global_rounds": 100,  # number of global rounds
-    "local_steps": 50,  # number of steps per round
-    "server_lr": 1.0,
+    "global_rounds": 400,  # number of global rounds
+    "local_steps": 2,  # number of steps per round
+    "server_lr": 1,
     "client_lr": 0.1,  # learning rate
 }
 simulator.run(**run_params)

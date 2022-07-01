@@ -1,29 +1,38 @@
-import ray
+"""
+"This" is my example-script
+===========================
 
-from blades.datasets import MNIST
-from blades.models.mnist import DNN
+This example doesn't do much, it just makes a simple plot
+"""
+
+
+import ray
+import torch.optim
+
+from blades.datasets import CIFAR10
+from blades.models.cifar10 import CCTNet
 from blades.simulator import Simulator
 
-mnist = MNIST(data_root="./data", train_bs=32, num_clients=10)  # built-in federated MNIST dataset
+cifar10 = CIFAR10(num_clients=40, iid=True)  # built-in federated cifar10 dataset
 
 # configuration parameters
 conf_params = {
-    "dataset": mnist,
-    "aggregator": "median",  # aggregation
-    # "agg_param": {"num_clients": 10,  # attacker parameters
-    #               "num_byzantine": 3},
-    "num_byzantine": 3,  # number of Byzantine input
+    "dataset": cifar10,
+    "aggregator": "mean",  # defense: robust aggregation
+    "num_byzantine": 5,  # number of byzantine input
     "attack": "alie",  # attack strategy
-    "attack_param": {"num_clients": 10,  # attacker parameters
-                    "num_byzantine": 3},
+    "attack_params": {"num_clients": 20,  # attacker parameters
+                    "num_byzantine": 5},
     "num_actors": 4,  # number of training actors
     "seed": 1,  # reproducibility
 }
 
 ray.init(num_gpus=0)
+# ray.init(num_gpus=0, local_mode=True)
 simulator = Simulator(**conf_params)
 
-model = DNN()
+model = CCTNet()
+server_opt = torch.optim.Adam(model.parameters(), lr=0.01)
 # runtime parameters
 run_params = {
     "model": model,  # global model

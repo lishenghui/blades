@@ -1,18 +1,14 @@
 import os
 import sys
+from typing import Union, List
 
 import numpy as np
 import torch
 from numpy import inf
 from scipy import spatial
 from sklearn.cluster import AgglomerativeClustering
-import numpy as np
-import torch
-from numpy import inf
-from scipy import spatial
-from typing import Union, Tuple, Optional, List
+
 from blades.client import BladesClient
-from sklearn.cluster import AgglomerativeClustering
 from .mean import _BaseAggregator
 
 file_dir = os.path.dirname(__file__)
@@ -31,7 +27,7 @@ class Clippedclustering(_BaseAggregator):
     def __init__(self) -> None:
         super(Clippedclustering, self).__init__()
         self.l2norm_his = []
-
+    
     def __call__(self, inputs: Union[List[BladesClient], List[torch.Tensor], torch.Tensor]):
         updates = self._get_updates(inputs)
         l2norms = [torch.norm(update).item() for update in updates]

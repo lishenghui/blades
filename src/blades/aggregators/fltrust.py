@@ -11,6 +11,7 @@ class Fltrust(object):
 
          
         """
+    
     def __call__(self, clients: List[BladesClient]):
         trusted_clients = [client for client in clients if client.is_trusted()]
         assert len(trusted_clients) == 1
