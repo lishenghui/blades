@@ -25,7 +25,8 @@ conf_params = {
     "attack": "alie",  # attack strategy
     "attack_params": {"num_clients": 10,  # attacker parameters
                      "num_byzantine": 4},
-    "num_actors": 10,  # number of training actors
+    "num_actors": 4,  # number of training actors
+    # "num_actors": 10,  # number of training actors
     "use_cuda": False,
     "gpu_per_actor": 0.,
     "seed": 1,  # reproducibility
@@ -41,7 +42,7 @@ run_params = {
     "server_optimizer": 'SGD',  # ,server_opt  # server optimizer
     "client_optimizer": 'SGD',  # client optimizer
     "loss": "crossentropy",  # loss function
-    "global_rounds": 400,  # number of global rounds
+    "global_rounds": 100,  # number of global rounds
     "local_steps": 50,  # number of steps per round
     "server_lr": 1.0,
     "client_lr": 0.1,  # learning rate
