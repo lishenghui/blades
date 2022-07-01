@@ -3,8 +3,15 @@
 
     | 知己知彼，百战百胜 ——孙武
 
-.. figure:: https://i.postimg.cc/26n0ftN7/blades-title.png
-   :alt: Blades Logo
+
+.. raw:: html
+
+    <p align=center>
+      <a href="https://i.postimg.cc/NGKWNjk3/Blades-title-g.png">
+        <img src="https://i.postimg.cc/NGKWNjk3/Blades-title-g.png" width="600" alt="Blades Logo">
+      </a>
+    </p>
+    
 
 **Blades** is a simulator for **B**\ yzantine-robust federated **L**\ earning with **A**\ ttacks and **D**\ efenses
 **E**\ xperimental **S**\ imulation.
