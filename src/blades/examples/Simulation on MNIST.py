@@ -3,8 +3,6 @@ Simulation on Mnist Dataset
 ===========================
 
 """
-
-import sys, os
 import ray
 import json
 import pandas as pd
@@ -14,25 +12,9 @@ from blades.models.mnist import MLP
 from blades.simulator import Simulator
 
 
-# In[2]:
-
-
-# Get the IP address of the Spark driver node
-# driver_ip = spark.sparkContext.getConf().get('spark.driver.host')
-
 # Initialize Ray
-# ray.init(ignore_reinit_error=True, address=f'{driver_ip}:9339', _redis_password='d4t4bricks')
 ray.init()
 # ray.init(address='auto')
-
-
-# In[3]:
-
-
-# %sh rm -rf /dbfs/data
-
-
-# In[9]:
 
 
 # mnist = MNIST(data_root="/dbfs/data", train_bs=32, num_clients=20)  # built-in federated MNIST dataset
@@ -44,7 +26,7 @@ conf_params = {
 #     "aggregator": "trimmedmean",  # aggregation
     "num_byzantine": 8,  # number of Byzantine input
     "attack": "ipm",  # attack strategy
-    "log_path": "dbfs/outputs",
+    # "log_path": "dbfs/outputs",
     "attack_params": {   
                           "epsilon": 100,
                      },
@@ -65,10 +47,10 @@ run_params = {
 
 aggs = {
     'mean': {},
-#     'trimmedmean': {"num_byzantine": 8},
-#     'geomed': {},
-#     'median': {},
-#     'clippedclustering': {},
+    'trimmedmean': {"num_byzantine": 8},
+    'geomed': {},
+    'median': {},
+    'clippedclustering': {},
 }
 
 

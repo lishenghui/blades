@@ -5,58 +5,16 @@ from time import time
 from typing import Any, Callable, Optional, Union, List, Dict
 
 import numpy as np
-import ray
 import torch
 from ray.train import Trainer
 from ray.util import ActorPool
+from tqdm import trange
 
+from blades.actor import _RayActor
 from blades.client import BladesClient, ByzantineClient
 from blades.datasets.datasets import FLDataset
 from blades.server import BladesServer
 from blades.utils import top1_accuracy, initialize_logger
-
-
-@ray.remote
-class _RayActor(object):
-    """Ray Actor"""
-    
-    def __init__(self, dataset: object, *args, **kwargs):
-        """
-       Args:
-           aggregator (callable): A callable which takes a list of tensors and returns
-               an aggregated tensor.
-           log_interval (int): Control the frequency of logging training batches
-           metrics (dict): dict of metric names and their functions
-           use_cuda (bool): Use cuda or not
-           debug (bool):
-       """
-        traindls, testdls = dataset.get_dls()
-        self.dataset = FLDataset(traindls, testdls)
-    
-    def local_training(self, clients, model, local_round):
-        update = []
-        for i in range(len(clients)):
-            clients[i].set_para(model)
-            clients[i].on_train_round_start()
-            data = self.dataset.get_train_data(clients[i].id(), local_round)
-            clients[i].local_training(local_round, use_actor=True, data_batches=data)
-            update.append(clients[i].get_update())
-        return update
-    
-    def evaluate(self, clients, model, round_number, batch_size, metrics):
-        update = []
-        for i in range(len(clients)):
-            clients[i].set_para(model)
-            data = self.dataset.get_all_test_data(clients[i].id())
-            result = clients[i].evaluate(
-                round_number=round_number,
-                test_set=data,
-                batch_size=batch_size,
-                metrics=metrics,
-                use_actor=True,
-            )
-            update.append(result)
-        return update
 
 
 class Simulator(object):
@@ -102,7 +60,7 @@ class Simulator(object):
     ):
         
         self.use_actor = True if mode == 'actor' else False
-
+        
         if use_cuda or ("gpu_per_actor" in kwargs and kwargs["gpu_per_actor"] > 0.0):
             self.device = torch.device("cuda")
         else:
@@ -111,17 +69,17 @@ class Simulator(object):
         if aggregator_params is None:
             aggregator_params = {}
         self._init_aggregator(aggregator=aggregator, aggregator_params=aggregator_params)
-
+        
         # Setup logger
         initialize_logger(log_path)
         self.metrics = {"top1": top1_accuracy} if metrics is None else metrics
         self.json_logger = logging.getLogger("stats")
         self.debug_logger = logging.getLogger("debug")
         self.debug_logger.info(self.__str__())
-
+        
         self.random_states = {}
         self.omniscient_callbacks = []
-
+        
         if kwargs:
             # User passed in extra keyword arguments but isn't connecting through
             # the simulator. Raise an error, since most likely a typo in keyword
@@ -170,10 +128,10 @@ class Simulator(object):
             else:
                 client = BladesClient(id=u, device=self.device)
             self._clients[u] = client
-
+    
     def _register_omniscient_callback(self, callback):
         self.omniscient_callbacks.append(callback)
-        
+    
     def get_clients(self):
         r"""Return all clients.
         """
@@ -249,11 +207,11 @@ class Simulator(object):
         client_groups = np.array_split(self.get_clients(), len(self.ray_actors))
         all_results = self.actor_pool.map(
             lambda actor, clients:
-                actor.local_training.remote(
-                    clients=clients,
-                    model=global_model,
-                    local_round=num_rounds,
-                ),
+            actor.local_training.remote(
+                clients=clients,
+                model=global_model,
+                local_round=num_rounds,
+            ),
             client_groups
         )
         
@@ -329,7 +287,8 @@ class Simulator(object):
         
         loss, top1 = self.log_validate(metrics)
         self.debug_logger.info(f"Test global round {global_round}, loss: {loss}, top1: {top1}")
-
+        return loss, top1
+    
     def log_variance(self, cur_round, update):
         var_avg = torch.mean(torch.var(torch.vstack(update), dim=0, unbiased=False)).item()
         norm = torch.norm(torch.var(torch.vstack(update), dim=0, unbiased=False)).item()
@@ -384,7 +343,7 @@ class Simulator(object):
         )
         # Output to file
         self.json_logger.info(r)
-
+    
     def run(
             self,
             model: torch.nn.Module,
@@ -432,38 +391,43 @@ class Simulator(object):
             self.server_opt = torch.optim.SGD(model.parameters(), lr=server_lr)
         else:
             self.server_opt = server_optimizer
-    
+        
         self.client_opt = client_optimizer
         self.server = BladesServer(optimizer=self.server_opt,
                                    model=model,
                                    aggregator=self.aggregator,
                                    )
-    
+        
         self.parallel_call(self.get_clients(), lambda client: client.set_loss(loss))
         global_start = time()
         ret = []
         global_model = self.server.get_model()
         self.parallel_call(self.get_clients(),
                            lambda client: client.set_model(global_model, torch.optim.SGD, client_lr))
-        for global_rounds in range(1, global_rounds + 1):
-            round_start = time()
-            if self.use_actor:
-                self.train_actor(global_rounds, local_steps, self.get_clients())
-            else:
-                self.train_trainer(global_rounds, local_steps, self._clients)
         
-            if self.use_actor and global_rounds % validate_interval == 0:
-                self.test_actor(global_round=global_rounds, batch_size=test_batch_size)
-        
-            # TODO(Shenghui): When using trainer, the test method is not implemented so far.
-            if lr_scheduler:
-                lr_scheduler.step()
-                client_lr = lr_scheduler.get_last_lr()[0]
-            # else:
-        
-            # client_lr = self.server_opt.param_groups[0]['lr']
-            # client_lr = self.server_opt.param_groups[0]['lr']
-        
-            ret.append(time() - round_start)
-            print(f"E={global_rounds}; Learning rate = {client_lr:}; Time cost = {time() - global_start}")
-        return ret
+        with trange(1, global_rounds + 1) as t:
+            for global_rounds in t:
+                round_start = time()
+                if self.use_actor:
+                    self.train_actor(global_rounds, local_steps, self.get_clients())
+                else:
+                    self.train_trainer(global_rounds, local_steps, self._clients)
+                
+                if self.use_actor and global_rounds % validate_interval == 0:
+                    loss, top1 = self.test_actor(global_round=global_rounds, batch_size=test_batch_size)
+                    t.set_postfix(loss=loss, top1=top1)
+                
+                # TODO(Shenghui): When using trainer, the test method is not implemented so far.
+                if lr_scheduler:
+                    lr_scheduler.step()
+                    client_lr = lr_scheduler.get_last_lr()[0]
+                # else:
+                
+                # client_lr = self.server_opt.param_groups[0]['lr']
+                # client_lr = self.server_opt.param_groups[0]['lr']
+                
+                ret.append(time() - round_start)
+                self.debug_logger.info(
+                    f"E={global_rounds}; Learning rate = {client_lr:}; Time cost = {time() - global_start}")
+            
+            return ret
