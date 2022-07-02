@@ -1,7 +1,11 @@
 import logging
-import os
 import shutil
 from importlib import reload
+import os
+import random
+from torch import nn
+import numpy as np
+import torch
 
 class BColors(object):
     HEADER = "\033[95m"
@@ -86,3 +90,32 @@ def initialize_logger(log_root):
     fh.setLevel(logging.INFO)
     fh.setFormatter(logging.Formatter("%(message)s"))
     debug_logger.addHandler(fh)
+
+
+def reset_model_weights(model: nn.Module) -> None:
+    """
+    refs:
+        - https://discuss.pytorch.org/t/how-to-re-set-alll-parameters-in-a-network/20819/6
+        - https://stackoverflow.com/questions/63627997/reset-parameters-of-a-neural-network-in-pytorch
+        - https://pytorch.org/docs/stable/generated/torch.nn.Module.html
+    """
+
+    @torch.no_grad()
+    def weight_reset(m: nn.Module):
+        # - check if the current module has reset_parameters & if it's callabed called it on m
+        reset_parameters = getattr(m, "reset_parameters", None)
+        if callable(reset_parameters):
+            m.reset_parameters()
+
+    # Applies fn recursively to every submodule see: https://pytorch.org/docs/stable/generated/torch.nn.Module.html
+    model.apply(fn=weight_reset)
+
+def set_random_seed(seed_value=0, use_cuda=False):
+    np.random.seed(seed_value)  # cpu vars
+    random.seed(seed_value)  # Python
+    torch.manual_seed(seed_value)
+    os.environ['PYTHONHASHSEED'] = str(seed_value)  # Python hash buildin
+    if use_cuda:
+        torch.cuda.manual_seed_all(seed_value)
+        torch.backends.cudnn.deterministic = True
+        torch.backends.cudnn.benchmark = False
