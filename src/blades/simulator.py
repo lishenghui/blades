@@ -6,15 +6,16 @@ from typing import Any, Callable, Optional, Union, List, Dict
 
 import numpy as np
 import torch
+
 from ray.train import Trainer
 from ray.util import ActorPool
 from tqdm import trange
-
 from blades.actor import _RayActor
 from blades.client import BladesClient, ByzantineClient
 from blades.datasets.datasets import FLDataset
 from blades.server import BladesServer
 from blades.utils import top1_accuracy, initialize_logger
+from blades.utils import reset_model_weights, set_random_seed
 
 
 class Simulator(object):
@@ -58,7 +59,8 @@ class Simulator(object):
             seed: Optional[int] = None,
             **kwargs,
     ):
-        
+    
+        set_random_seed(seed)
         self.use_actor = True if mode == 'actor' else False
         
         if use_cuda or ("gpu_per_actor" in kwargs and kwargs["gpu_per_actor"] > 0.0):
@@ -138,7 +140,8 @@ class Simulator(object):
         return list(self._clients.values())
     
     def set_trusted_clients(self, ids: List[str]) -> None:
-        r"""Set a list of input as trusted. This is usable for trusted-based algorithms that assume some input are known as not Byzantine.
+        r"""Set a list of input as trusted. This is usable for trusted-based algorithms
+        that assume some clients are known as not Byzantine.
     
         :param ids: a list of client ids that are trusted
         :type ids: list
@@ -387,6 +390,7 @@ class Simulator(object):
         :type lr_scheduler: torch.optim.lr_scheduler.MultiStepLR, optional
         :return: None
         """
+        reset_model_weights(model)
         if server_optimizer == 'SGD':
             self.server_opt = torch.optim.SGD(model.parameters(), lr=server_lr)
         else:

@@ -7,12 +7,8 @@
 .. raw:: html
 
     <p align=center>
-        <img src="https://github.com/bladesteam/blades/blob/master/docs/source/_static/blades_logo.png" width="600" alt="Blades Logo">
+        <img src="https://i.postimg.cc/NGKWNjk3/Blades-title-g.png" width="600" alt="Blades Logo">
     </p>
-    
-
-**Blades** is a simulator for **B**\ yzantine-robust federated **L**\ earning with **A**\ ttacks and **D**\ efenses
-**E**\ xperimental **S**\ imulation.
 
 .. raw:: html
 
@@ -33,6 +29,11 @@
     </p>
 
 
+
+**Blades** is a simulator for **B**\ yzantine-robust federated **L**\ earning with **A**\ ttacks and **D**\ efenses
+**E**\ xperimental **S**\ imulation.
+
+
 **Blades** is designed to simulate attacks and defenses in federated learning with high performance and fast evaluation
 of existing strategies and new techniques. Key features of **Blades** include:
 
@@ -48,7 +49,7 @@ If you are interested in this project, don't hesitate to contact me or make a PR
 
 
 `Documentation <https://bladesteam.github.io/>`_ | `Examples <https://bladesteam.github.io/auto_examples/index.html>`_ | `API Reference  <https://bladesteam.github.io/references/api_reference.html>`_
-======================================================================================================================================================
+========================================================================================================================================================================================================
 
 
 
