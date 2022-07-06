@@ -302,7 +302,7 @@ class Simulator(object):
             torch.mean(torch.vstack(update) ** 2, dim=0))).item()
         r = {
             "_meta": {"type": "variance"},
-            "E": cur_round,
+            "Round": cur_round,
             "avg": var_avg,
             "norm": norm,
             "avg_norm": avg_norm,
@@ -315,7 +315,7 @@ class Simulator(object):
         loss = np.average([metric['Loss'] for metric in metrics], weights=[metric['Length'] for metric in metrics])
         r = {
             "_meta": {"type": "test"},
-            "E": metrics[0]['E'],
+            "Round": metrics[0]['E'],
             "top1": top1,
             "Length": np.sum([metric['Length'] for metric in metrics]),
             "Loss": loss,
@@ -328,7 +328,7 @@ class Simulator(object):
         
         r = {
             "_meta": {"type": "train"},
-            "E": epoch,
+            "Round": epoch,
             "B": batch_idx,
             "Length": length,
             "Loss": sum(res["loss"] * res["length"] for res in results) / length,
@@ -344,7 +344,7 @@ class Simulator(object):
         total = len(self._clients.values()[0].data_loader.dataset)
         pct = 100 * progress / total
         self.debug_logger.info(
-            f"[E{r['E']:2}B{r['B']:<3}| {progress:6}/{total} ({pct:3.0f}%) ] Loss: {r['Loss']:.4f} "
+            f"[Round{r['E']:2}B{r['B']:<3}| {progress:6}/{total} ({pct:3.0f}%) ] Loss: {r['Loss']:.4f} "
             + " ".join(name + "=" + "{:>8.4f}".format(r[name]) for name in self.metrics)
         )
         # Output to file
