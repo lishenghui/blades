@@ -193,7 +193,8 @@ class Simulator(object):
     def train_actor(self,
                     global_round: int,
                     num_rounds: int,
-                    clients: List[BladesClient]
+                    clients: List[BladesClient],
+                    lr: float,
                     ) -> None:
         r"""Run local training using ``ray`` actors
         
@@ -201,6 +202,7 @@ class Simulator(object):
             global_round (int): The current global round.
             num_rounds (int): The number of local update steps.
             clients (list): A list of clients that perform local training.
+            lr (float): Learning rate for client optimizer.
         """
         # TODO: randomly select a subset of input for local training
         self.debug_logger.info(f"Train global round {global_round}")
@@ -214,6 +216,7 @@ class Simulator(object):
                 clients=clients,
                 model=global_model,
                 local_round=num_rounds,
+                lr=lr,
             ),
             client_groups
         )
@@ -359,7 +362,8 @@ class Simulator(object):
             test_batch_size: Optional[int] = 64,
             server_lr: Optional[float] = 0.1,
             client_lr: Optional[float] = 0.1,
-            lr_scheduler: Optional[torch.optim.lr_scheduler.MultiStepLR] = None,
+            server_lr_scheduler: Optional[torch.optim.lr_scheduler.MultiStepLR] = None,
+            client_lr_scheduler: Optional[torch.optim.lr_scheduler.MultiStepLR] = None,
     ):
         """Run the adversarial training.
 
@@ -386,8 +390,10 @@ class Simulator(object):
         :type server_lr: float, optional
         :param client_lr: Learning rate of ``client_optimizer``
         :type client_lr: float, optional
-        :param lr_scheduler: Learning rate scheduler
-        :type lr_scheduler: torch.optim.lr_scheduler.MultiStepLR, optional
+        :param server_lr_scheduler: Server learning rate scheduler
+        :type server_lr_scheduler: torch.optim.lr_scheduler.MultiStepLR, optional
+        :param client_lr_scheduler: Client learning rate scheduler
+        :type client_lr_scheduler: torch.optim.lr_scheduler.MultiStepLR, optional
         :return: None
         """
         reset_model_weights(model)
@@ -413,7 +419,7 @@ class Simulator(object):
             for global_rounds in t:
                 round_start = time()
                 if self.use_actor:
-                    self.train_actor(global_rounds, local_steps, self.get_clients())
+                    self.train_actor(global_rounds, local_steps, self.get_clients(), client_lr)
                 else:
                     self.train_trainer(global_rounds, local_steps, self._clients)
                 
@@ -422,9 +428,12 @@ class Simulator(object):
                     t.set_postfix(loss=loss, top1=top1)
                 
                 # TODO(Shenghui): When using trainer, the test method is not implemented so far.
-                if lr_scheduler:
-                    lr_scheduler.step()
-                    client_lr = lr_scheduler.get_last_lr()[0]
+                if server_lr_scheduler:
+                    server_lr_scheduler.step()
+
+                if client_lr_scheduler:
+                    client_lr_scheduler.step()
+                    client_lr = client_lr_scheduler.get_last_lr()[0]
                 # else:
                 
                 # client_lr = self.server_opt.param_groups[0]['lr']
@@ -432,6 +441,6 @@ class Simulator(object):
                 
                 ret.append(time() - round_start)
                 self.debug_logger.info(
-                    f"E={global_rounds}; Learning rate = {client_lr:}; Time cost = {time() - global_start}")
+                    f"E={global_rounds}; Client learning rate = {client_lr:}; Time cost = {time() - global_start}")
             
             return ret
