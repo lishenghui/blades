@@ -19,6 +19,7 @@ class BColors(object):
     UNDERLINE = "\033[4m"
 
 
+
 def touch(fname: str, times=None, create_dirs: bool = False):
     if create_dirs:
         base_dir = os.path.dirname(fname)

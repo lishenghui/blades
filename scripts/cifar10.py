@@ -6,34 +6,37 @@ import os
 os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
 # os.environ["CUDA_VISIBLE_DEVICES"]="2,3"
 
-# from blades.utils.args import options
+from args import options
 from blades.simulator import Simulator
 from blades.datasets import CIFAR10
 from blades.models.cifar10 import CCTNet
+
+args = options
+# if not ray.is_initialized():
+ray.init(include_dashboard=False, num_gpus=args.num_gpus)
+
+if not os.path.exists(options.log_dir):
+    os.makedirs(options.log_dir)
 
 cifar10 = CIFAR10(num_clients=20, iid=True)  # built-in federated cifar10 dataset
 
 # configuration parameters
 conf_args = {
     "dataset": cifar10,
-    "aggregator": "geomed",  # defense: robust aggregation
+    "aggregator": options.agg,  # defense: robust aggregation
     # "aggregator": "clippedclustering",  # defense: robust aggregation
-    "num_byzantine": 8,  # number of byzantine input
+    "num_byzantine": options.num_byzantine,  # number of byzantine input
     "use_cuda": True,
     # "use_cuda": False,
-    "attack": "ipm",  # attack strategy
-    "attack_params": {
-        # "num_clients": 20,  # attacker parameters
-        # "num_byzantine": 8,
-                     },
+    "attack": options.attack,  # attack strategy
+    "attack_params": options.attack_args[options.attack],
     "num_actors": 20,  # number of training actors
     "gpu_per_actor": 0.19,
+    "log_path": options.log_dir,
     # "gpu_per_actor": 0.19,
-    "seed": 1,  # reproducibility
+    "seed": options.seed,  # reproducibility
 }
 
-ray.init(num_gpus=4)
-# ray.init(local_mode=True)
 simulator = Simulator(**conf_args)
 
 model = CCTNet()
@@ -47,8 +50,8 @@ run_args = {
     "server_optimizer": 'SGD', #server_opt, server optimizer
     "client_optimizer": client_opt,  # client optimizer
     "loss": "crossentropy",  # loss funcstion
-    "global_rounds": 600,  # number of global rounds
-    "local_steps": 50,  # number of seps "client_lr": 0.1,  # learning rateteps per round
+    "global_rounds": options.global_round,  # number of global rounds
+    "local_steps": options.local_round,  # number of seps "client_lr": 0.1,  # learning rateteps per round
     "server_lr": 1.0,
     # "client_lr": 0.1,  # learning rate
     "validate_interval": 10,
