@@ -40,6 +40,7 @@ class BladesClient(object):
     def set_id(self, id: str) -> None:
         r"""Sets the unique id of the client.
         """
+
         # if not isinstance(id,str):
         #     raise TypeError(f'Client _id must be str, but got {type(id)}')
         self._id = id
@@ -87,6 +88,16 @@ class BladesClient(object):
         self.model = copy.deepcopy(model)
         self.optimizer = opt(self.model.parameters(), lr=lr)
     
+    def set_lr(self, lr: float) -> None:
+        r""" change the learning rate of the client optimizer.
+
+        Args:
+            lr (float): target learning rate.
+        """
+
+        for g in self.optimizer.param_groups:
+            g['lr'] = lr
+
     def set_loss(self, loss_func='crossentropy'):
         if loss_func == 'crossentropy':
             self.loss_func = nn.modules.loss.CrossEntropyLoss()
@@ -173,7 +184,8 @@ class BladesClient(object):
             self.optimizer.zero_grad()
             
             output = model(data)
-            loss = self.loss_func(output, target)
+            # loss = self.loss_func(output, target)
+            loss = torch.clamp(self.loss_func(output, target), -1e7, 1e7)
             loss.backward()
             self.optimizer.step()
         
