@@ -33,7 +33,9 @@ class CIFAR10:
         transforms.Normalize(mean=stats["mean"], std=stats["std"]),
     ])
     
+    img_size = 32
     train_transform = transforms.Compose([
+        transforms.RandomCrop(img_size, padding=4),
         transforms.RandomHorizontalFlip(),
         transforms.Normalize(mean=stats["mean"], std=stats["std"]),
     ])

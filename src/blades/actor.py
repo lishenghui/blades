@@ -20,10 +20,11 @@ class _RayActor(object):
         traindls, testdls = dataset.get_dls()
         self.dataset = FLDataset(traindls, testdls)
     
-    def local_training(self, clients, model, local_round):
+    def local_training(self, clients, model, local_round, lr):
         update = []
         for i in range(len(clients)):
             clients[i].set_para(model)
+            clients[i].set_lr(lr)
             clients[i].on_train_round_start()
             data = self.dataset.get_train_data(clients[i].id(), local_round)
             clients[i].local_training(local_round, use_actor=True, data_batches=data)
