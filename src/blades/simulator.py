@@ -46,9 +46,9 @@ class Simulator(object):
             dataset: FLDataset,
             num_byzantine: Optional[int] = 0,
             attack: Optional[str] = None,
-            attack_params: Optional[Dict[str, float]] = None,
+            attack_kws: Optional[Dict[str, float]] = None,
             aggregator: Union[Callable[[list], torch.Tensor], str] = 'mean',
-            aggregator_params: Optional[Dict[str, float]] = None,
+            aggregator_kws: Optional[Dict[str, float]] = None,
             num_actors: Optional[int] = 1,
             num_trainers: Optional[int] = 1,
             gpu_per_actor: Optional[float] = 0,
@@ -60,7 +60,6 @@ class Simulator(object):
             **kwargs,
     ):
     
-        set_random_seed(seed)
         self.use_actor = True if mode == 'actor' else False
         
         if use_cuda or ("gpu_per_actor" in kwargs and kwargs["gpu_per_actor"] > 0.0):
@@ -68,9 +67,9 @@ class Simulator(object):
         else:
             self.device = torch.device("cpu")
         
-        if aggregator_params is None:
-            aggregator_params = {}
-        self._init_aggregator(aggregator=aggregator, aggregator_params=aggregator_params)
+        if aggregator_kws is None:
+            aggregator_kws = {}
+        self._init_aggregator(aggregator=aggregator, aggregator_kws=aggregator_kws)
         
         # Setup logger
         initialize_logger(log_path)
@@ -102,19 +101,21 @@ class Simulator(object):
             traindls, testdls = dataset.get_dls()
             self.dataset = FLDataset(traindls, testdls)
         
-        if attack_params is None:
-            attack_params = {}
-        self._setup_clients(attack, num_byzantine=num_byzantine, attack_params=attack_params)
+        if attack_kws is None:
+            attack_kws = {}
+        self._setup_clients(attack, num_byzantine=num_byzantine, attack_kws=attack_kws)
+
+        set_random_seed(seed)
     
-    def _init_aggregator(self, aggregator, aggregator_params):
+    def _init_aggregator(self, aggregator, aggregator_kws):
         if type(aggregator) == str:
             agg_path = importlib.import_module('blades.aggregators.%s' % aggregator)
             agg_scheme = getattr(agg_path, aggregator.capitalize())
-            self.aggregator = agg_scheme(**aggregator_params)
+            self.aggregator = agg_scheme(**aggregator_kws)
         else:
             self.aggregator = aggregator
     
-    def _setup_clients(self, attack: str, num_byzantine, attack_params):
+    def _setup_clients(self, attack: str, num_byzantine, attack_kws):
         import importlib
         if attack is None:
             num_byzantine = 0
@@ -125,7 +126,7 @@ class Simulator(object):
             if i < num_byzantine:
                 module_path = importlib.import_module('blades.attackers.%sclient' % attack)
                 attack_scheme = getattr(module_path, '%sClient' % attack.capitalize())
-                client = attack_scheme(id=u, device=self.device, **attack_params)
+                client = attack_scheme(id=u, device=self.device, **attack_kws)
                 self._register_omniscient_callback(client.omniscient_callback)
             else:
                 client = BladesClient(id=u, device=self.device)
@@ -204,6 +205,7 @@ class Simulator(object):
             clients (list): A list of clients that perform local training.
             lr (float): Learning rate for client optimizer.
         """
+        
         # TODO: randomly select a subset of input for local training
         self.debug_logger.info(f"Train global round {global_round}")
         
