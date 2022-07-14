@@ -105,7 +105,8 @@ class BladesClient(object):
             raise NotImplementedError
     
     def set_para(self, model):
-        self.model.load_state_dict(model.state_dict())
+        state_dict = model.state_dict()
+        self.model.load_state_dict(state_dict)
     
     def __str__(self) -> str:
         return "BladesClient"
