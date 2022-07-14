@@ -42,7 +42,7 @@ aggs = [Mean(),
         Geomed(),
         Median(),
         Autogm(lamb=1.0),
-        Trimmedmean(num_byzantine=len(outliers)),
+        Trimmedmean(nb=len(outliers)),
         Clustering(),
         Clippedclustering(),
        ]

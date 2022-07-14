@@ -23,7 +23,7 @@ conf_params = {
     "aggregator": "mean",  # aggregation
     "num_byzantine": 4,  # number of Byzantine input
     "attack": "alie",  # attack strategy
-    "attack_params": {"num_clients": 10,  # attacker parameters
+    "attack_kws": {"num_clients": 10,  # attacker parameters
                      "num_byzantine": 4},
     "num_actors": 4,  # number of training actors
     # "num_actors": 10,  # number of training actors

@@ -7,7 +7,7 @@ import torch
 import torchvision
 import torchvision.transforms as transforms
 from sklearn.utils import shuffle
-
+from blades.utils import set_random_seed
 from .CustomDataset import CustomTensorDataset
 
 
@@ -34,10 +34,17 @@ class CIFAR10:
     ])
     
     img_size = 32
+    # train_transform = transforms.Compose([
+    #     transforms.RandomCrop(img_size, padding=4),
+    #     transforms.RandomHorizontalFlip(),
+    #     transforms.Normalize(mean=stats["mean"], std=stats["std"]),
+    # ])
     train_transform = transforms.Compose([
-        transforms.RandomCrop(img_size, padding=4),
-        transforms.RandomHorizontalFlip(),
+        transforms.RandomResizedCrop(32, scale=(0.75, 1.0), ratio=(1.0, 1.0)),
+        transforms.RandomHorizontalFlip(p=0.5),
+        # transforms.RandAugment(num_ops=1, magnitude=8),
         transforms.Normalize(mean=stats["mean"], std=stats["std"]),
+        transforms.RandomErasing(p=0.25)
     ])
     
     def __init__(
@@ -126,9 +133,11 @@ class CIFAR10:
             batch_size,
             seed=0
     ) -> (torch.Tensor, torch.LongTensor):
+        # The following line is needed for reproducing the randomness of transforms.
+        set_random_seed(seed)
         i = 0
-        np.random.seed(seed=seed)
         idx = np.random.permutation(len(labels))
+
         data, labels = data[idx], labels[idx]
         
         while True:

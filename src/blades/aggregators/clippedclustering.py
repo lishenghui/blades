@@ -22,18 +22,24 @@ class Clippedclustering(_BaseAggregator):
          A robust aggregator from paper `"An Experimental Study of Byzantine-Robust sAggregation Schemes in Federated Learning" <https://www.techrxiv.org/articles/preprint/An_Experimental_Study_of_Byzantine-Robust_Aggregation_Schemes_in_Federated_Learning/19560325>`_
 
          it separates the client population into two groups based on the cosine similarities
+
+    Args:
+        tau (float): threshold of clipping norm. If it is not given, updates are clipped according the median of historical norm.
     """
     
-    def __init__(self) -> None:
+    def __init__(self, tau=None) -> None:
         super(Clippedclustering, self).__init__()
+        self.tau = tau
         self.l2norm_his = []
     
     def __call__(self, inputs: Union[List[BladesClient], List[torch.Tensor], torch.Tensor]):
         updates = self._get_updates(inputs)
         l2norms = [torch.norm(update).item() for update in updates]
         self.l2norm_his.extend(l2norms)
-        threshold = np.median(self.l2norm_his)
-        # threshold = min(threshold, 5.0)
+        if self.tau:
+            threshold = self.tau
+        else:
+            threshold = np.median(self.l2norm_his)
         
         for idx, l2 in enumerate(l2norms):
             if l2 > threshold:
