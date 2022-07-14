@@ -6,7 +6,7 @@ import numpy as np
 import torch
 import torchvision
 from sklearn.utils import shuffle
-
+from blades.utils import set_random_seed
 from .CustomDataset import CustomTensorDataset
 
 
@@ -97,7 +97,9 @@ class MNIST:
             seed=0
     ) -> (torch.Tensor, torch.LongTensor):
         i = 0
-        np.random.seed(seed=seed)
+        # The following line is needed for reproducing the randomness of transforms.
+        set_random_seed(seed)
+
         idx = np.random.permutation(len(labels))
         data, labels = data[idx], labels[idx]
         
