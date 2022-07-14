@@ -14,6 +14,7 @@ from blades.models.cifar10 import CCTNet
 args = options
 # if not ray.is_initialized():
 ray.init(include_dashboard=False, num_gpus=args.num_gpus)
+# ray.init(include_dashboard=False, num_gpus=args.num_gpus, local_mode=True)
 
 if not os.path.exists(options.log_dir):
     os.makedirs(options.log_dir)
@@ -24,16 +25,14 @@ cifar10 = CIFAR10(num_clients=20, iid=True)  # built-in federated cifar10 datase
 conf_args = {
     "dataset": cifar10,
     "aggregator": options.agg,  # defense: robust aggregation
-    # "aggregator": "clippedclustering",  # defense: robust aggregation
+    "aggregator_kws": options.agg_args[options.agg],
     "num_byzantine": options.num_byzantine,  # number of byzantine input
     "use_cuda": True,
-    # "use_cuda": False,
     "attack": options.attack,  # attack strategy
-    "attack_params": options.attack_args[options.attack],
+    "attack_kws": options.attack_args[options.attack],
     "num_actors": 20,  # number of training actors
     "gpu_per_actor": 0.19,
     "log_path": options.log_dir,
-    # "gpu_per_actor": 0.19,
     "seed": options.seed,  # reproducibility
 }
 

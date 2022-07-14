@@ -27,7 +27,7 @@ conf_params = {
     "num_byzantine": 8,  # number of Byzantine input
     "attack": "ipm",  # attack strategy
     # "log_path": "dbfs/outputs",
-    "attack_params": {   
+    "attack_kws": {   
                           "epsilon": 100,
                      },
     "num_actors": 1,  # number of training actors
@@ -81,7 +81,7 @@ def read_json(path):
 
 def transform(entry, agg):  
     return {
-        'Round Number': entry['E'],
+        'Round Number': entry['Round'],
         'Accuracy (%)': entry['top1'],
         "Loss": entry['Loss'],
         'AGG': agg,

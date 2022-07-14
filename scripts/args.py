@@ -8,16 +8,16 @@ def parse_arguments():
     parser = argparse.ArgumentParser()
     parser.add_argument("--use-cuda", action="store_true", default=False)
     parser.add_argument("--use_actor", action="store_true", default=False)
-    parser.add_argument("--seed", type=int, default=0)
+    parser.add_argument("--seed", type=int, default=1)
     parser.add_argument("--global_round", type=int, default=400)
-    parser.add_argument("--local_round", type=int, default=50)
+    parser.add_argument("--local_round", type=int, default=1)
     parser.add_argument("--batch_size", type=int, default=32)
     parser.add_argument("--test_batch_size", type=int, default=128)
     parser.add_argument("--log_interval", type=int, default=10)
     parser.add_argument('--metrics_name', help='name for metrics file;', type=str, default='none', required=False)
     parser.add_argument("--attack", type=str, default='signflipping', help="Select attack types.")
     parser.add_argument("--dataset", type=str, default='cifar10', help="Dataset")
-    parser.add_argument("--agg", type=str, default='trimmedmean', help="Aggregator.")
+    parser.add_argument("--agg", type=str, default='clippedclustering', help="Aggregator.")
     parser.add_argument("--lr", type=float, default=0.1, help="learning rate")
     parser.add_argument("--num_actors", type=int, default=20)
     parser.add_argument("--num_byzantine", type=int, default=8)
@@ -37,6 +37,8 @@ def parse_arguments():
         'signflipping': {},
         'ipm': {"epsilon": 0.5},
         'trimmedmean': {"nb": options.num_byzantine},
+        'clippedclustering': {},
+        # 'clippedclustering': {"tau": 5.0},
     }
 
     options.log_dir = (
