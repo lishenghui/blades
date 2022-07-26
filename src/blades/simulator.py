@@ -6,16 +6,16 @@ from typing import Any, Callable, Optional, Union, List, Dict
 
 import numpy as np
 import torch
-
 from ray.train import Trainer
 from ray.util import ActorPool
 from tqdm import trange
+
 from blades.actor import _RayActor
 from blades.client import BladesClient, ByzantineClient
 from blades.datasets.datasets import FLDataset
 from blades.server import BladesServer
-from blades.utils import top1_accuracy, initialize_logger
 from blades.utils import reset_model_weights, set_random_seed
+from blades.utils import top1_accuracy, initialize_logger
 
 
 class Simulator(object):

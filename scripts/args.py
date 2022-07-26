@@ -10,7 +10,7 @@ def parse_arguments():
     parser.add_argument("--use_actor", action="store_true", default=False)
     parser.add_argument("--seed", type=int, default=1)
     parser.add_argument("--global_round", type=int, default=400)
-    parser.add_argument("--local_round", type=int, default=1)
+    parser.add_argument("--local_round", type=int, default=50)
     parser.add_argument("--batch_size", type=int, default=32)
     parser.add_argument("--test_batch_size", type=int, default=128)
     parser.add_argument("--log_interval", type=int, default=10)
@@ -32,7 +32,7 @@ def parse_arguments():
         'signflipping': {},
         'ipm': {"epsilon": 0.5},
     }
-
+    
     options.agg_args = {
         'signflipping': {},
         'ipm': {"epsilon": 0.5},
@@ -40,18 +40,20 @@ def parse_arguments():
         'clippedclustering': {},
         # 'clippedclustering': {"tau": 5.0},
     }
-
+    
     options.log_dir = (
-        EXP_DIR
-        + f"/b{options.num_byzantine}"
-        + f"_{options.attack}" + ("_" + "_".join([k+str(v) for k, v in options.attack_args[options.attack].items()]) if options.attack_args[options.attack] else "")
-        + f"_{options.agg}" + ("_" + "_".join([k+str(v) for k, v in options.agg_args[options.agg].items()]) if options.agg_args[options.agg] else "")
-        + (f"_lr{options.lr}")
-        + (f"_bz{options.batch_size}")
-        + f"_seed{options.seed}"
+            EXP_DIR
+            + f"/b{options.num_byzantine}"
+            + f"_{options.attack}" + (
+                "_" + "_".join([k + str(v) for k, v in options.attack_args[options.attack].items()]) if
+                options.attack_args[options.attack] else "")
+            + f"_{options.agg}" + (
+                "_" + "_".join([k + str(v) for k, v in options.agg_args[options.agg].items()]) if options.agg_args[
+                    options.agg] else "")
+            + (f"_lr{options.lr}")
+            + (f"_bz{options.batch_size}")
+            + f"_seed{options.seed}"
     )
-
-
     
     if not torch.cuda.is_available():
         print('Unfortunaly, we currently do not have any GPU on your machine. ')

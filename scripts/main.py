@@ -1,9 +1,9 @@
-import sys
+import os
 
 import ray
 import torch
-import os
-os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
+
+os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
 # os.environ["CUDA_VISIBLE_DEVICES"]="2,3"
 
 # from blades.utils.args import options
@@ -25,7 +25,7 @@ conf_args = {
     "attack_params": {
         # "num_clients": 20,  # attacker parameters
         # "num_byzantine": 8,
-                     },
+    },
     "num_actors": 20,  # number of training actors
     "gpu_per_actor": 0.19,
     # "gpu_per_actor": 0.19,
@@ -39,12 +39,12 @@ simulator = Simulator(**conf_args)
 model = CCTNet()
 client_opt = torch.optim.Adam(model.parameters(), lr=0.1)
 client_lr_scheduler = torch.optim.lr_scheduler.MultiStepLR(
-        client_opt, milestones=[150, 300, 500], gamma=0.5
-    )
+    client_opt, milestones=[150, 300, 500], gamma=0.5
+)
 # runtime parameters
 run_args = {
     "model": model,  # global model
-    "server_optimizer": 'SGD', #server_opt, server optimizer
+    "server_optimizer": 'SGD',  # server_opt, server optimizer
     "client_optimizer": client_opt,  # client optimizer
     "loss": "crossentropy",  # loss funcstion
     "global_rounds": 600,  # number of global rounds

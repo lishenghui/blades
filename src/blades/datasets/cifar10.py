@@ -7,6 +7,7 @@ import torch
 import torchvision
 import torchvision.transforms as transforms
 from sklearn.utils import shuffle
+
 from blades.utils import set_random_seed
 from .CustomDataset import CustomTensorDataset
 
@@ -61,8 +62,8 @@ class CIFAR10:
             self._generate_datasets(data_root, iid, alpha, num_clients)
     
     def _generate_datasets(self, path='./data', iid=True, alpha=0.1, num_clients=20):
-        num_train = 48000
-        num_test = 9600
+        num_train = 50000
+        num_test = 10000
         train_set = torchvision.datasets.CIFAR10(train=True, download=True, root=path)
         test_set = torchvision.datasets.CIFAR10(train=False, download=True, root=path)
         x_test, y_test = test_set.data[:num_test], np.array(test_set.targets)[:num_test]

@@ -1,9 +1,9 @@
-import sys
+import os
 
 import ray
 import torch
-import os
-os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
+
+os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
 # os.environ["CUDA_VISIBLE_DEVICES"]="2,3"
 
 from args import options
@@ -13,6 +13,7 @@ from blades.models.cifar10 import CCTNet
 
 args = options
 # if not ray.is_initialized():
+
 ray.init(include_dashboard=False, num_gpus=args.num_gpus)
 # ray.init(include_dashboard=False, num_gpus=args.num_gpus, local_mode=True)
 
@@ -41,12 +42,12 @@ simulator = Simulator(**conf_args)
 model = CCTNet()
 client_opt = torch.optim.Adam(model.parameters(), lr=0.1)
 client_lr_scheduler = torch.optim.lr_scheduler.MultiStepLR(
-        client_opt, milestones=[150, 300, 500], gamma=0.5
-    )
+    client_opt, milestones=[150, 300, 500], gamma=0.5
+)
 # runtime parameters
 run_args = {
     "model": model,  # global model
-    "server_optimizer": 'SGD', #server_opt, server optimizer
+    "server_optimizer": 'SGD',  # server_opt, server optimizer
     "client_optimizer": client_opt,  # client optimizer
     "loss": "crossentropy",  # loss funcstion
     "global_rounds": options.global_round,  # number of global rounds

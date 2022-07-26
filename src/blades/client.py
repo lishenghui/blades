@@ -1,7 +1,7 @@
 import copy
 import logging
 from collections import defaultdict
-from typing import Union, Optional
+from typing import Optional
 
 import ray.train as train
 import torch
