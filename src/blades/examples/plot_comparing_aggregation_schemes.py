@@ -6,16 +6,11 @@ We draw 100 samples from two normal distributions with different mean and co-var
 The samples are then aggregated using the build-in aggregation rules.
 """
 
-import torch
-from blades.aggregators import Krum, Median, Geomed, Autogm, Mean, Clustering, Trimmedmean, Clippedclustering
-
-import numpy as np
-import pandas as pd
 import matplotlib.pyplot as plt
-import os
-from scipy.stats import skew
-import scipy.stats as st
-from sklearn.datasets import make_blobs
+import numpy as np
+import torch
+
+from blades.aggregators import Krum, Median, Geomed, Autogm, Mean, Clustering, Trimmedmean, Clippedclustering
 
 plt.rcParams['axes.linewidth'] = 1.5 #set the value globally
 plt.rcParams["font.weight"] = "bold"
