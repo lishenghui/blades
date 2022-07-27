@@ -6,16 +6,16 @@ from typing import Any, Callable, Optional, Union, List, Dict
 
 import numpy as np
 import torch
-
 from ray.train import Trainer
 from ray.util import ActorPool
 from tqdm import trange
+
 from blades.actor import _RayActor
 from blades.client import BladesClient, ByzantineClient
 from blades.datasets.datasets import FLDataset
 from blades.server import BladesServer
-from blades.utils import top1_accuracy, initialize_logger
 from blades.utils import reset_model_weights, set_random_seed
+from blades.utils import top1_accuracy, initialize_logger
 
 
 class Simulator(object):
@@ -135,8 +135,8 @@ class Simulator(object):
     def _register_omniscient_callback(self, callback):
         self.omniscient_callbacks.append(callback)
     
-    def get_clients(self):
-        r"""Return all clients.
+    def get_clients(self) -> List:
+        r"""Return all clients as a list.
         """
         return list(self._clients.values())
     
@@ -164,14 +164,23 @@ class Simulator(object):
         torch.set_rng_state(self.random_states["torch"])
         np.random.set_state(self.random_states["numpy"])
     
-    def register_attackers(self, clients: List[ByzantineClient]) -> None:
+    def register_attackers(self, clients: List[ByzantineClient], replace_indices=None) -> None:
         r"""Register a list of clients as attackers. Those malicious clients replace the first few clients.
         
-        :param clients: a list of Byzantine clients.
+        Args:
+            clients:  a list of Byzantine clients that will replace some of honest ones.
+            replace_indices:  a list of indices of clients to be replaced by the Byzantine clients. The length of this
+                                list should be equal to that of ``clients`` parameter. If it remains ``None``, the first ``n`` clients
+                                will be replaced, where ``n`` is the length of ``clients``.
         """
+        if replace_indices:
+            assert len(clients) < len(replace_indices)
+        else:
+            replace_indices = list(range(len(clients)))
         assert len(clients) < len(self._clients)
+        
         client_li = self.get_clients()
-        for i in range(len(clients)):
+        for i in replace_indices:
             id = client_li[i].id()
             clients[i].set_id(id)
             self._clients[id] = clients[i]
@@ -244,7 +253,7 @@ class Simulator(object):
             update = []
             for i in range(len(config['client'])):
                 config['client'][i].set_para(config['model'])
-                config['client'][i].on_train_round_start()
+                config['client'][i].on_train_round_begin()
                 config['client'][i].local_training(config['local_round'], config['use_actor'], config['data'][i])
                 update.append(config['client'][i].get_update())
             return update

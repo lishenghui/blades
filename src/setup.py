@@ -14,19 +14,19 @@ requirements = [
 ]
 setup(
     name='blades',
-    version='0.0.12',
+    version='0.0.13',
     description="""Blades: A simulator for Byzantine-robust federated Learning with Attacks and Defenses Experimental Simulation""",
     # long_description=open('../README.rst').read(),
     # long_description_content_type="text/markdown",
     author='Blades Team',
     author_email='shenghui.li@it.uu.se',
-    url='https://github.com/lishenghui',
+    url='https://bladesteam.github.io/',
     # py_modules=['blades'],
     python_requires='>=3.8',
     license='MIT license',
     zip_safe=False,
     # entry_points={
-    #     'console_scripts': ["fedn=cli:main"]
+    #     'console_scripts': [""]
     # },
     install_requires=requirements,
     keywords='Federated learning',

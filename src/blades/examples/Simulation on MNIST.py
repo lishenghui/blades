@@ -3,14 +3,15 @@ Simulation on Mnist Dataset
 ===========================
 
 """
-import ray
 import json
+
 import pandas as pd
+import ray
 import seaborn as sns
+
 from blades.datasets import MNIST
 from blades.models.mnist import MLP
 from blades.simulator import Simulator
-
 
 # Initialize Ray
 ray.init()
