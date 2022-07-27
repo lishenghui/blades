@@ -111,15 +111,24 @@ class BladesClient(object):
     def __str__(self) -> str:
         return "BladesClient"
     
-    def on_train_round_start(self) -> None:
+    def on_train_round_begin(self, use_actor=True) -> None:
         """Called at the beginning of each local training round in `local_training` methods.
 
         Subclasses should override for any actions to run.
 
         :param logs: Dict. Aggregated metric results up until this batch.
         """
+        self._save_para()
+        if not use_actor:
+            self.model = train.torch.prepare_model(self.model)
         self.model = self.model.to(self.device)
         self.model.train()
+        
+    def on_train_round_end(self) -> None:
+        """Called at the end of local optimization.
+        """
+        update = (self._get_para(current=True) - self._get_para(current=False))
+        self.save_update(update)
     
     def on_train_batch_begin(self, data, target, logs=None):
         """Called at the beginning of a training batch in `local_training` methods.
@@ -166,33 +175,22 @@ class BladesClient(object):
         )
         return r
     
-    def local_training(self, num_rounds: int, use_actor: bool, data_batches: list) -> None:
-        r''' Local optimizaiton of the ``client``. Byzantine input can overwrite this method to perform adversarial attack.
+    def local_training(self, data_batches: list) -> None:
+        r''' Local optimizaiton of the ``client``. Byzantine input can override this method to perform adversarial attack.
         
             :param num_rounds: Number of local optimization steps.
-            :param use_actor: Specifyinmodelg the training mode, it should be ``True`` if you use ``Trainer Mode``
             :param data_batches: A list of training batches for local training.
         '''
-        self._save_para()
-        if use_actor:
-            model = self.model
-        else:
-            model = train.torch.prepare_model(self.model)
-        
         for data, target in data_batches:
             data, target = data.to(self.device), target.to(self.device)
             data, target = self.on_train_batch_begin(data=data, target=target)
             self.optimizer.zero_grad()
             
-            output = model(data)
-            # loss = self.loss_func(output, target)
-            loss = torch.clamp(self.loss_func(output, target), -1e7, 1e7)
+            output = self.model(data)
+            # Clamp loss value to avoid possible 'Nan' gradient with some attack types.
+            loss = torch.clamp(self.loss_func(output, target), 0, 1e6)
             loss.backward()
             self.optimizer.step()
-        
-        self.model = model
-        update = (self._get_para(current=True) - self._get_para(current=False))
-        self.save_update(update)
     
     def get_update(self) -> torch.Tensor:
         r'''Returns the saved update of local optimization, represented as a vector.
@@ -214,15 +212,8 @@ class BladesClient(object):
             if not param.requires_grad:
                 continue
             self._state['saved_para'][name] = torch.clone(param.data).detach()
-        
-        # for group in self.optimizer.param_groups:
-        #     for p in group["params"]:
-        #         if not p.requires_grad:
-        #             continue
-        #         param_state = self._state[p]
-        #         param_state["saved_para"] = torch.clone(p.data).detach()
     
-    def _get_para(self, current=True) -> None:
+    def _get_para(self, current=True) -> torch.Tensor:
         layer_parameters = []
         
         for name, param in self.model.named_parameters():
@@ -234,15 +225,6 @@ class BladesClient(object):
                 saved_param = self._state['saved_para'][name]
                 layer_parameters.append(saved_param.data.view(-1))
         
-        # for group in self.optimizer.param_groups:
-        #     for p in group["params"]:
-        #         if p.grad is None:
-        #             continue
-        #         if current:
-        #             layer_parameters.append(p.data.view(-1))
-        #         else:
-        #             param_state = self._state[p]
-        #             layer_parameters.append(param_state["saved_para"].data.view(-1))
         return torch.cat(layer_parameters).to('cpu')
 
 
@@ -250,7 +232,7 @@ class ByzantineClient(BladesClient):
     r"""Base class for Byzantine input.
     
             .. note::
-                Your Byzantine input should also subclass this class, and overwrite ``local_training`` and
+                Your Byzantine input should also subclass this class, and override ``local_training`` and
                 ``omniscient_callback`` to customize your attack.
                 
         """
@@ -262,7 +244,7 @@ class ByzantineClient(BladesClient):
     def omniscient_callback(self, simulator):
         r"""A method that will be registered by the simulator and execute after each communication round.
             It allows a Byzantine client has full knowledge of the training system, e.g., updates from all
-            input. Your Byzantine client can overwrite this method to access information from the server
+            input. Your Byzantine client can override this method to access information from the server
             and other input.
             
             :param simulator: The running simulator.

@@ -25,9 +25,10 @@ class _RayActor(object):
         for i in range(len(clients)):
             clients[i].set_para(model)
             clients[i].set_lr(lr)
-            clients[i].on_train_round_start()
+            clients[i].on_train_round_begin()
             data = self.dataset.get_train_data(clients[i].id(), local_round)
-            clients[i].local_training(local_round, use_actor=True, data_batches=data)
+            clients[i].local_training(data_batches=data)
+            clients[i].on_train_round_end()
             update.append(clients[i].get_update())
         return update
     
