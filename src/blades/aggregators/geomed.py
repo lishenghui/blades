@@ -78,7 +78,6 @@ class Geomed(_BaseAggregator):
             median = torch.sum(torch.vstack([w * beta for w, beta in zip(updates, weights)]), dim=0)
             num_oracle_calls += 1
             obj_val = self._geometric_median_objective(median, updates, weights)
-            # print('gm obj:', obj_val)
             if abs(prev_obj_val - obj_val) < self.ftol * obj_val:
                 break
         

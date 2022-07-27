@@ -5,11 +5,10 @@ A mini example
 """
 
 import ray
+
 from blades.datasets import MNIST
 from blades.models.mnist import MLP
 from blades.simulator import Simulator
-
-
 
 # os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
 # os.environ["CUDA_VISIBLE_DEVICES"]="2,3"
