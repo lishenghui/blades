@@ -12,7 +12,7 @@ Indices and tables
    :titlesonly:
 
    install
-   auto_examples/index
+   examples/index
    references/api_reference
 
 

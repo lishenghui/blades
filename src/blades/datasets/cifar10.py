@@ -35,15 +35,9 @@ class CIFAR10:
     ])
     
     img_size = 32
-    # train_transform = transforms.Compose([
-    #     transforms.RandomCrop(img_size, padding=4),
-    #     transforms.RandomHorizontalFlip(),
-    #     transforms.Normalize(mean=stats["mean"], std=stats["std"]),
-    # ])
     train_transform = transforms.Compose([
         transforms.RandomResizedCrop(32, scale=(0.75, 1.0), ratio=(1.0, 1.0)),
         transforms.RandomHorizontalFlip(p=0.5),
-        # transforms.RandAugment(num_ops=1, magnitude=8),
         transforms.Normalize(mean=stats["mean"], std=stats["std"]),
         transforms.RandomErasing(p=0.25)
     ])
