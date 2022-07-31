@@ -35,7 +35,7 @@ src/blades/mnist_output/*
 *data_batch_*
 *.meta
 *test_batch
-docs/source/auto_examples
+docs/source/examples
 scripts/outputs/stats
 *.html
 *stats

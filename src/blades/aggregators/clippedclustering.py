@@ -60,6 +60,7 @@ class Clippedclustering(_BaseAggregator):
         dis_max[np.isnan(dis_max)] = 2
         clustering = AgglomerativeClustering(affinity='precomputed', linkage='complete', n_clusters=2)
         clustering.fit(dis_max)
+
         flag = 1 if np.sum(clustering.labels_) > num // 2 else 0
         values = torch.vstack(list(model for model, label in zip(updates, clustering.labels_) if label == flag)).mean( dim=0)
         return values
