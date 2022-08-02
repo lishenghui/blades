@@ -21,7 +21,7 @@ conf_params = {
     "aggregator": "mean",  # defense: robust aggregation
     "num_byzantine": 5,  # number of byzantine input
     "attack": "alie",  # attack strategy
-    "attack_params": {"num_clients": 20,  # attacker parameters
+    "attack_kws": {"num_clients": 20,  # attacker parameters
                     "num_byzantine": 5},
     "num_actors": 4,  # number of training actors
     "seed": 1,  # reproducibility
