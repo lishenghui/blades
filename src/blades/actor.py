@@ -1,6 +1,6 @@
 import ray
 
-from blades.datasets.datasets import FLDataset
+from blades.datasets.dataset import FLDataset
 
 
 @ray.remote

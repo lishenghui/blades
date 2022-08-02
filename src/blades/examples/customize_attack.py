@@ -19,12 +19,12 @@ At present, there are three methods for the customization of attack strategies, 
 
 
 import ray
+import torch
 
 from blades.client import ByzantineClient
 from blades.datasets import MNIST
 from blades.models.mnist import MLP
 from blades.simulator import Simulator
-import torch
 
 # built-in federated MNIST dataset
 mnist = MNIST(data_root="./data", train_bs=32, num_clients=10)
