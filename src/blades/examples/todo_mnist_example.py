@@ -1,11 +1,8 @@
 """
-"This" is my example-script
+A mini example
 ===========================
 
-This example doesn't do much, it just makes a simple plot
 """
-
-
 
 import ray
 
@@ -13,23 +10,30 @@ from blades.datasets import MNIST
 from blades.models.mnist import MLP
 from blades.simulator import Simulator
 
-mnist = MNIST(data_root="./data", train_bs=32, num_clients=10)  # built-in federated MNIST dataset
+# os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
+# os.environ["CUDA_VISIBLE_DEVICES"]="2,3"
+
+
+mnist = MNIST(data_root="./data", train_bs=32, num_clients=20, seed=3)  # built-in federated MNIST dataset
 
 # configuration parameters
 conf_params = {
     "dataset": mnist,
-    "aggregator": "mean",  # aggregation
-    # "aggregator_params": {"num_clients": 10,  # attacker parameters
-    #               "num_byzantine": 3},
-    "num_byzantine": 0,  # number of Byzantine input
-    "attack": "labelflipping",  # attack strategy
-    # "attack_params": {"num_clients": 10,  # attacker parameters
-    # "num_byzantine": 3},
+    "aggregator": "median",  # aggregation
+    "num_byzantine": 8,  # number of Byzantine input
+    "attack": "fangattackmedian", #"mediantailored",  # attack strategy
+    # "attack": "alie",  # attack strategy
+    "attack_kws": {
+        # "num_clients": 20,
+        "num_byzantine": 8},
     "num_actors": 4,  # number of training actors
-    "seed": 1,  # reproducibility
+    # "num_actors": 10,  # number of training actors
+    "use_cuda": False,
+    "gpu_per_actor": 0.,
+    "seed": 2,  # reproducibility
 }
 
-ray.init(num_gpus=0)
+ray.init(num_gpus=0, local_mode=False)
 simulator = Simulator(**conf_params)
 
 model = MLP()
@@ -39,9 +43,9 @@ run_params = {
     "server_optimizer": 'SGD',  # ,server_opt  # server optimizer
     "client_optimizer": 'SGD',  # client optimizer
     "loss": "crossentropy",  # loss function
-    "global_rounds": 400,  # number of global rounds
-    "local_steps": 1,  # number of steps per round
-    "server_lr": 1,
+    "global_rounds": 50,  # number of global rounds
+    "local_steps": 50,  # number of steps per round
+    "server_lr": 1.0,
     "client_lr": 0.1,  # learning rate
 }
 simulator.run(**run_params)

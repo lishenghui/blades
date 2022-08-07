@@ -19,7 +19,7 @@ ray.init()
 
 
 # mnist = MNIST(data_root="/dbfs/data", train_bs=32, num_clients=20)  # built-in federated MNIST dataset
-mnist = MNIST(data_root="./data", train_bs=32, num_clients=20, seed=1)  # built-in federated MNIST dataset
+mnist = MNIST(data_root="./data", train_bs=32, num_clients=20, seed=0)  # built-in federated MNIST dataset
 
 # configuration parameters
 conf_params = {
