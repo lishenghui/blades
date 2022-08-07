@@ -25,7 +25,7 @@ conf_params = {
     "num_byzantine": 5,  # number of byzantine input
     "use_cuda": True,
     # "attack": "noise",  # attack strategy
-    "attack": "fangattackmedian", #"mediantailored",  # attack strategy
+    "attack": "mediantailored", #" fangattackmedian",  # attack strategy
     "attack_kws": {
         # "num_clients": 20,
         "num_byzantine": 8},
