@@ -44,15 +44,16 @@ class CIFAR10(BaseDataset):
             train_bs: Optional[int] = 32,
             iid: Optional[bool] = True,
             alpha: Optional[float] = 0.1,
-            num_clients: Optional[int] = 20
+            num_clients: Optional[int] = 20,
+            seed: Optional[int] = 1,
     ):
-        super(CIFAR10, self).__init__(data_root, train_bs, iid, alpha, num_clients)
+        super(CIFAR10, self).__init__(data_root, train_bs, iid, alpha, num_clients, seed)
     
     def generate_datasets(self, path='./data', iid=True, alpha=0.1, num_clients=20, seed=1):
         train_set = torchvision.datasets.CIFAR10(train=True, download=True, root=path)
         test_set = torchvision.datasets.CIFAR10(train=False, download=True, root=path)
         x_test, y_test = test_set.data, np.array(test_set.targets)
-        x_train, y_train = train_set.dat, np.array(train_set.targets)
+        x_train, y_train = train_set.data, np.array(train_set.targets)
         
         x_train = x_train.astype('float32') / 255.0
         x_train = np.transpose(x_train, (0, 3, 1, 2))
