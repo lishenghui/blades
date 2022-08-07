@@ -13,14 +13,13 @@ from blades.models.cifar10 import CCTNet
 
 args = options
 # if not ray.is_initialized():
-
-ray.init(include_dashboard=False, num_gpus=args.num_gpus)
-# ray.init(include_dashboard=False, num_gpus=args.num_gpus, local_mode=True)
+    # ray.init(include_dashboard=False, num_gpus=args.num_gpus)
+ray.init(address='auto')
 
 if not os.path.exists(options.log_dir):
     os.makedirs(options.log_dir)
 
-cifar10 = CIFAR10(num_clients=20, iid=True)  # built-in federated cifar10 dataset
+cifar10 = CIFAR10(num_clients=options.num_clients, iid=True, seed=3)  # built-in federated cifar10 dataset
 
 # configuration parameters
 conf_args = {
@@ -31,7 +30,7 @@ conf_args = {
     "use_cuda": True,
     "attack": options.attack,  # attack strategy
     "attack_kws": options.attack_args[options.attack],
-    "num_actors": 20,  # number of training actors
+    "num_actors": 1,  # number of training actors
     "gpu_per_actor": 0.19,
     "log_path": options.log_dir,
     "seed": options.seed,  # reproducibility
@@ -40,7 +39,7 @@ conf_args = {
 simulator = Simulator(**conf_args)
 
 model = CCTNet()
-client_opt = torch.optim.Adam(model.parameters(), lr=0.1)
+client_opt = torch.optim.SGD(model.parameters(), lr=0.1)
 client_lr_scheduler = torch.optim.lr_scheduler.MultiStepLR(
     client_opt, milestones=[150, 300, 500], gamma=0.5
 )
@@ -53,8 +52,7 @@ run_args = {
     "global_rounds": options.global_round,  # number of global rounds
     "local_steps": options.local_round,  # number of seps "client_lr": 0.1,  # learning rateteps per round
     "server_lr": 1.0,
-    # "client_lr": 0.1,  # learning rate
-    "validate_interval": 10,
+    "validate_interval": 20,
     "client_lr_scheduler": client_lr_scheduler,
 }
 simulator.run(**run_args)

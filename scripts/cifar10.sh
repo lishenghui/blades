@@ -1,29 +1,25 @@
 #!/bin/bash
 
+pkill -9 ray
 
-cuda=2
+ray start --head --port=6379
+
 for seed in 0
 do
-    for num_byzantine in 5
+    for num_byzantine in 8
     do
-        for attack in "IPM" #"ALIE" "IPM" "LF" "IPM_large" "IPM"  # "ALIE" "IPM" 
+        for attack in "ipm" "signflipping" "labelflipping" "alie" "noise"
         do  
-            for agg in "clustering" #"tm" "krum" "cm" "cp" "rfa" "autogm" "clippedclustering" 
+            for agg in 'trimmedmean' 'median' 'geomed' 'clippedclustering' # 'clustering' 'centeredclipping' 'mean' 'autogm'
             do
-                export CUDA_VISIBLE_DEVICES=$(((cuda)))
-                cuda=$(((cuda + 1) % 4))
-                args="--round 2 --use-cuda --batch_size 32 --seed $seed --agg ${agg} --momentum 0.0 --num_byzantine ${num_byzantine} --attack $attack"
-                # args="--round 50 --use-cuda --batch_size 32 --seed $seed --agg ${agg} --momentum 0 --num_byzantine ${num_byzantine} --attack $attack --fedavg"
+                args="--global_round 600 --use-cuda --batch_size 32 --seed $seed --agg ${agg} --num_byzantine ${num_byzantine} --attack $attack"
                 echo ${args}
                 arg_str="\""
                 for var in ${args}
                     do
                         arg_str="${arg_str}, \"${var}\""ss
                     done
-                # echo ${arg_str}
-                # echo ${cuda}
-                # python main.py ${args}
-                nohup python cifar10-all.py ${args} &
+                nohup python cifar10.py ${args} &
             done
         done
     done

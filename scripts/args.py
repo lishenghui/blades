@@ -19,7 +19,8 @@ def parse_arguments():
     parser.add_argument("--dataset", type=str, default='cifar10', help="Dataset")
     parser.add_argument("--agg", type=str, default='clippedclustering', help="Aggregator.")
     parser.add_argument("--lr", type=float, default=0.1, help="learning rate")
-    parser.add_argument("--num_actors", type=int, default=20)
+    parser.add_argument("--num_actors", type=int, default=1)
+    parser.add_argument("--num_clients", type=int, default=20)
     parser.add_argument("--num_byzantine", type=int, default=8)
     parser.add_argument("--num_gpus", type=int, default=4)
     options = parser.parse_args()
@@ -30,15 +31,22 @@ def parse_arguments():
     
     options.attack_args = {
         'signflipping': {},
+        'noise': {},
+        'labelflipping': {},
         'ipm': {"epsilon": 0.5},
+        # 'ipm': {"epsilon": 100},
+        'alie': {"num_clients": options.num_clients, "num_byzantine": options.num_byzantine},
     }
     
     options.agg_args = {
-        'signflipping': {},
-        'ipm': {"epsilon": 0.5},
-        'trimmedmean': {"nb": options.num_byzantine},
+        'trimmedmean': {"num_byzantine": options.num_byzantine},
+        'median': {},
+        'mean': {},
+        'geomed': {},
+        'autogm': {"lamb": 2.0},
         'clippedclustering': {},
-        # 'clippedclustering': {"tau": 5.0},
+        'clustering': {},
+        'centeredclipping': {},
     }
     
     options.log_dir = (
