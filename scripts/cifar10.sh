@@ -1,32 +1,33 @@
 #!/bin/bash
 
-pkill -9 ray
+# pkill -9 ray
 
 ray start --head --port=6379
 
-for seed in 0
-do
-    for num_byzantine in 8
+run_all_attacks() {
+    for attack in "ipm" "signflipping" "labelflipping" "alie" "noise"
     do
-        for attack in "ipm" "signflipping" "labelflipping" "alie" "noise"
-        do  
-            for agg in 'mean' # 'trimmedmean' 'median' 'geomed' 'clippedclustering' 'clustering' 'centeredclipping' 'mean' 'autogm'
-            do
-                args="--global_round 600 --dataset cifar10 --use-cuda --batch_size 32 --seed $seed --agg ${agg} --num_byzantine ${num_byzantine} --attack $attack"
-                echo ${args}
-                arg_str="\""
-                for var in ${args}
-                    do
-                        arg_str="${arg_str}, \"${var}\""ss
-                    done
-                nohup python cifar10.py ${args} &
-            done
+        for num_byzantine in 5 8
+        do
+            args="--global_round 600 --dataset cifar10 --num_gpus 4 --use-cuda --batch_size 32 --seed 0 --agg $1 --num_byzantine $num_byzantine --attack $attack"
+            echo ${args}
+            arg_str="\""
+            for var in ${args}
+                do
+                    arg_str="${arg_str}, \"${var}\""ss
+                done
+            python cifar10.py ${args}
+            # nohup python mnist.py ${args} &
         done
     done
+   return 10
+}
 
-    # wait for all pids
-    for pid in ${pids[*]}; do
-        wait $pid
-    done
-    unset pids
+export -f run_all_attacks 
+
+
+for agg in 'trimmedmean' 'geomed' 'median' 'clippedclustering' #'mean' # 'trimmedmean' 'median' 'geomed' 'clippedclustering' 'clustering' 'centeredclipping' 'mean' 'autogm'
+do
+    nohup bash -c "run_all_attacks $agg" &
+    # run_all_attacks ${args} 
 done
