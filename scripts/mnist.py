@@ -43,7 +43,8 @@ conf_args = {
 simulator = Simulator(**conf_args)
 
 model = MLP()
-client_opt = torch.optim.SGD(model.parameters(), lr=0.1)
+client_opt = torch.optim.SGD(model.parameters(), lr=1.0)
+# client_opt = torch.optim.SGD(model.parameters(), lr=0.1)
 client_lr_scheduler = torch.optim.lr_scheduler.MultiStepLR(
     client_opt, milestones=[150, 300, 500], gamma=0.5
 )
@@ -55,8 +56,10 @@ run_args = {
     "loss": "crossentropy",  # loss funcstion
     "global_rounds": options.global_round,  # number of global rounds
     "local_steps": options.local_round,  # number of seps "client_lr": 0.1,  # learning rateteps per round
-    "server_lr": 1.0,
+    "server_lr": 0.1,
+    # "server_lr": 1.0,
     "validate_interval": 20,
-    "client_lr_scheduler": client_lr_scheduler,
+    # "client_lr_scheduler": client_lr_scheduler,
+    # "client_lr_scheduler": client_lr_scheduler,
 }
 simulator.run(**run_args)
