@@ -4,7 +4,7 @@ import ray
 import torch
 
 os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
-os.environ["CUDA_VISIBLE_DEVICES"]="1,2,3"
+# os.environ["CUDA_VISIBLE_DEVICES"]="1,2,3"
 
 from args import options
 from blades.simulator import Simulator
@@ -12,11 +12,13 @@ from blades.datasets import MNIST
 from blades.models.mnist import MLP
 
 args = options
-if not ray.is_initialized():
-    print("initializing ray")
-    ray.init(include_dashboard=False, num_gpus=args.num_gpus)
+# if not ray.is_initialized():
+#     print("initializing ray")
+#     ray.init(include_dashboard=False, num_gpus=args.num_gpus)
 # ray.init(include_dashboard=False, num_gpus=args.num_gpus)
-# ray.init(address='auto')
+# else:
+    # ray.init(address='auto')
+ray.init(address='auto')
 
 if not os.path.exists(options.log_dir):
     os.makedirs(options.log_dir)
@@ -33,7 +35,7 @@ conf_args = {
     "attack": options.attack,  # attack strategy
     "attack_kws": options.attack_args[options.attack],
     "num_actors": 5,  # number of training actors
-    "gpu_per_actor": 0.19,
+    "gpu_per_actor": 0.2,
     "log_path": options.log_dir,
     "seed": options.seed,  # reproducibility
 }
