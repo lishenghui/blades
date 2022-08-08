@@ -5,18 +5,18 @@
 ray start --head --port=6379
 
 run_all_attacks() {
-    for attack in "ipm" "signflipping" "labelflipping" "alie" "noise"
+    for attack in "ipm" #"signflipping" "labelflipping" "alie" "noise"
     do
         for num_byzantine in 5 8
         do
-            args="--global_round 600 --dataset cifar10 --num_gpus 4 --use-cuda --batch_size 32 --seed 0 --agg $1 --num_byzantine $num_byzantine --attack $attack"
+            args="--global_round 6000 --local_round 1 --dataset cifar10 --num_gpus 4 --use-cuda --batch_size 32 --seed 0 --agg $1 --num_byzantine $num_byzantine --attack $attack"
             echo ${args}
             arg_str="\""
             for var in ${args}
                 do
                     arg_str="${arg_str}, \"${var}\""ss
                 done
-            python cifar10.py ${args}
+            python cifar10_fedsgd.py ${args}
             # nohup python mnist.py ${args} &
         done
     done
@@ -26,7 +26,7 @@ run_all_attacks() {
 export -f run_all_attacks 
 
 
-for agg in 'trimmedmean' 'geomed' 'median' 'clippedclustering' #'mean' # 'trimmedmean' 'median' 'geomed' 'clippedclustering' 'clustering' 'centeredclipping' 'mean' 'autogm'
+for agg in 'mean' 'geomed' 'median' 'clippedclustering' #'mean' # 'trimmedmean' 'median' 'geomed' 'clippedclustering' 'clustering' 'centeredclipping' 'mean' 'autogm'
 do
     nohup bash -c "run_all_attacks $agg" &
     # run_all_attacks ${args} 
