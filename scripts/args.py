@@ -47,6 +47,7 @@ def parse_arguments():
         'clippedclustering': {},
         'clustering': {},
         'centeredclipping': {},
+        'krum': {"num_clients": options.num_clients, "num_byzantine": options.num_byzantine},
     }
     
     options.log_dir = (
