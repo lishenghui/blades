@@ -60,6 +60,7 @@ def parse_arguments():
                     options.agg] else "")
             + (f"_lr{options.lr}")
             + (f"_bz{options.batch_size}")
+            + (f"_localround{options.local_round}")
             + f"_seed{options.seed}"
     )
     

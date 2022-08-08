@@ -10,9 +10,9 @@ do
     do
         for attack in "ipm" "signflipping" "labelflipping" "alie" "noise"
         do  
-            for agg in 'trimmedmean' 'median' 'geomed' 'clippedclustering' # 'clustering' 'centeredclipping' 'mean' 'autogm'
+            for agg in 'mean' # 'trimmedmean' 'median' 'geomed' 'clippedclustering' 'clustering' 'centeredclipping' 'mean' 'autogm'
             do
-                args="--global_round 600 --use-cuda --batch_size 32 --seed $seed --agg ${agg} --num_byzantine ${num_byzantine} --attack $attack"
+                args="--global_round 600 --dataset cifar10 --use-cuda --batch_size 32 --seed $seed --agg ${agg} --num_byzantine ${num_byzantine} --attack $attack"
                 echo ${args}
                 arg_str="\""
                 for var in ${args}
