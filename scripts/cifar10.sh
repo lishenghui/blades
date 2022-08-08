@@ -9,7 +9,7 @@ run_all_attacks() {
     do
         for num_byzantine in 5 8
         do
-            args="--global_round 600 --dataset mnist --num_gpus 4 --use-cuda --batch_size 32 --seed 0 --agg $1 --num_byzantine $num_byzantine --attack $attack"
+            args="--global_round 600 --dataset cifar10 --num_gpus 4 --use-cuda --batch_size 32 --seed 0 --agg $1 --num_byzantine $num_byzantine --attack $attack"
             echo ${args}
             arg_str="\""
             for var in ${args}
