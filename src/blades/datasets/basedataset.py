@@ -19,6 +19,7 @@ class BaseDataset(ABC):
     def __init__(
             self,
             data_root: str = './data',
+            cache_name: str = "",
             train_bs: Optional[int] = 32,
             iid: Optional[bool] = True,
             alpha: Optional[float] = 0.1,
@@ -26,7 +27,9 @@ class BaseDataset(ABC):
             seed = 1,
     ):
         self.train_bs = train_bs
-        self._data_path = os.path.join(data_root, self.__class__.__name__ + '.obj')
+        if cache_name == "":
+            cache_name = self.__class__.__name__
+        self._data_path = os.path.join(data_root, cache_name + '.obj')
         
         # Meta parameters for data partitioning, for comparison with cache. Regenerate dataset
         # if those parameters are different.

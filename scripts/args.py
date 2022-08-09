@@ -55,6 +55,7 @@ def parse_arguments():
     
     options.log_dir = (
             EXP_DIR
+            + f"_{options.algorithm}"
             + f"/b{options.num_byzantine}"
             + f"_{options.attack}" + (
                 "_" + "_".join([k + str(v) for k, v in options.attack_args[options.attack].items()]) if
