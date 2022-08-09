@@ -44,15 +44,16 @@ class CIFAR10(BaseDataset):
             train_bs: Optional[int] = 32,
             iid: Optional[bool] = True,
             alpha: Optional[float] = 0.1,
-            num_clients: Optional[int] = 20
+            num_clients: Optional[int] = 20,
+            seed: Optional[int] = 1,
     ):
-        super(CIFAR10, self).__init__(data_root, train_bs, iid, alpha, num_clients)
+        super(CIFAR10, self).__init__(data_root, train_bs, iid, alpha, num_clients, seed)
     
     def generate_datasets(self, path='./data', iid=True, alpha=0.1, num_clients=20, seed=1):
         train_set = torchvision.datasets.CIFAR10(train=True, download=True, root=path)
         test_set = torchvision.datasets.CIFAR10(train=False, download=True, root=path)
         x_test, y_test = test_set.data, np.array(test_set.targets)
-        x_train, y_train = train_set.dat, np.array(train_set.targets)
+        x_train, y_train = train_set.data, np.array(train_set.targets)
         
         x_train = x_train.astype('float32') / 255.0
         x_train = np.transpose(x_train, (0, 3, 1, 2))
@@ -89,7 +90,6 @@ class CIFAR10(BaseDataset):
                         [p * (len(idx_j) < N / num_clients) for p, idx_j in zip(proportions, idx_batch)])
                     proportions = proportions / proportions.sum()
                     proportions = (np.cumsum(proportions) * len(idx_k)).astype(int)[:-1]
-                    print(proportions)
                     idx_batch = [idx_j + idx.tolist() for idx_j, idx in zip(idx_batch, np.split(idx_k, proportions))]
                     min_size = min([len(idx_j) for idx_j in idx_batch])
                     proportion_list.append(proportions)
@@ -98,7 +98,7 @@ class CIFAR10(BaseDataset):
                 np.random.shuffle(idx_batch[j])
                 client_dataidx_map[j] = idx_batch[j]
                 x_train_splits.append(x_train[idx_batch[j], :])
-                y_train_splits.append(y_train[idx_batch[j], :])
+                y_train_splits.append(y_train[idx_batch[j]])
         
         test_dataset = {}
         train_dataset = {}

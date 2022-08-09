@@ -451,7 +451,8 @@ class Simulator(object):
                 # client_lr = self.server_opt.param_groups[0]['lr']
                 
                 ret.append(time() - round_start)
+                server_lr = self.server.get_opt().param_groups[0]['lr']
                 self.debug_logger.info(
-                    f"E={global_rounds}; Client learning rate = {client_lr:}; Time cost = {time() - global_start}")
+                    f"E={global_rounds}; Server learning rate = {server_lr:}; Client learning rate = {client_lr:}; Time cost = {time() - global_start}")
             
             return ret

@@ -8,7 +8,10 @@ import torch
 
 from blades.utils import set_random_seed
 from .customdataset import CustomTensorDataset
+import logging
+import os
 
+logger = logging.getLogger(__name__)
 
 class BaseDataset(ABC):
     train_transform = None
@@ -42,7 +45,12 @@ class BaseDataset(ABC):
                 loaded_meta_info  = pickle.load(f)
                 if loaded_meta_info == meta_info:
                     regenerate = False
-                    
+                else:
+                    logger.warning(
+                        "arguments for data partitioning didn't match the cache,"
+                        " datasets will be regenerated using the new setting."
+                    )
+
         if regenerate:
             returns = self.generate_datasets(data_root, iid, alpha, num_clients, seed)
             with open(self._data_path, 'wb') as f:

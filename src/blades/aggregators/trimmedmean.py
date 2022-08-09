@@ -20,8 +20,8 @@ class Trimmedmean(_BaseAggregator):
 
     """
     
-    def __init__(self, nb=5):
-        self.b = nb
+    def __init__(self, num_byzantine=5):
+        self.b = num_byzantine
         super(Trimmedmean, self).__init__()
     
     def __call__(self, inputs: Union[List[BladesClient], List[torch.Tensor], torch.Tensor]):
