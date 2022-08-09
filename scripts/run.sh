@@ -5,9 +5,9 @@
 ray start --head --port=6379
 
 run_all_attacks() {
-    for agg in 'mean' #'trimmedmean' 'geomed' 'median' 'clippedclustering' 'clustering' 'centeredclipping' 'autogm'
+    for agg in 'mean' 'trimmedmean' 'geomed' 'median' 'clippedclustering' 'clustering' 'centeredclipping' 'autogm'
     do
-        for attack in "ipm" #"signflipping" "labelflipping" "alie" "noise"
+        for attack in "ipm" "signflipping" "labelflipping" "alie" "noise"
         do
             for num_byzantine in 5
             do
