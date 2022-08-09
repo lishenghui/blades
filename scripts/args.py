@@ -8,6 +8,7 @@ def parse_arguments():
     parser = argparse.ArgumentParser()
     parser.add_argument("--use-cuda", action="store_true", default=False)
     parser.add_argument("--use_actor", action="store_true", default=False)
+    parser.add_argument("--noniid", action="store_true", default=False)
     parser.add_argument("--seed", type=int, default=1)
     parser.add_argument("--global_round", type=int, default=400)
     parser.add_argument("--local_round", type=int, default=50)
@@ -17,9 +18,11 @@ def parse_arguments():
     parser.add_argument('--metrics_name', help='name for metrics file;', type=str, default='none', required=False)
     parser.add_argument("--attack", type=str, default='signflipping', help="Select attack types.")
     parser.add_argument("--dataset", type=str, default='cifar10', help="Dataset")
+    parser.add_argument("--algorithm", type=str, default='fedavg', help="Optimization algorithm, either 'fedavg' or 'fedsgd'.")
     parser.add_argument("--agg", type=str, default='clippedclustering', help="Aggregator.")
     parser.add_argument("--lr", type=float, default=0.1, help="learning rate")
     parser.add_argument("--num_actors", type=int, default=1)
+    parser.add_argument("--alpha", type=float, default=0.1)
     parser.add_argument("--num_clients", type=int, default=20)
     parser.add_argument("--num_byzantine", type=int, default=8)
     parser.add_argument("--num_gpus", type=int, default=4)
@@ -62,6 +65,7 @@ def parse_arguments():
             + (f"_lr{options.lr}")
             + (f"_bz{options.batch_size}")
             + (f"_localround{options.local_round}")
+            + ("_noniid" if options.noniid else "")
             + f"_seed{options.seed}"
     )
     

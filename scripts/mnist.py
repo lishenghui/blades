@@ -23,7 +23,7 @@ ray.init(address='auto')
 if not os.path.exists(options.log_dir):
     os.makedirs(options.log_dir)
 
-mnist = MNIST(num_clients=options.num_clients, iid=True, seed=0)  # built-in federated mnist dataset
+mnist = MNIST(num_clients=options.num_clients, alpha=0.05, iid=not options.noniid, seed=0)  # built-in federated mnist dataset
 
 # configuration parameters
 conf_args = {

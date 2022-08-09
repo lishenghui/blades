@@ -90,7 +90,6 @@ class CIFAR10(BaseDataset):
                         [p * (len(idx_j) < N / num_clients) for p, idx_j in zip(proportions, idx_batch)])
                     proportions = proportions / proportions.sum()
                     proportions = (np.cumsum(proportions) * len(idx_k)).astype(int)[:-1]
-                    print(proportions)
                     idx_batch = [idx_j + idx.tolist() for idx_j, idx in zip(idx_batch, np.split(idx_k, proportions))]
                     min_size = min([len(idx_j) for idx_j in idx_batch])
                     proportion_list.append(proportions)
@@ -99,7 +98,7 @@ class CIFAR10(BaseDataset):
                 np.random.shuffle(idx_batch[j])
                 client_dataidx_map[j] = idx_batch[j]
                 x_train_splits.append(x_train[idx_batch[j], :])
-                y_train_splits.append(y_train[idx_batch[j], :])
+                y_train_splits.append(y_train[idx_batch[j]])
         
         test_dataset = {}
         train_dataset = {}
