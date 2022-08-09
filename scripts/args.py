@@ -8,6 +8,7 @@ def parse_arguments():
     parser = argparse.ArgumentParser()
     parser.add_argument("--use-cuda", action="store_true", default=False)
     parser.add_argument("--use_actor", action="store_true", default=False)
+    parser.add_argument("--noniid", action="store_true", default=False)
     parser.add_argument("--seed", type=int, default=1)
     parser.add_argument("--global_round", type=int, default=400)
     parser.add_argument("--local_round", type=int, default=50)
@@ -17,9 +18,12 @@ def parse_arguments():
     parser.add_argument('--metrics_name', help='name for metrics file;', type=str, default='none', required=False)
     parser.add_argument("--attack", type=str, default='signflipping', help="Select attack types.")
     parser.add_argument("--dataset", type=str, default='cifar10', help="Dataset")
+    parser.add_argument("--algorithm", type=str, default='fedavg', help="Optimization algorithm, either 'fedavg' or 'fedsgd'.")
     parser.add_argument("--agg", type=str, default='clippedclustering', help="Aggregator.")
     parser.add_argument("--lr", type=float, default=0.1, help="learning rate")
-    parser.add_argument("--num_actors", type=int, default=20)
+    parser.add_argument("--num_actors", type=int, default=1)
+    parser.add_argument("--alpha", type=float, default=0.1)
+    parser.add_argument("--num_clients", type=int, default=20)
     parser.add_argument("--num_byzantine", type=int, default=8)
     parser.add_argument("--num_gpus", type=int, default=4)
     options = parser.parse_args()
@@ -30,15 +34,23 @@ def parse_arguments():
     
     options.attack_args = {
         'signflipping': {},
+        'noise': {},
+        'labelflipping': {},
         'ipm': {"epsilon": 0.5},
+        # 'ipm': {"epsilon": 100},
+        'alie': {"num_clients": options.num_clients, "num_byzantine": options.num_byzantine},
     }
     
     options.agg_args = {
-        'signflipping': {},
-        'ipm': {"epsilon": 0.5},
-        'trimmedmean': {"nb": options.num_byzantine},
+        'trimmedmean': {"num_byzantine": options.num_byzantine},
+        'median': {},
+        'mean': {},
+        'geomed': {},
+        'autogm': {"lamb": 2.0},
         'clippedclustering': {},
-        # 'clippedclustering': {"tau": 5.0},
+        'clustering': {},
+        'centeredclipping': {},
+        'krum': {"num_clients": options.num_clients, "num_byzantine": options.num_byzantine},
     }
     
     options.log_dir = (
@@ -52,6 +64,8 @@ def parse_arguments():
                     options.agg] else "")
             + (f"_lr{options.lr}")
             + (f"_bz{options.batch_size}")
+            + (f"_localround{options.local_round}")
+            + ("_noniid" if options.noniid else "")
             + f"_seed{options.seed}"
     )
     
