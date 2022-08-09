@@ -19,7 +19,7 @@ ray.init(address='auto')
 if not os.path.exists(options.log_dir):
     os.makedirs(options.log_dir)
 
-cifar10 = CIFAR10(num_clients=options.num_clients, iid=True, seed=0)  # built-in federated cifar10 dataset
+cifar10 = CIFAR10(num_clients=options.num_clients, iid=not options.noniid, seed=0)  # built-in federated cifar10 dataset
 
 # configuration parameters
 conf_args = {
