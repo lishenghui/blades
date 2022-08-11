@@ -40,7 +40,7 @@ conf_args = {
     "use_cuda": True,
     "attack": options.attack,  # attack strategy
     "attack_kws": options.attack_args[options.attack],
-    "num_actors": 5,  # number of training actors
+    "num_actors": 2,  # number of training actors
     "gpu_per_actor": 0.2,
     "log_path": options.log_dir,
     "seed": options.seed,  # reproducibility

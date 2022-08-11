@@ -9,6 +9,7 @@ def parse_arguments():
     parser.add_argument("--use-cuda", action="store_true", default=False)
     parser.add_argument("--use_actor", action="store_true", default=False)
     parser.add_argument("--noniid", action="store_true", default=False)
+    parser.add_argument("--ipmlarge", action="store_true", default=False)
     parser.add_argument("--seed", type=int, default=1)
     parser.add_argument("--global_round", type=int, default=400)
     parser.add_argument("--local_round", type=int, default=50)
@@ -36,8 +37,7 @@ def parse_arguments():
         'signflipping': {},
         'noise': {},
         'labelflipping': {},
-        'ipm': {"epsilon": 0.5},
-        # 'ipm': {"epsilon": 100},
+        'ipm': {"epsilon": 100 if options.ipmlarge else 0.5},
         'alie': {"num_clients": options.num_clients, "num_byzantine": options.num_byzantine},
     }
     
