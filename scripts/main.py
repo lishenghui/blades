@@ -37,11 +37,11 @@ conf_args = {
     "aggregator": options.agg,  # defense: robust aggregation
     "aggregator_kws": options.agg_args[options.agg],
     "num_byzantine": options.num_byzantine,  # number of byzantine input
-    "use_cuda": True,
+    "use_cuda": False,
     "attack": options.attack,  # attack strategy
     "attack_kws": options.attack_args[options.attack],
     "num_actors": 2,  # number of training actors
-    "gpu_per_actor": 0.2,
+    # "gpu_per_actor": 0.2,
     "log_path": options.log_dir,
     "seed": options.seed,  # reproducibility
 }
