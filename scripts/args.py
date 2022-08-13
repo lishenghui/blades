@@ -9,6 +9,7 @@ def parse_arguments():
     parser.add_argument("--use-cuda", action="store_true", default=False)
     parser.add_argument("--use_actor", action="store_true", default=False)
     parser.add_argument("--noniid", action="store_true", default=False)
+    parser.add_argument("--ipmlarge", action="store_true", default=False)
     parser.add_argument("--seed", type=int, default=1)
     parser.add_argument("--global_round", type=int, default=400)
     parser.add_argument("--local_round", type=int, default=50)
@@ -36,8 +37,7 @@ def parse_arguments():
         'signflipping': {},
         'noise': {},
         'labelflipping': {},
-        'ipm': {"epsilon": 0.5},
-        # 'ipm': {"epsilon": 100},
+        'ipm': {"epsilon": 100 if options.ipmlarge else 0.5},
         'alie': {"num_clients": options.num_clients, "num_byzantine": options.num_byzantine},
     }
     
@@ -47,7 +47,7 @@ def parse_arguments():
         'mean': {},
         'geomed': {},
         'autogm': {"lamb": 2.0},
-        'clippedclustering': {},
+        'clippedclustering': {"agg": "median"},
         'clustering': {},
         'centeredclipping': {},
         'krum': {"num_clients": options.num_clients, "num_byzantine": options.num_byzantine},
@@ -55,6 +55,7 @@ def parse_arguments():
     
     options.log_dir = (
             EXP_DIR
+            + f"_{options.algorithm}"
             + f"/b{options.num_byzantine}"
             + f"_{options.attack}" + (
                 "_" + "_".join([k + str(v) for k, v in options.attack_args[options.attack].items()]) if

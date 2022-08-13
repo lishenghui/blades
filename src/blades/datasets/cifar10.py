@@ -41,13 +41,14 @@ class CIFAR10(BaseDataset):
     def __init__(
             self,
             data_root: str = './data',
+            cache_name: str = "",
             train_bs: Optional[int] = 32,
             iid: Optional[bool] = True,
             alpha: Optional[float] = 0.1,
             num_clients: Optional[int] = 20,
             seed: Optional[int] = 1,
     ):
-        super(CIFAR10, self).__init__(data_root, train_bs, iid, alpha, num_clients, seed)
+        super(CIFAR10, self).__init__(data_root, cache_name, train_bs, iid, alpha, num_clients, seed)
     
     def generate_datasets(self, path='./data', iid=True, alpha=0.1, num_clients=20, seed=1):
         train_set = torchvision.datasets.CIFAR10(train=True, download=True, root=path)
