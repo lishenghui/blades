@@ -9,7 +9,8 @@ from scipy import spatial
 from sklearn.cluster import AgglomerativeClustering
 
 from blades.client import BladesClient
-from .mean import _BaseAggregator
+from .mean import _BaseAggregator, Mean
+from .median import Median
 
 file_dir = os.path.dirname(__file__)
 sys.path.append(file_dir)
@@ -27,20 +28,25 @@ class Clippedclustering(_BaseAggregator):
         tau (float): threshold of clipping norm. If it is not given, updates are clipped according the median of historical norm.
     """
     
-    def __init__(self, tau=None) -> None:
+    def __init__(self, agg='mean', max_tau=1e5) -> None:
         super(Clippedclustering, self).__init__()
-        self.tau = tau
+        self.tau = max_tau
         self.l2norm_his = []
+        if agg == 'mean':
+            self.agg = Mean()
+        elif agg == 'median':
+            self.agg = Median()
+        else:
+            raise NotImplementedError(f"{agg} is not supported yet.")
     
     def __call__(self, inputs: Union[List[BladesClient], List[torch.Tensor], torch.Tensor]):
         updates = self._get_updates(inputs)
         l2norms = [torch.norm(update).item() for update in updates]
         self.l2norm_his.extend(l2norms)
-        if self.tau:
-            threshold = self.tau
-        else:
-            threshold = np.median(self.l2norm_his)
+        threshold = np.median(self.l2norm_his)
+        threshold = min(threshold, self.tau)
         
+        print(threshold, l2norms)
         for idx, l2 in enumerate(l2norms):
             if l2 > threshold:
                 updates[idx] = torch_utils.clip_tensor_norm_(updates[idx], threshold)
@@ -62,5 +68,6 @@ class Clippedclustering(_BaseAggregator):
         clustering.fit(dis_max)
 
         flag = 1 if np.sum(clustering.labels_) > num // 2 else 0
-        values = torch.vstack(list(model for model, label in zip(updates, clustering.labels_) if label == flag)).mean( dim=0)
+        # values = torch.vstack(list(model for model, label in zip(updates, clustering.labels_) if label == flag)).mean( dim=0)
+        values = self.agg(torch.vstack(list(model for model, label in zip(updates, clustering.labels_) if label == flag)))
         return values

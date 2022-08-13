@@ -21,11 +21,12 @@ ray.init(address='auto')
 if not os.path.exists(options.log_dir):
     os.makedirs(options.log_dir)
 
+cache_name = options.dataset + "_" + options.algorithm + ("_noniid" if not options.noniid else "") + f"_{str(options.num_clients)}_{str(options.seed)}"
 if options.dataset == 'cifar10':
-    dataset = CIFAR10(num_clients=options.num_clients, iid=not options.noniid, seed=0)  # built-in federated cifar10 dataset
+    dataset = CIFAR10(cache_name=cache_name, num_clients=options.num_clients, iid=not options.noniid, seed=0)  # built-in federated cifar10 dataset
     model = CCTNet()
 elif options.dataset == 'mnist':
-    dataset = MNIST(num_clients=options.num_clients, iid=not options.noniid, seed=0)  # built-in federated cifar10 dataset
+    dataset = MNIST(cache_name=cache_name, num_clients=options.num_clients, iid=not options.noniid, seed=0)  # built-in federated cifar10 dataset
     model = MLP()
 else:
     raise NotImplementedError
@@ -36,11 +37,11 @@ conf_args = {
     "aggregator": options.agg,  # defense: robust aggregation
     "aggregator_kws": options.agg_args[options.agg],
     "num_byzantine": options.num_byzantine,  # number of byzantine input
-    "use_cuda": True,
+    "use_cuda": False,
     "attack": options.attack,  # attack strategy
     "attack_kws": options.attack_args[options.attack],
-    "num_actors": 5,  # number of training actors
-    "gpu_per_actor": 0.2,
+    "num_actors": 1,  # number of training actors
+    "gpu_per_actor": 0.25,
     "log_path": options.log_dir,
     "seed": options.seed,  # reproducibility
 }
@@ -48,7 +49,7 @@ conf_args = {
 simulator = Simulator(**conf_args)
 
 if options.algorithm == 'fedsgd':
-    opt = torch.optim.SGD(model.parameters(), lr=0.1)
+    opt = torch.optim.SGD(model.parameters(), lr=0.1, momentum=0.9)
     lr_scheduler = torch.optim.lr_scheduler.MultiStepLR(
         opt, milestones=[2000, 3000, 5000], gamma=0.5
     )
@@ -72,12 +73,7 @@ if options.algorithm == 'fedsgd':
 elif options.algorithm == 'fedavg':
     opt = torch.optim.SGD(model.parameters(), lr=0.1)
     lr_scheduler = torch.optim.lr_scheduler.MultiStepLR(
-        opt, milestones=[2000, 3000, 5000], gamma=0.5
-    )
-
-    opt = torch.optim.SGD(model.parameters(), lr=0.1)
-    lr_scheduler = torch.optim.lr_scheduler.MultiStepLR(
-        opt, milestones=[150, 300, 500], gamma=0.5
+        opt, milestones=[200, 300, 500], gamma=0.5
     )
     # runtime parameters
     run_args = {
