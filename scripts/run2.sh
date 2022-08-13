@@ -23,10 +23,8 @@ run_all_attacks1() {
 export -f run_all_attacks1
 
 
-dataset='mnist'
-nohup bash -c "run_all_attacks1 $dataset fedavg 600 50 " &
-nohup bash -c "run_all_attacks1 $dataset fedavg 600 50 --noniid " &
-# sleep 5
+dataset='cifar10'
+
 nohup bash -c "run_all_attacks1 $dataset fedsgd 6000 1 " &
 nohup bash -c "run_all_attacks1 $dataset fedsgd 6000 1 --noniid" &
 
@@ -49,9 +47,7 @@ run_all_attacks2() {
 export -f run_all_attacks2
 
 
-dataset='mnist'
-nohup bash -c "run_all_attacks2 $dataset fedavg 600 50 " &
-nohup bash -c "run_all_attacks2 $dataset fedavg 600 50 --noniid " &
-# sleep 5
+
+
 nohup bash -c "run_all_attacks2 $dataset fedsgd 6000 1 " &
 nohup bash -c "run_all_attacks2 $dataset fedsgd 6000 1 --noniid" &

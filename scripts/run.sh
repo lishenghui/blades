@@ -5,15 +5,16 @@
 ray start --head --port=6379
 
 run_all_attacks() {
-    for agg in 'krum' 'median' 'clippedclustering' 'trimmedmean' 'clustering' 'centeredclipping' 'mean' 'geomed' 'autogm'
+    for agg in 'mean' 'geomed' 'autogm' 'krum' 'median' 'clippedclustering' 'clustering' 'centeredclipping' 
     do
-        for attack in "ipm" #"noise" "signflipping" "labelflipping" "alie" 
+        for attack in  "ipm"  #"signflipping" "noise" "ipm" "alie" 
         do
             for num_byzantine in 0
             do
-                args="--dataset $1 --algorithm $2 --ipmlarge --global_round $3 --local_round $4 $5 --num_gpus 4 --use-cuda --batch_size 32 --seed 0 --agg $agg --num_byzantine $num_byzantine --attack $attack"
+                args="--dataset $1 --algorithm $2 --global_round $3 --local_round $4 $5 --num_gpus 4 --use-cuda --batch_size 32 --seed 0 --agg $agg --num_byzantine $num_byzantine --attack $attack"
                 echo ${args}
-                python main.py ${args}
+                nohup python main.py ${args} &
+                # python main.py ${args}
             done
         done
     done
@@ -23,9 +24,8 @@ run_all_attacks() {
 export -f run_all_attacks 
 
 
-dataset='mnist'
-nohup bash -c "run_all_attacks $dataset fedavg 600 50 " &
-nohup bash -c "run_all_attacks $dataset fedavg 600 50 --noniid " &
-# sleep 5
+dataset='cifar10'
+# nohup bash -c "run_all_attacks $dataset fedsgd 6000 1 " &
 nohup bash -c "run_all_attacks $dataset fedsgd 6000 1 " &
+# run_all_attacks $dataset fedsgd 6000 1
 nohup bash -c "run_all_attacks $dataset fedsgd 6000 1 --noniid" &

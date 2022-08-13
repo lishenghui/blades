@@ -40,8 +40,8 @@ conf_args = {
     "use_cuda": True,
     "attack": options.attack,  # attack strategy
     "attack_kws": options.attack_args[options.attack],
-    "num_actors": 2,  # number of training actors
-    "gpu_per_actor": 0.2,
+    "num_actors": 1,  # number of training actors
+    "gpu_per_actor": 0.25,
     "log_path": options.log_dir,
     "seed": options.seed,  # reproducibility
 }
@@ -49,10 +49,10 @@ conf_args = {
 simulator = Simulator(**conf_args)
 
 if options.algorithm == 'fedsgd':
-    opt = torch.optim.SGD(model.parameters(), lr=0.1)
-    # lr_scheduler = torch.optim.lr_scheduler.MultiStepLR(
-    #     opt, milestones=[2000, 3000, 5000], gamma=0.5
-    # )
+    opt = torch.optim.SGD(model.parameters(), lr=0.1, momentum=0.9)
+    lr_scheduler = torch.optim.lr_scheduler.MultiStepLR(
+        opt, milestones=[2000, 3000, 5000], gamma=0.5
+    )
 
     assert options.local_round == 1, f"fedsgd requires that only one SGD is taken."
 
@@ -66,7 +66,7 @@ if options.algorithm == 'fedsgd':
         "local_steps": options.local_round,  # number of seps "client_lr": 0.1,  # learning rateteps per round
         "client_lr": 1.0,
         "validate_interval": 20,
-        # "server_lr_scheduler": lr_scheduler,
+        "server_lr_scheduler": lr_scheduler,
     }
 
 
