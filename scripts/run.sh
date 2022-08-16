@@ -5,9 +5,9 @@
 ray start --head --port=6379
 
 run_all_attacks() {
-    for agg in 'mean' 'geomed' 'autogm' 'krum' 'median' 'clippedclustering' 'clustering' 'centeredclipping' 
+    for agg in 'clippedclustering' #'mean' 'geomed' 'autogm' 'krum' 'median' 'clustering' 'centeredclipping' 
     do
-        for attack in  "ipm"  #"signflipping" "noise" "ipm" "alie" 
+        for attack in  "noise"  #"signflipping" "noise" "ipm" "alie" 
         do
             for num_byzantine in 0
             do
@@ -26,6 +26,6 @@ export -f run_all_attacks
 
 dataset='cifar10'
 # nohup bash -c "run_all_attacks $dataset fedsgd 6000 1 " &
-nohup bash -c "run_all_attacks $dataset fedsgd 6000 1 " &
+nohup bash -c "run_all_attacks $dataset fedsgd 6000 1" &
 # run_all_attacks $dataset fedsgd 6000 1
-nohup bash -c "run_all_attacks $dataset fedsgd 6000 1 --noniid" &
+# nohup bash -c "run_all_attacks $dataset fedsgd 6000 1 --noniid" &
