@@ -76,7 +76,7 @@ elif options.algorithm == 'fedavg':
     lr_scheduler = torch.optim.lr_scheduler.MultiStepLR(
         opt, milestones=[options.global_round / 3, options.global_round / 2, 2 * options.global_round / 3], gamma=0.5
     )
-    server_opt = torch.optim.SGD(model.parameters(), lr=1.0, momentum=0.9)
+    server_opt = torch.optim.SGD(model.parameters(), lr=1.0)
     # lr_scheduler = torch.optim.lr_scheduler.MultiStepLR(
     #     opt, milestones=[200, 300, 500], gamma=0.5
     # )
