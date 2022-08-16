@@ -1,11 +1,11 @@
 #!/bin/bash
 
 # pkill -9 ray
-
+export CUDA_VISIBLE_DEVICES=1,2,3
 ray start --head --port=6379
 
 run_all_aggs() {
-    for attack in "noise" "ipm" "signflipping" "labelflipping" "alie" 
+    for attack in "attackclippedclustering" #"noise" "signflipping" "labelflipping" "alie" 
     do
         for num_byzantine in 5 #1 3 5 7 9
         do
@@ -23,8 +23,9 @@ export -f run_all_aggs
 
 dataset='mnist'
 
-for agg in 'clippedclustering' 'centeredclipping' 'mean' 'trimmedmean' 'krum' 'median' 'clustering' 'geomed' 'autogm'
+for agg in 'clippedclustering' #'centeredclipping' 'mean' 'trimmedmean' 'krum' 'median' 'clustering' 'geomed' 'autogm'
 do 
-    nohup bash -c "run_all_aggs $dataset fedavg 6000 1 $agg" &
+    run_all_aggs $dataset fedavg 6000 1 $agg
+    # nohup bash -c "run_all_aggs $dataset fedavg 6000 1 $agg" &
 done
 
