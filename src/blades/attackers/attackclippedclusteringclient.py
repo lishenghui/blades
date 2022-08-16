@@ -1,57 +1,138 @@
-from typing import Optional
-
 import torch
 import numpy as np
 from blades.client import ByzantineClient
-
-
-class Attackclippedclusteringclient(ByzantineClient):
-    r"""Uploads random noise as local update. The noise is drawn from a
-    ``normal`` distribution.  The ``means`` and ``standard deviation`` are shared among all drawn elements.
-
-    :param mean: the mean for all distributions
-    :param std: the standard deviation for all distributions
+from blades.aggregators.clippedclustering import Clippedclustering
+from sklearn.cluster import AgglomerativeClustering
+from numpy import inf
+from scipy import spatial
+from blades.utils import torch_utils
+class AttackclippedclusteringClient(ByzantineClient):
+    r"""
     """
     
-    def __init__(self, num_byzantine: int, dev_type='std', *args, **kwargs):
+    def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.dev_type = dev_type
-        self.num_byzantine = num_byzantine
+        
+        
+        
+        
+
+class AttackclippedclusteringAdversary():
+    def __int__(self):
+        self.agg = Clippedclustering()
+
+    def chain_attack(self, simulator):
+        benign_update = []
+        for w in simulator.get_clients():
+            if not w.is_byzantine():
+                benign_update.append(w.get_update())
+        benign_update = torch.stack(benign_update, 0)
+        benign_mean = benign_update.mean(dim=0).cpu().detach().numpy()
     
+        np_models = benign_update.cpu().detach().numpy()
+    
+        num = len(benign_update)
+        dis_max = np.zeros((num, num))
+        for i in range(num):
+            for j in range(num):
+                if i == j:
+                    dis_max[i, j] = 0
+                else:
+                    dis_max[i, j] = spatial.distance.cosine(np_models[i, :], np_models[j, :])
+        dis_max[dis_max == -inf] = 0
+        dis_max[dis_max == inf] = 2
+        dis_max[np.isnan(dis_max)] = 2
+        clustering = AgglomerativeClustering(affinity='precomputed', linkage='complete', n_clusters=2)
+        clustering.fit(dis_max)
+    
+        dis_cross = inf
+        for idx_i, label_i in enumerate(clustering.labels_):
+            for idx_j, label_j in enumerate(clustering.labels_):
+                if idx_j == idx_i:
+                    continue
+                dis = spatial.distance.cosine(np_models[idx_i, :], np_models[idx_j, :])
+                dis_cross = min(dis_cross, dis)
+    
+        theta_cross = np.arccos(1 - dis_cross) - 0.1
+        # theta_cross = 0
+        dis2mean = [spatial.distance.cosine(benign_update, benign_mean) for benign_update in np_models]
+        idx_max_dis = np.argmax(dis2mean)
+        theta = np.arccos(1 - dis2mean[idx_max_dis])
+        mal_update = benign_update[idx_max_dis] / torch.norm(benign_update[idx_max_dis])
+        print(dis_cross)
+        for w in simulator.get_clients():
+            if w.is_byzantine():
+                if theta + theta_cross >= np.pi:
+                    mal_update = -benign_update.mean(dim=0)
+                    w.save_update(mal_update)
+                else:
+                    a = (np.cos(theta + theta_cross - 1e-4) - np.sin(theta + theta_cross - 1e-4) / np.tan(theta))
+                    b = (np.cos(theta_cross - 1e-4) + np.sin(theta_cross - 1e-4) / np.tan(theta))
+                    mal_update0 = a * benign_update.mean(dim=0) / torch.norm(benign_update.mean(dim=0)) + b * mal_update
+                    dis = spatial.distance.cosine(mal_update0.cpu().detach().numpy(), mal_update.cpu().detach().numpy())
+                    mal_update = mal_update0
+                    theta = theta + theta_cross - 1e-4
+                    w.save_update(mal_update)
+        return
+
     def omniscient_callback(self, simulator):
         benign_update = []
         for w in simulator.get_clients():
             if not w.is_byzantine():
                 benign_update.append(w.get_update())
         benign_update = torch.stack(benign_update, 0)
-        agg_grads = torch.mean(benign_update, 0)
-        deviation = torch.sign(agg_grads)
-        b = 2
-        max_vector = torch.max(benign_update, 0)[0]
-        min_vector = torch.min(benign_update, 0)[0]
+        benign_mean = benign_update.mean(dim=0).cpu().detach().numpy()
     
-        max_ = (max_vector > 0).type(torch.FloatTensor)#
-        min_ = (min_vector < 0).type(torch.FloatTensor)#
+        np_models = benign_update.cpu().detach().numpy()
     
-        max_[max_ == 1] = b
-        max_[max_ == 0] = 1 / b
-        min_[min_ == 1] = b
-        min_[min_ == 0] = 1 / b
-    
-        max_range = torch.cat((max_vector[:, None], (max_vector * max_)[:, None]), dim=1)
-        min_range = torch.cat(((min_vector * min_)[:, None], min_vector[:, None]), dim=1)
-    
-        rand = torch.from_numpy(np.random.uniform(0, 1, [len(deviation), self.num_byzantine])).type(torch.FloatTensor)
-    
-        max_rand = torch.stack([max_range[:, 0]] * rand.shape[1]).T + rand * torch.stack(
-            [max_range[:, 1] - max_range[:, 0]] * rand.shape[1]).T
-        min_rand = torch.stack([min_range[:, 0]] * rand.shape[1]).T + rand * torch.stack(
-            [min_range[:, 1] - min_range[:, 0]] * rand.shape[1]).T
-    
-        mal_vec = (torch.stack(
-            [(deviation > 0).type(torch.FloatTensor)] * max_rand.shape[1]).T * max_rand + torch.stack(
-            [(deviation > 0).type(torch.FloatTensor)] * min_rand.shape[1]).T * min_rand).T
+        num = len(benign_update)
+        dis_max = np.zeros((num, num))
+        for i in range(num):
+            for j in range(num):
+                if i == j:
+                    dis_max[i, j] = 0
+                else:
+                    dis_max[i, j] = spatial.distance.cosine(np_models[i, :], np_models[j, :])
+        dis_max[dis_max == -inf] = 0
+        dis_max[dis_max == inf] = 2
+        dis_max[np.isnan(dis_max)] = 2
+        clustering = AgglomerativeClustering(affinity='precomputed', linkage='average', n_clusters=2)
+        clustering.fit(dis_max)
+
+        flag = 1 if np.sum(clustering.labels_) > num // 2 else 0
+        # values = torch.vstack(list(model for model, label in zip(updates, clustering.labels_) if label == flag)).mean( dim=0)
+        larger_group = torch.vstack(list(model / torch.norm(model) for model, label in zip(benign_update, clustering.labels_) if label == flag))
+        center_point = torch.sum(larger_group, dim=0)
         
-        self._state['saved_update'] = mal_vec[0]
-
-
+        
+        dis_cross = 0
+        dis_size = 0
+        for i in range(len(clustering.labels_)):
+            for j in range(i+1, len(clustering.labels_)):
+                if clustering.labels_[i] != clustering.labels_[j]:
+                    dis = spatial.distance.cosine(np_models[i, :], np_models[j, :])
+                    dis_cross += dis
+                    dis_size += 1
+        
+        dis_avg =  dis_cross / dis_size
+        threshold = min(dis_size * (1 - dis_avg) / torch.norm(center_point), 1)
+        # max_dis = np.arccos(1 - dis_cross / dis_size) * 15 / torch.norm(center_point)
+        theta_cross = np.arccos(threshold)
+        # theta_cross = 0
+        dis2mean = [spatial.distance.cosine(benign_update, benign_mean) for benign_update in np_models]
+        idx_max_dis = np.argmin(dis2mean)
+        # theta = np.arccos(1 - dis2mean[idx_max_dis])
+        theta = np.arccos(1 - spatial.distance.cosine(center_point, benign_mean))
+        mal_update = center_point / torch.norm(center_point)
+        print(dis_cross)
+        for w in simulator.get_clients():
+            if w.is_byzantine():
+                if theta + theta_cross >= np.pi:
+                    mal_update = -benign_update.mean(dim=0)
+                    w.save_update(mal_update)
+                else:
+                    a = (np.cos(theta + theta_cross - 1e-4) - np.sin(theta + theta_cross - 1e-4) / np.tan(theta))
+                    b = (np.cos(theta_cross - 1e-4) + np.sin(theta_cross - 1e-4) / np.tan(theta))
+                    mal_update0 = a * benign_update.mean(dim=0) / torch.norm(benign_update.mean(dim=0)) + b * mal_update
+                    w.save_update(mal_update0 * 5.0)
+        return

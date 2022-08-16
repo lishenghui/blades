@@ -6,7 +6,7 @@ from typing import Optional
 import numpy as np
 import torch
 
-from blades.utils import set_random_seed
+from blades.utils.utils import set_random_seed
 from .customdataset import CustomTensorDataset
 import logging
 import os
