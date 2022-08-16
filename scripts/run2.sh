@@ -21,9 +21,9 @@ run_all_aggs() {
 export -f run_all_aggs 
 
 
-dataset='cifar10'
+dataset='mnist'
 
-for agg in 'mean' 'trimmedmean' 'krum' 'median' 'clippedclustering' 'clustering' 'centeredclipping' 'geomed' 'autogm'
+for agg in 'clippedclustering' 'centeredclipping' 'mean' 'trimmedmean' 'krum' 'median' 'clustering' 'geomed' 'autogm'
 do 
     nohup bash -c "run_all_aggs $dataset fedavg 6000 1 $agg" &
 done
