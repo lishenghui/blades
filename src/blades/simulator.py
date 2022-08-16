@@ -277,7 +277,7 @@ class Simulator(object):
         aggregated = self.aggregator(update)
         self.server.apply_update(aggregated)
         
-        self.log_variance(epoch, update)
+        # self.log_variance(epoch, update)
     
     def test_actor(self, global_round, batch_size):
         """Evaluates the global model using test set.
@@ -307,16 +307,23 @@ class Simulator(object):
         return loss, top1
     
     def log_variance(self, cur_round, update):
-        var_avg = torch.mean(torch.var(torch.vstack(update), dim=0, unbiased=False)).item()
-        norm = torch.norm(torch.var(torch.vstack(update), dim=0, unbiased=False)).item()
-        avg_norm = torch.mean(torch.var(torch.vstack(update), dim=0, unbiased=False) / (
-            torch.mean(torch.vstack(update) ** 2, dim=0))).item()
+        updates = []
+        for client in self._clients.values():
+            if not client.is_byzantine():
+                updates.append(client.get_update())
+        mean_update = torch.mean(torch.vstack(updates), dim=0)
+        var_avg = torch.mean(torch.var(torch.vstack(updates), dim=0, unbiased=False)).item()
+        norm = torch.norm(torch.var(torch.vstack(updates), dim=0, unbiased=False)).item()
+        avg_norm = torch.norm(mean_update)
+        var_norm = torch.sqrt(torch.mean(torch.tensor([torch.norm(model_update - mean_update) ** 2 for model_update in updates])))
+        
         r = {
             "_meta": {"type": "variance"},
             "Round": cur_round,
             "avg": var_avg,
             "norm": norm,
             "avg_norm": avg_norm,
+            "VN_ratio": var_norm / avg_norm,
         }
         # Output to file
         self.json_logger.info(r)

@@ -64,7 +64,7 @@ class Clippedclustering(_BaseAggregator):
         dis_max[dis_max == -inf] = 0
         dis_max[dis_max == inf] = 2
         dis_max[np.isnan(dis_max)] = 2
-        clustering = AgglomerativeClustering(affinity='precomputed', linkage='complete', n_clusters=2)
+        clustering = AgglomerativeClustering(affinity='precomputed', linkage='average', n_clusters=2)
         clustering.fit(dis_max)
 
         flag = 1 if np.sum(clustering.labels_) > num // 2 else 0
