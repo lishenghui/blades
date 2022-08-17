@@ -333,6 +333,10 @@ class Simulator(object):
             "avg_norm": avg_norm,
             "VN_ratio": var_norm / avg_norm,
         }
+
+        # Output to file
+        self.json_logger.info(r)
+        
     
     def log_validate(self, metrics):
         top1 = np.average([metric['top1'] for metric in metrics], weights=[metric['Length'] for metric in metrics])
