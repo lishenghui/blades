@@ -23,10 +23,10 @@ if not os.path.exists(options.log_dir):
 
 cache_name = options.dataset + "_" + options.algorithm + ("_noniid" if not options.noniid else "") + f"_{str(options.num_clients)}_{str(options.seed)}"
 if options.dataset == 'cifar10':
-    dataset = CIFAR10(cache_name=cache_name, num_clients=options.num_clients, iid=not options.noniid, seed=0)  # built-in federated cifar10 dataset
+    dataset = CIFAR10(cache_name=cache_name, train_bs=options.batch_size, num_clients=options.num_clients, iid=not options.noniid, seed=0)  # built-in federated cifar10 dataset
     model = CCTNet()
 elif options.dataset == 'mnist':
-    dataset = MNIST(cache_name=cache_name, num_clients=options.num_clients, iid=not options.noniid, seed=0)  # built-in federated cifar10 dataset
+    dataset = MNIST(cache_name=cache_name, train_bs=options.batch_size, num_clients=options.num_clients, iid=not options.noniid, seed=0)  # built-in federated cifar10 dataset
     model = MLP()
 else:
     raise NotImplementedError
@@ -41,7 +41,7 @@ conf_args = {
     "attack": options.attack,  # attack strategy
     "attack_kws": options.attack_args[options.attack],
     "num_actors": 1,  # number of training actors
-    "gpu_per_actor": 0.15,
+    "gpu_per_actor": 0.2,
     "log_path": options.log_dir,
     "seed": options.seed,  # reproducibility
 }
@@ -76,7 +76,7 @@ elif options.algorithm == 'fedavg':
     lr_scheduler = torch.optim.lr_scheduler.MultiStepLR(
         opt, milestones=[options.global_round / 3, options.global_round / 2, 2 * options.global_round / 3], gamma=0.5
     )
-    server_opt = torch.optim.SGD(model.parameters(), lr=1.0, momentum=0.9)
+    server_opt = torch.optim.SGD(model.parameters(), lr=1.0)
     # lr_scheduler = torch.optim.lr_scheduler.MultiStepLR(
     #     opt, milestones=[200, 300, 500], gamma=0.5
     # )
