@@ -15,7 +15,7 @@ run_all_attacks() {
         do
             for num_byzantine in 5
             do
-                args="--dataset $1 --algorithm $2 --global_round $3 --local_round $4 $5 --num_gpus 4 --use-cuda --batch_size 32 --seed 0 --agg $agg --num_byzantine $num_byzantine --attack $attack"
+                args="--dataset $1 --algorithm $2 --global_round $3 --local_round $4 $5 --num_gpus 4 --use-cuda --batch_size 64 --seed 0 --agg $agg --num_byzantine $num_byzantine --attack $attack"
                 echo ${args}
                 # nohup python main.py ${args} &
                 python main.py ${args}
