@@ -25,7 +25,7 @@ dataset='mnist'
 
 for agg in 'clippedclustering' 'centeredclipping' 'mean' 'trimmedmean' 'krum' 'median' 'clustering' 'geomed' 'autogm'
 do 
-    nohup bash -c "run_all_aggs $dataset fedavg 6000 1 $agg" &
-    nohup bash -c "run_all_aggs $dataset fedavg 6000 1 $agg" &
+    nohup bash -c "run_all_aggs $dataset fedsgd 6000 1 $agg" &
+    nohup bash -c "run_all_aggs $dataset fedsgd 6000 1 $agg" &
 done
 
