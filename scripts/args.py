@@ -35,7 +35,7 @@ def parse_arguments():
     
     options.attack_args = {
         'signflipping': {},
-        'noise': {},
+        'noise': {"std": 0.1},
         'labelflipping': {},
         'attackclippedclustering': {},
         'ipm': {"epsilon": 100 if options.ipmlarge else 0.5},
