@@ -42,7 +42,7 @@ class AttackclippedclusteringAdversary():
         dis_max[dis_max == -inf] = 0
         dis_max[dis_max == inf] = 2
         dis_max[np.isnan(dis_max)] = 2
-        clustering = AgglomerativeClustering(affinity='precomputed', linkage='complete', n_clusters=2)
+        clustering = AgglomerativeClustering(affinity='precomputed', linkage='single', n_clusters=2)
         clustering.fit(dis_max)
     
         dis_cross = inf
@@ -54,8 +54,12 @@ class AttackclippedclusteringAdversary():
                 dis_cross = min(dis_cross, dis)
     
         theta_cross = np.arccos(1 - dis_cross) - 0.1
+
+        flag = 1 if np.sum(clustering.labels_) > num // 2 else 0
+        # values = torch.vstack(list(model for model, label in zip(updates, clustering.labels_) if label == flag)).mean( dim=0)
+        larger_group = torch.vstack(list(model / torch.norm(model) for model, label in zip(benign_update, clustering.labels_) if label == flag)).cpu().detach().numpy()
         # theta_cross = 0
-        dis2mean = [spatial.distance.cosine(benign_update, benign_mean) for benign_update in np_models]
+        dis2mean = [spatial.distance.cosine(benign_update, benign_mean) for benign_update in larger_group]
         idx_max_dis = np.argmax(dis2mean)
         theta = np.arccos(1 - dis2mean[idx_max_dis])
         mal_update = benign_update[idx_max_dis] / torch.norm(benign_update[idx_max_dis])
@@ -63,7 +67,7 @@ class AttackclippedclusteringAdversary():
         for w in simulator.get_clients():
             if w.is_byzantine():
                 if theta + theta_cross >= np.pi:
-                    mal_update = -benign_update.mean(dim=0)
+                    mal_update = -10 * benign_update.mean(dim=0)
                     w.save_update(mal_update)
                 else:
                     a = (np.cos(theta + theta_cross - 1e-4) - np.sin(theta + theta_cross - 1e-4) / np.tan(theta))
@@ -72,10 +76,12 @@ class AttackclippedclusteringAdversary():
                     dis = spatial.distance.cosine(mal_update0.cpu().detach().numpy(), mal_update.cpu().detach().numpy())
                     mal_update = mal_update0
                     theta = theta + theta_cross - 1e-4
-                    w.save_update(mal_update)
+                    w.save_update(10 * mal_update)
         return
 
     def omniscient_callback(self, simulator):
+        # return self.chain_attack(simulator)
+
         benign_update = []
         for w in simulator.get_clients():
             if not w.is_byzantine():
@@ -96,7 +102,7 @@ class AttackclippedclusteringAdversary():
         dis_max[dis_max == -inf] = 0
         dis_max[dis_max == inf] = 2
         dis_max[np.isnan(dis_max)] = 2
-        clustering = AgglomerativeClustering(affinity='precomputed', linkage='average', n_clusters=2)
+        clustering = AgglomerativeClustering(affinity='precomputed', linkage='complete', n_clusters=2)
         clustering.fit(dis_max)
 
         flag = 1 if np.sum(clustering.labels_) > num // 2 else 0

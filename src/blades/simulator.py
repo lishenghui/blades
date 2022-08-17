@@ -104,6 +104,7 @@ class Simulator(object):
         if attack_kws is None:
             attack_kws = {}
         self._setup_clients(attack, num_byzantine=num_byzantine, attack_kws=attack_kws)
+        self._setup_adversary(attack)
 
         set_random_seed(seed)
     
@@ -115,6 +116,11 @@ class Simulator(object):
         else:
             self.aggregator = aggregator
     
+    def _setup_adversary(self, attack: str):
+        module_path = importlib.import_module('blades.attackers.%sclient' % attack)
+        adversary_cls = getattr(module_path, '%sAdversary' % attack.capitalize(), lambda: None)
+        self.adversary = adversary_cls() if adversary_cls else None
+        
     def _setup_clients(self, attack: str, num_byzantine, attack_kws):
         import importlib
         if attack is None:
@@ -240,6 +246,8 @@ class Simulator(object):
         for omniscient_attacker_callback in self.omniscient_callbacks:
             omniscient_attacker_callback(self)
         
+        if self.adversary:
+            self.adversary.omniscient_callback(self)
         updates = self.parallel_get(clients, lambda w: w.get_update())
         aggregated = self.server.aggregator(clients)
         self.server.apply_update(aggregated)
@@ -325,8 +333,6 @@ class Simulator(object):
             "avg_norm": avg_norm,
             "VN_ratio": var_norm / avg_norm,
         }
-        # Output to file
-        self.json_logger.info(r)
     
     def log_validate(self, metrics):
         top1 = np.average([metric['top1'] for metric in metrics], weights=[metric['Length'] for metric in metrics])
