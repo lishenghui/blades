@@ -68,20 +68,17 @@ class AttackclippedclusteringAdversary():
             if w.is_byzantine():
                 if theta + theta_cross >= np.pi:
                     mal_update = -10 * benign_update.mean(dim=0)
-                    w.save_update(mal_update)
                 else:
                     a = (np.cos(theta + theta_cross - 1e-4) - np.sin(theta + theta_cross - 1e-4) / np.tan(theta))
                     b = (np.cos(theta_cross - 1e-4) + np.sin(theta_cross - 1e-4) / np.tan(theta))
-                    mal_update0 = a * benign_update.mean(dim=0) / torch.norm(benign_update.mean(dim=0)) + b * mal_update
-                    dis = spatial.distance.cosine(mal_update0.cpu().detach().numpy(), mal_update.cpu().detach().numpy())
-                    mal_update = mal_update0
+                    mal_update = 10 * (a * benign_update.mean(dim=0) / torch.norm(benign_update.mean(dim=0)) + b * mal_update)
                     theta = theta + theta_cross - 1e-4
-                    w.save_update(10 * mal_update)
+                w.save_update(mal_update)
+                dis = spatial.distance.cosine(mal_update.cpu().detach().numpy(), benign_update.mean(dim=0).cpu().detach().numpy())
+                print(dis)
         return
-
-    def omniscient_callback(self, simulator):
-        # return self.chain_attack(simulator)
-
+    
+    def attack_average(self, simulator):
         benign_update = []
         for w in simulator.get_clients():
             if not w.is_byzantine():
@@ -102,43 +99,43 @@ class AttackclippedclusteringAdversary():
         dis_max[dis_max == -inf] = 0
         dis_max[dis_max == inf] = 2
         dis_max[np.isnan(dis_max)] = 2
-        clustering = AgglomerativeClustering(affinity='precomputed', linkage='complete', n_clusters=2)
+        clustering = AgglomerativeClustering(affinity='precomputed', linkage='average', n_clusters=2)
         clustering.fit(dis_max)
-
+    
         flag = 1 if np.sum(clustering.labels_) > num // 2 else 0
         # values = torch.vstack(list(model for model, label in zip(updates, clustering.labels_) if label == flag)).mean( dim=0)
-        larger_group = torch.vstack(list(model / torch.norm(model) for model, label in zip(benign_update, clustering.labels_) if label == flag))
-        center_point = torch.sum(larger_group, dim=0)
-        
-        
+        larger_group = torch.vstack(
+            list(model / torch.norm(model) for model, label in zip(benign_update, clustering.labels_) if label == flag))
+        center_point = torch.mean(larger_group, dim=0)
+    
         dis_cross = 0
         dis_size = 0
         for i in range(len(clustering.labels_)):
-            for j in range(i+1, len(clustering.labels_)):
+            for j in range(i + 1, len(clustering.labels_)):
                 if clustering.labels_[i] != clustering.labels_[j]:
                     dis = spatial.distance.cosine(np_models[i, :], np_models[j, :])
                     dis_cross += dis
                     dis_size += 1
-        
-        dis_avg =  dis_cross / dis_size
-        threshold = min(dis_size * (1 - dis_avg) / torch.norm(center_point), 1)
-        # max_dis = np.arccos(1 - dis_cross / dis_size) * 15 / torch.norm(center_point)
-        theta_cross = np.arccos(threshold)
-        # theta_cross = 0
-        dis2mean = [spatial.distance.cosine(benign_update, benign_mean) for benign_update in np_models]
-        idx_max_dis = np.argmin(dis2mean)
-        # theta = np.arccos(1 - dis2mean[idx_max_dis])
+    
+        dis_avg = dis_cross / dis_size
+        print('avg dis', dis_avg)
+        theta_cross = np.arccos(1 - dis_avg) - 0.1
         theta = np.arccos(1 - spatial.distance.cosine(center_point, benign_mean))
-        mal_update = center_point / torch.norm(center_point)
         print(dis_cross)
         for w in simulator.get_clients():
             if w.is_byzantine():
                 if theta + theta_cross >= np.pi:
-                    mal_update = -benign_update.mean(dim=0)
-                    w.save_update(mal_update)
+                    mal_update = -1000 * benign_update.mean(dim=0)
                 else:
-                    a = (np.cos(theta + theta_cross - 1e-4) - np.sin(theta + theta_cross - 1e-4) / np.tan(theta))
-                    b = (np.cos(theta_cross - 1e-4) + np.sin(theta_cross - 1e-4) / np.tan(theta))
-                    mal_update0 = a * benign_update.mean(dim=0) / torch.norm(benign_update.mean(dim=0)) + b * mal_update
-                    w.save_update(mal_update0 * 5.0)
+                    a = (np.cos(theta + theta_cross) - np.sin(theta + theta_cross) / np.tan(theta))
+                    b = (np.cos(theta_cross) + np.sin(theta_cross) / np.tan(theta))
+                    mal_update = 1000 * (a * benign_update.mean(dim=0) / torch.norm(benign_update.mean(dim=0)) + b * center_point / torch.norm(center_point))
+                w.save_update(mal_update)
+                dis = spatial.distance.cosine(mal_update.cpu().detach().numpy(),
+                                              center_point.cpu().detach().numpy())
+                print(np.arccos(1 - dis))
         return
+    
+    def omniscient_callback(self, simulator):
+        return self.chain_attack(simulator)
+        # return self.attack_average(simulator)

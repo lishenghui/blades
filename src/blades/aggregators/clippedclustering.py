@@ -28,9 +28,12 @@ class Clippedclustering(_BaseAggregator):
         tau (float): threshold of clipping norm. If it is not given, updates are clipped according the median of historical norm.
     """
     
-    def __init__(self, agg='mean', max_tau=1e5) -> None:
+    def __init__(self, agg='mean', max_tau=1e5, linkage='average') -> None:
         super(Clippedclustering, self).__init__()
+        
+        assert linkage in ['average', 'single']
         self.tau = max_tau
+        self.linkage = linkage
         self.l2norm_his = []
         if agg == 'mean':
             self.agg = Mean()
@@ -64,7 +67,7 @@ class Clippedclustering(_BaseAggregator):
         dis_max[dis_max == -inf] = 0
         dis_max[dis_max == inf] = 2
         dis_max[np.isnan(dis_max)] = 2
-        clustering = AgglomerativeClustering(affinity='precomputed', linkage='complete', n_clusters=2)
+        clustering = AgglomerativeClustering(affinity='precomputed', linkage=self.linkage, n_clusters=2)
         clustering.fit(dis_max)
 
         flag = 1 if np.sum(clustering.labels_) > num // 2 else 0
