@@ -23,10 +23,10 @@ if not os.path.exists(options.log_dir):
 
 cache_name = options.dataset + "_" + options.algorithm + ("_noniid" if not options.noniid else "") + f"_{str(options.num_clients)}_{str(options.seed)}"
 if options.dataset == 'cifar10':
-    dataset = CIFAR10(cache_name=cache_name, train_bs=options.batch_size, num_clients=options.num_clients, iid=not options.noniid, seed=0)  # built-in federated cifar10 dataset
+    dataset = CIFAR10(data_root='/Users/sheli564/Desktop/blades/scripts/data', cache_name=cache_name, train_bs=options.batch_size, num_clients=options.num_clients, iid=not options.noniid, seed=0)  # built-in federated cifar10 dataset
     model = CCTNet()
 elif options.dataset == 'mnist':
-    dataset = MNIST(cache_name=cache_name, train_bs=options.batch_size, num_clients=options.num_clients, iid=not options.noniid, seed=0)  # built-in federated cifar10 dataset
+    dataset = MNIST(data_root='/Users/sheli564/Desktop/blades/scripts/data', cache_name=cache_name, train_bs=options.batch_size, num_clients=options.num_clients, iid=not options.noniid, seed=0)  # built-in federated cifar10 dataset
     model = MLP()
 else:
     raise NotImplementedError
@@ -37,11 +37,11 @@ conf_args = {
     "aggregator": options.agg,  # defense: robust aggregation
     "aggregator_kws": options.agg_args[options.agg],
     "num_byzantine": options.num_byzantine,  # number of byzantine input
-    "use_cuda": True,
+    "use_cuda": False,
     "attack": options.attack,  # attack strategy
     "attack_kws": options.attack_args[options.attack],
     "num_actors": 1,  # number of training actors
-    "gpu_per_actor": 0.2,
+    # "gpu_per_actor": 0.2,
     "log_path": options.log_dir,
     "seed": options.seed,  # reproducibility
 }
