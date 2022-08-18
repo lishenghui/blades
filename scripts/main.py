@@ -49,9 +49,9 @@ conf_args = {
 simulator = Simulator(**conf_args)
 
 if options.algorithm == 'fedsgd':
-    opt = torch.optim.SGD(model.parameters(), lr=0.1, momentum=0.9)
+    opt = torch.optim.SGD(model.parameters(), lr=0.1, momentum=options.serv_momentum)
     lr_scheduler = torch.optim.lr_scheduler.MultiStepLR(
-        # opt, milestones=[200, 300, 500], gamma=0.5
+        # opt, milestones=[200, 300, 500], gamma=0.5p
         opt, milestones=[2000, 3000, 5000], gamma=0.5
     )
 
