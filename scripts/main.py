@@ -42,7 +42,7 @@ conf_args = {
     "attack": options.attack,  # attack strategy
     "attack_kws": options.attack_args[options.attack],
     "num_actors": 2,  # number of training actors
-    "gpu_per_actor": 0.2,
+    "gpu_per_actor": 0.1,
     "log_path": options.log_dir,
     "seed": options.seed,  # reproducibility
 }
