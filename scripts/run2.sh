@@ -33,11 +33,11 @@ run_all_aggs() {
 export -f run_all_aggs 
 
 
-dataset='mnist'
+dataset='fedavg'
 
 for agg in 'clippedclustering' 'median' 'trimmedmean' 'centeredclipping' 'mean' 'krum' 'clustering' 'geomed' 'autogm'
 do 
     # nohup bash -c "run_all_aggs $dataset fedsgd 6000 1 $agg" &
-    nohup bash -c "run_all_aggs $dataset fedsgd 6000 1 $agg  --noniid" &
+    nohup bash -c "run_all_aggs $dataset fedsgd 600 50 $agg  --noniid" &
 done
 
