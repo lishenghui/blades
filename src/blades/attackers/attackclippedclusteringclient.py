@@ -18,7 +18,8 @@ class AttackclippedclusteringClient(ByzantineClient):
         
 
 class AttackclippedclusteringAdversary():
-    def __int__(self):
+    def __int__(self, linkage='single'):
+        self.linkage = linkage
         self.agg = Clippedclustering()
 
     def chain_attack(self, simulator):
@@ -137,5 +138,9 @@ class AttackclippedclusteringAdversary():
         return
     
     def omniscient_callback(self, simulator):
-        return self.chain_attack(simulator)
-        # return self.attack_average(simulator)
+        if self.linkage == "single":
+            return self.chain_attack(simulator)
+        elif self.linkage == "average":
+            return self.attack_average(simulator)
+        else:
+            raise NotImplementedError

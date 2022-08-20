@@ -47,6 +47,7 @@ class Simulator(object):
             num_byzantine: Optional[int] = 0,
             attack: Optional[str] = None,
             attack_kws: Optional[Dict[str, float]] = None,
+            adversary_kws: Optional[Dict[str, float]] = None,
             aggregator: Union[Callable[[list], torch.Tensor], str] = 'mean',
             aggregator_kws: Optional[Dict[str, float]] = None,
             num_actors: Optional[int] = 1,
@@ -104,7 +105,7 @@ class Simulator(object):
         if attack_kws is None:
             attack_kws = {}
         self._setup_clients(attack, num_byzantine=num_byzantine, attack_kws=attack_kws)
-        self._setup_adversary(attack)
+        self._setup_adversary(attack, adversary_kws=adversary_kws)
 
         set_random_seed(seed)
     
@@ -116,10 +117,10 @@ class Simulator(object):
         else:
             self.aggregator = aggregator
     
-    def _setup_adversary(self, attack: str):
+    def _setup_adversary(self, attack: str, adversary_kws):
         module_path = importlib.import_module('blades.attackers.%sclient' % attack)
         adversary_cls = getattr(module_path, '%sAdversary' % attack.capitalize(), lambda: None)
-        self.adversary = adversary_cls() if adversary_cls else None
+        self.adversary = adversary_cls(adversary_kws) if adversary_cls else None
         
     def _setup_clients(self, attack: str, num_byzantine, attack_kws):
         import importlib
