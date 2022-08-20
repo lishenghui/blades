@@ -41,6 +41,7 @@ conf_args = {
     "use_cuda": True,
     "attack": options.attack,  # attack strategy
     "attack_kws": options.attack_args[options.attack],
+    "adversary_kws": options.adversary_args,
     "num_actors": 2,  # number of training actors
     "gpu_per_actor": 0.1,
     "log_path": options.log_dir,
