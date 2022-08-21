@@ -120,7 +120,7 @@ class Simulator(object):
     def _setup_adversary(self, attack: str, adversary_kws):
         module_path = importlib.import_module('blades.attackers.%sclient' % attack)
         adversary_cls = getattr(module_path, '%sAdversary' % attack.capitalize(), lambda: None)
-        self.adversary = adversary_cls(adversary_kws) if adversary_cls else None
+        self.adversary = adversary_cls(**adversary_kws) if adversary_cls else None
         
     def _setup_clients(self, attack: str, num_byzantine, attack_kws):
         import importlib
