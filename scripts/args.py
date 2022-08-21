@@ -49,7 +49,7 @@ def parse_arguments():
         'mean': {},
         'geomed': {},
         'autogm': {"lamb": 2.0},
-        'clippedclustering': {"max_tau": 2.0, "linkage": 'average'},
+        'clippedclustering': {"max_tau": 2.0, "linkage": 'single'},
         'clustering': {},
         'centeredclipping': {},
         'krum': {"num_clients": options.num_clients, "num_byzantine": options.num_byzantine},

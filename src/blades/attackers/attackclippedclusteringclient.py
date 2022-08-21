@@ -18,7 +18,7 @@ class AttackclippedclusteringClient(ByzantineClient):
         
 
 class AttackclippedclusteringAdversary():
-    def __int__(self, linkage='single'):
+    def __init__(self, linkage='single'):
         self.linkage = linkage
         self.agg = Clippedclustering()
 
@@ -143,4 +143,4 @@ class AttackclippedclusteringAdversary():
         elif self.linkage == "average":
             return self.attack_average(simulator)
         else:
-            raise NotImplementedError
+            raise NotImplementedError(f"linkage {self.linkage} is not implemented.")
