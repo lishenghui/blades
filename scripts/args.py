@@ -49,14 +49,14 @@ def parse_arguments():
         'mean': {},
         'geomed': {},
         'autogm': {"lamb": 2.0},
-        'clippedclustering': {"max_tau": 2.0, "linkage": 'average'},
+        'clippedclustering': {"max_tau": 20.0, "linkage": 'average'},
         'clustering': {},
         'centeredclipping': {},
         'krum': {"num_clients": options.num_clients, "num_byzantine": options.num_byzantine},
     }
     
-    # options.adversary_args = {"linkage": "average"}
-    options.adversary_args = {}
+    options.adversary_args = {"linkage": "average"}
+    # options.adversary_args = {}
     options.log_dir = (
             EXP_DIR
             + f"_{options.algorithm}"
