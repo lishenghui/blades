@@ -47,6 +47,7 @@ def parse_arguments():
         'trimmedmean': {"num_byzantine": options.num_byzantine},
         'median': {},
         'mean': {},
+        'signguard': {},
         'geomed': {},
         'autogm': {"lamb": 2.0},
         'clippedclustering': {"max_tau": 20.0, "linkage": 'average'},
@@ -55,8 +56,8 @@ def parse_arguments():
         'krum': {"num_clients": options.num_clients, "num_byzantine": options.num_byzantine},
     }
     
-    options.adversary_args = {"linkage": "average"}
-    # options.adversary_args = {}
+    # options.adversary_args = {"linkage": "average"}
+    options.adversary_args = {}
     options.log_dir = (
             EXP_DIR
             + f"_{options.algorithm}"
