@@ -47,6 +47,7 @@ def parse_arguments():
         'trimmedmean': {"num_byzantine": options.num_byzantine},
         'median': {},
         'mean': {},
+        'signguard': {},
         'geomed': {},
         'autogm': {"lamb": 2.0},
         'clippedclustering': {"max_tau": 20.0, "linkage": 'average'},
