@@ -55,8 +55,8 @@ def parse_arguments():
         'krum': {"num_clients": options.num_clients, "num_byzantine": options.num_byzantine},
     }
     
-    options.adversary_args = {"linkage": "average"}
-    # options.adversary_args = {}
+    # options.adversary_args = {"linkage": "average"}
+    options.adversary_args = {}
     options.log_dir = (
             EXP_DIR
             + f"_{options.algorithm}"
