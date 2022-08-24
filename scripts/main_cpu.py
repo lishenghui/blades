@@ -21,7 +21,7 @@ ray.init(address='auto')
 if not os.path.exists(options.log_dir):
     os.makedirs(options.log_dir)
 
-data_root = "./data"
+data_root = "/Users/sheli564/Desktop/blades/scripts/data"
 cache_name = options.dataset + "_" + options.algorithm + ("_noniid" if not options.noniid else "") + f"_{str(options.num_clients)}_{str(options.seed)}"
 if options.dataset == 'cifar10':
     dataset = CIFAR10(data_root=data_root, cache_name=cache_name, train_bs=options.batch_size, num_clients=options.num_clients, iid=not options.noniid, seed=0)  # built-in federated cifar10 dataset
@@ -38,12 +38,12 @@ conf_args = {
     "aggregator": options.agg,  # defense: robust aggregation
     "aggregator_kws": options.agg_args[options.agg],
     "num_byzantine": options.num_byzantine,  # number of byzantine input
-    "use_cuda": True,
+    "use_cuda": False,
     "attack": options.attack,  # attack strategy
     "attack_kws": options.attack_args[options.attack],
     "adversary_kws": options.adversary_args,
-    "num_actors": 1,  # number of training actors
-    "gpu_per_actor": 0.2,
+    "num_actors": 4,  # number of training actors
+    # "gpu_per_actor": 0.19,
     "log_path": options.log_dir,
     "seed": options.seed,  # reproducibility
 }

@@ -28,9 +28,9 @@ class Clustering(_BaseAggregator):
         for i in range(num):
             for j in range(num):
                 if i == j:
-                    dis_max[i, j] = 1
+                    dis_max[i, j] = 0
                 else:
-                    dis_max[i, j] = 1 - spatial.distance.cosine(np_models[i, :], np_models[j, :])
+                    dis_max[i, j] = spatial.distance.cosine(np_models[i, :], np_models[j, :])
         dis_max[dis_max == -inf] = -1
         dis_max[dis_max == inf] = 1
         dis_max[np.isnan(dis_max)] = -1
