@@ -3,14 +3,15 @@ Simulation on Mnist Dataset
 ===========================
 
 """
-import ray
 import json
+
 import pandas as pd
+import ray
 import seaborn as sns
+
 from blades.datasets import MNIST
 from blades.models.mnist import MLP
 from blades.simulator import Simulator
-
 
 # Initialize Ray
 ray.init()
@@ -18,7 +19,7 @@ ray.init()
 
 
 # mnist = MNIST(data_root="/dbfs/data", train_bs=32, num_clients=20)  # built-in federated MNIST dataset
-mnist = MNIST(data_root="./data", train_bs=32, num_clients=20)  # built-in federated MNIST dataset
+mnist = MNIST(data_root="./data", train_bs=32, num_clients=20, seed=0)  # built-in federated MNIST dataset
 
 # configuration parameters
 conf_params = {
@@ -27,7 +28,7 @@ conf_params = {
     "num_byzantine": 8,  # number of Byzantine input
     "attack": "ipm",  # attack strategy
     # "log_path": "dbfs/outputs",
-    "attack_params": {   
+    "attack_kws": {   
                           "epsilon": 100,
                      },
     "num_actors": 1,  # number of training actors
@@ -81,7 +82,7 @@ def read_json(path):
 
 def transform(entry, agg):  
     return {
-        'Round Number': entry['E'],
+        'Round Number': entry['Round'],
         'Accuracy (%)': entry['top1'],
         "Loss": entry['Loss'],
         'AGG': agg,

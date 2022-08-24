@@ -13,4 +13,4 @@ class IpmClient(ByzantineClient):
             if not w.is_byzantine():
                 updates.append(w.get_update())
         
-        self._state['saved_update'] = -self.epsilon * (sum(updates)) / len(updates)
+        self.save_update(-self.epsilon * (sum(updates)) / len(updates))

@@ -1,5 +1,0 @@
-Examples
-==================
-
-.. nbgallery::
-   notebooks/aggregators
