@@ -14,8 +14,8 @@ from blades.actor import _RayActor
 from blades.client import BladesClient, ByzantineClient
 from blades.datasets.dataset import FLDataset
 from blades.server import BladesServer
-from blades.utils import reset_model_weights, set_random_seed
-from blades.utils import top1_accuracy, initialize_logger
+from blades.utils.utils import reset_model_weights, set_random_seed
+from blades.utils.utils import top1_accuracy, initialize_logger
 
 
 class Simulator(object):
@@ -47,6 +47,7 @@ class Simulator(object):
             num_byzantine: Optional[int] = 0,
             attack: Optional[str] = None,
             attack_kws: Optional[Dict[str, float]] = None,
+            adversary_kws: Optional[Dict[str, float]] = None,
             aggregator: Union[Callable[[list], torch.Tensor], str] = 'mean',
             aggregator_kws: Optional[Dict[str, float]] = None,
             num_actors: Optional[int] = 1,
@@ -104,6 +105,7 @@ class Simulator(object):
         if attack_kws is None:
             attack_kws = {}
         self._setup_clients(attack, num_byzantine=num_byzantine, attack_kws=attack_kws)
+        self._setup_adversary(attack, adversary_kws=adversary_kws)
 
         set_random_seed(seed)
     
@@ -115,6 +117,11 @@ class Simulator(object):
         else:
             self.aggregator = aggregator
     
+    def _setup_adversary(self, attack: str, adversary_kws):
+        module_path = importlib.import_module('blades.attackers.%sclient' % attack)
+        adversary_cls = getattr(module_path, '%sAdversary' % attack.capitalize(), lambda: None)
+        self.adversary = adversary_cls(**adversary_kws) if adversary_cls else None
+        
     def _setup_clients(self, attack: str, num_byzantine, attack_kws):
         import importlib
         if attack is None:
@@ -240,6 +247,8 @@ class Simulator(object):
         for omniscient_attacker_callback in self.omniscient_callbacks:
             omniscient_attacker_callback(self)
         
+        if self.adversary:
+            self.adversary.omniscient_callback(self)
         updates = self.parallel_get(clients, lambda w: w.get_update())
         aggregated = self.server.aggregator(clients)
         self.server.apply_update(aggregated)
@@ -277,7 +286,7 @@ class Simulator(object):
         aggregated = self.aggregator(update)
         self.server.apply_update(aggregated)
         
-        self.log_variance(epoch, update)
+        # self.log_variance(epoch, update)
     
     def test_actor(self, global_round, batch_size):
         """Evaluates the global model using test set.
@@ -307,19 +316,28 @@ class Simulator(object):
         return loss, top1
     
     def log_variance(self, cur_round, update):
-        var_avg = torch.mean(torch.var(torch.vstack(update), dim=0, unbiased=False)).item()
-        norm = torch.norm(torch.var(torch.vstack(update), dim=0, unbiased=False)).item()
-        avg_norm = torch.mean(torch.var(torch.vstack(update), dim=0, unbiased=False) / (
-            torch.mean(torch.vstack(update) ** 2, dim=0))).item()
+        updates = []
+        for client in self._clients.values():
+            if not client.is_byzantine():
+                updates.append(client.get_update())
+        mean_update = torch.mean(torch.vstack(updates), dim=0)
+        var_avg = torch.mean(torch.var(torch.vstack(updates), dim=0, unbiased=False)).item()
+        norm = torch.norm(torch.var(torch.vstack(updates), dim=0, unbiased=False)).item()
+        avg_norm = torch.norm(mean_update)
+        var_norm = torch.sqrt(torch.mean(torch.tensor([torch.norm(model_update - mean_update) ** 2 for model_update in updates])))
+        
         r = {
             "_meta": {"type": "variance"},
             "Round": cur_round,
             "avg": var_avg,
             "norm": norm,
             "avg_norm": avg_norm,
+            "VN_ratio": var_norm / avg_norm,
         }
+
         # Output to file
         self.json_logger.info(r)
+        
     
     def log_validate(self, metrics):
         top1 = np.average([metric['top1'] for metric in metrics], weights=[metric['Length'] for metric in metrics])
