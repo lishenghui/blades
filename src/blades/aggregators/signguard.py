@@ -57,10 +57,12 @@ class Signguard(_BaseAggregator):
                 S1_idxs.append(idx)
                 
         features = []
+        num_para = len(updates[0])
         for update in updates:
-            feature0 = (update > 0).sum().item()
-            feature1 = (update < 0).sum().item()
-            feature2 = torch.count_nonzero(update).item()
+            feature0 = (update > 0).sum().item() / num_para
+            feature1 = (update < 0).sum().item() / num_para
+            feature2 = (update == 0).sum().item() / num_para
+            
             features.append([feature0, feature1, feature2])
 
         kmeans = KMeans(n_clusters=2, random_state=0).fit(features)
