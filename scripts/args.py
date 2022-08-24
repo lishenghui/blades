@@ -38,6 +38,7 @@ def parse_arguments():
         'signflipping': {},
         'noise': {"std": 0.1},
         'labelflipping': {},
+        'permutation': {},
         'attackclippedclustering': {},
         'ipm': {"epsilon": 100 if options.ipmlarge else 0.5},
         'alie': {"num_clients": options.num_clients, "num_byzantine": options.num_byzantine},
