@@ -28,11 +28,12 @@ class Clippedclustering(_BaseAggregator):
         tau (float): threshold of clipping norm. If it is not given, updates are clipped according the median of historical norm.
     """
     
-    def __init__(self, agg='mean', max_tau=1e5, linkage='average') -> None:
+    def __init__(self, agg='mean', signguard=False, max_tau=1e5, linkage='average') -> None:
         super(Clippedclustering, self).__init__()
         
         assert linkage in ['average', 'single']
         self.tau = max_tau
+        self.signguard = signguard
         self.linkage = linkage
         self.l2norm_his = []
         if agg == 'mean':
@@ -71,7 +72,31 @@ class Clippedclustering(_BaseAggregator):
         clustering.fit(dis_max)
 
         flag = 1 if np.sum(clustering.labels_) > num // 2 else 0
-        # values = torch.vstack(list(model for model, label in zip(updates, clustering.labels_) if label == flag)).mean( dim=0)
-        print(clustering.labels_)
-        values = self.agg(torch.vstack(list(model for model, label in zip(updates, clustering.labels_) if label == flag)))
+        S1_idxs = list([idx for idx, label in enumerate(clustering.labels_) if label == flag])
+        selected_idxs = S1_idxs
+        
+        if self.signguard:
+            features = []
+            num_para = len(updates[0])
+            for update in updates:
+                feature0 = (update > 0).sum().item() / num_para
+                feature1 = (update < 0).sum().item() / num_para
+                feature2 = (update == 0).sum().item() / num_para
+        
+                features.append([feature0, feature1, feature2])
+    
+            kmeans = KMeans(n_clusters=2, random_state=0).fit(features)
+            print(kmeans)
+    
+            flag = 1 if np.sum(kmeans.labels_) > num // 2 else 0
+            S2_idxs = list([idx for idx, label in enumerate(kmeans.labels_) if label == flag])
+            print(S2_idxs)
+
+            selected_idxs = list(set(S1_idxs) & set(S2_idxs))
+        
+        benign_updates = []
+        for idx in selected_idxs:
+            benign_updates.append(updates[idx])
+                
+        values = self.agg(torch.vstack(benign_updates))
         return values
