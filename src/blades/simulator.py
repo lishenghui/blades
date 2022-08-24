@@ -6,16 +6,16 @@ from typing import Any, Callable, Optional, Union, List, Dict
 
 import numpy as np
 import torch
-
 from ray.train import Trainer
 from ray.util import ActorPool
 from tqdm import trange
+
 from blades.actor import _RayActor
 from blades.client import BladesClient, ByzantineClient
-from blades.datasets.datasets import FLDataset
+from blades.datasets.dataset import FLDataset
 from blades.server import BladesServer
-from blades.utils import top1_accuracy, initialize_logger
 from blades.utils import reset_model_weights, set_random_seed
+from blades.utils import top1_accuracy, initialize_logger
 
 
 class Simulator(object):
@@ -46,9 +46,9 @@ class Simulator(object):
             dataset: FLDataset,
             num_byzantine: Optional[int] = 0,
             attack: Optional[str] = None,
-            attack_params: Optional[Dict[str, float]] = None,
+            attack_kws: Optional[Dict[str, float]] = None,
             aggregator: Union[Callable[[list], torch.Tensor], str] = 'mean',
-            aggregator_params: Optional[Dict[str, float]] = None,
+            aggregator_kws: Optional[Dict[str, float]] = None,
             num_actors: Optional[int] = 1,
             num_trainers: Optional[int] = 1,
             gpu_per_actor: Optional[float] = 0,
@@ -60,7 +60,6 @@ class Simulator(object):
             **kwargs,
     ):
     
-        set_random_seed(seed)
         self.use_actor = True if mode == 'actor' else False
         
         if use_cuda or ("gpu_per_actor" in kwargs and kwargs["gpu_per_actor"] > 0.0):
@@ -68,9 +67,9 @@ class Simulator(object):
         else:
             self.device = torch.device("cpu")
         
-        if aggregator_params is None:
-            aggregator_params = {}
-        self._init_aggregator(aggregator=aggregator, aggregator_params=aggregator_params)
+        if aggregator_kws is None:
+            aggregator_kws = {}
+        self._init_aggregator(aggregator=aggregator, aggregator_kws=aggregator_kws)
         
         # Setup logger
         initialize_logger(log_path)
@@ -102,19 +101,21 @@ class Simulator(object):
             traindls, testdls = dataset.get_dls()
             self.dataset = FLDataset(traindls, testdls)
         
-        if attack_params is None:
-            attack_params = {}
-        self._setup_clients(attack, num_byzantine=num_byzantine, attack_params=attack_params)
+        if attack_kws is None:
+            attack_kws = {}
+        self._setup_clients(attack, num_byzantine=num_byzantine, attack_kws=attack_kws)
+
+        set_random_seed(seed)
     
-    def _init_aggregator(self, aggregator, aggregator_params):
+    def _init_aggregator(self, aggregator, aggregator_kws):
         if type(aggregator) == str:
             agg_path = importlib.import_module('blades.aggregators.%s' % aggregator)
             agg_scheme = getattr(agg_path, aggregator.capitalize())
-            self.aggregator = agg_scheme(**aggregator_params)
+            self.aggregator = agg_scheme(**aggregator_kws)
         else:
             self.aggregator = aggregator
     
-    def _setup_clients(self, attack: str, num_byzantine, attack_params):
+    def _setup_clients(self, attack: str, num_byzantine, attack_kws):
         import importlib
         if attack is None:
             num_byzantine = 0
@@ -125,7 +126,7 @@ class Simulator(object):
             if i < num_byzantine:
                 module_path = importlib.import_module('blades.attackers.%sclient' % attack)
                 attack_scheme = getattr(module_path, '%sClient' % attack.capitalize())
-                client = attack_scheme(id=u, device=self.device, **attack_params)
+                client = attack_scheme(id=u, device=self.device, **attack_kws)
                 self._register_omniscient_callback(client.omniscient_callback)
             else:
                 client = BladesClient(id=u, device=self.device)
@@ -134,8 +135,8 @@ class Simulator(object):
     def _register_omniscient_callback(self, callback):
         self.omniscient_callbacks.append(callback)
     
-    def get_clients(self):
-        r"""Return all clients.
+    def get_clients(self) -> List:
+        r"""Return all clients as a list.
         """
         return list(self._clients.values())
     
@@ -163,14 +164,23 @@ class Simulator(object):
         torch.set_rng_state(self.random_states["torch"])
         np.random.set_state(self.random_states["numpy"])
     
-    def register_attackers(self, clients: List[ByzantineClient]) -> None:
+    def register_attackers(self, clients: List[ByzantineClient], replace_indices=None) -> None:
         r"""Register a list of clients as attackers. Those malicious clients replace the first few clients.
         
-        :param clients: a list of Byzantine clients.
+        Args:
+            clients:  a list of Byzantine clients that will replace some of honest ones.
+            replace_indices:  a list of indices of clients to be replaced by the Byzantine clients. The length of this
+                                list should be equal to that of ``clients`` parameter. If it remains ``None``, the first ``n`` clients
+                                will be replaced, where ``n`` is the length of ``clients``.
         """
+        if replace_indices:
+            assert len(clients) < len(replace_indices)
+        else:
+            replace_indices = list(range(len(clients)))
         assert len(clients) < len(self._clients)
+        
         client_li = self.get_clients()
-        for i in range(len(clients)):
+        for i in replace_indices:
             id = client_li[i].id()
             clients[i].set_id(id)
             self._clients[id] = clients[i]
@@ -193,7 +203,8 @@ class Simulator(object):
     def train_actor(self,
                     global_round: int,
                     num_rounds: int,
-                    clients: List[BladesClient]
+                    clients: List[BladesClient],
+                    lr: float,
                     ) -> None:
         r"""Run local training using ``ray`` actors
         
@@ -201,7 +212,9 @@ class Simulator(object):
             global_round (int): The current global round.
             num_rounds (int): The number of local update steps.
             clients (list): A list of clients that perform local training.
+            lr (float): Learning rate for client optimizer.
         """
+        
         # TODO: randomly select a subset of input for local training
         self.debug_logger.info(f"Train global round {global_round}")
         
@@ -214,6 +227,7 @@ class Simulator(object):
                 clients=clients,
                 model=global_model,
                 local_round=num_rounds,
+                lr=lr,
             ),
             client_groups
         )
@@ -239,7 +253,7 @@ class Simulator(object):
             update = []
             for i in range(len(config['client'])):
                 config['client'][i].set_para(config['model'])
-                config['client'][i].on_train_round_start()
+                config['client'][i].on_train_round_begin()
                 config['client'][i].local_training(config['local_round'], config['use_actor'], config['data'][i])
                 update.append(config['client'][i].get_update())
             return update
@@ -299,7 +313,7 @@ class Simulator(object):
             torch.mean(torch.vstack(update) ** 2, dim=0))).item()
         r = {
             "_meta": {"type": "variance"},
-            "E": cur_round,
+            "Round": cur_round,
             "avg": var_avg,
             "norm": norm,
             "avg_norm": avg_norm,
@@ -312,7 +326,7 @@ class Simulator(object):
         loss = np.average([metric['Loss'] for metric in metrics], weights=[metric['Length'] for metric in metrics])
         r = {
             "_meta": {"type": "test"},
-            "E": metrics[0]['E'],
+            "Round": metrics[0]['E'],
             "top1": top1,
             "Length": np.sum([metric['Length'] for metric in metrics]),
             "Loss": loss,
@@ -325,7 +339,7 @@ class Simulator(object):
         
         r = {
             "_meta": {"type": "train"},
-            "E": epoch,
+            "Round": epoch,
             "B": batch_idx,
             "Length": length,
             "Loss": sum(res["loss"] * res["length"] for res in results) / length,
@@ -341,7 +355,7 @@ class Simulator(object):
         total = len(self._clients.values()[0].data_loader.dataset)
         pct = 100 * progress / total
         self.debug_logger.info(
-            f"[E{r['E']:2}B{r['B']:<3}| {progress:6}/{total} ({pct:3.0f}%) ] Loss: {r['Loss']:.4f} "
+            f"[Round{r['E']:2}B{r['B']:<3}| {progress:6}/{total} ({pct:3.0f}%) ] Loss: {r['Loss']:.4f} "
             + " ".join(name + "=" + "{:>8.4f}".format(r[name]) for name in self.metrics)
         )
         # Output to file
@@ -359,7 +373,8 @@ class Simulator(object):
             test_batch_size: Optional[int] = 64,
             server_lr: Optional[float] = 0.1,
             client_lr: Optional[float] = 0.1,
-            lr_scheduler: Optional[torch.optim.lr_scheduler.MultiStepLR] = None,
+            server_lr_scheduler: Optional[torch.optim.lr_scheduler.MultiStepLR] = None,
+            client_lr_scheduler: Optional[torch.optim.lr_scheduler.MultiStepLR] = None,
     ):
         """Run the adversarial training.
 
@@ -386,8 +401,10 @@ class Simulator(object):
         :type server_lr: float, optional
         :param client_lr: Learning rate of ``client_optimizer``
         :type client_lr: float, optional
-        :param lr_scheduler: Learning rate scheduler
-        :type lr_scheduler: torch.optim.lr_scheduler.MultiStepLR, optional
+        :param server_lr_scheduler: Server learning rate scheduler
+        :type server_lr_scheduler: torch.optim.lr_scheduler.MultiStepLR, optional
+        :param client_lr_scheduler: Client learning rate scheduler
+        :type client_lr_scheduler: torch.optim.lr_scheduler.MultiStepLR, optional
         :return: None
         """
         reset_model_weights(model)
@@ -413,7 +430,7 @@ class Simulator(object):
             for global_rounds in t:
                 round_start = time()
                 if self.use_actor:
-                    self.train_actor(global_rounds, local_steps, self.get_clients())
+                    self.train_actor(global_rounds, local_steps, self.get_clients(), client_lr)
                 else:
                     self.train_trainer(global_rounds, local_steps, self._clients)
                 
@@ -422,16 +439,20 @@ class Simulator(object):
                     t.set_postfix(loss=loss, top1=top1)
                 
                 # TODO(Shenghui): When using trainer, the test method is not implemented so far.
-                if lr_scheduler:
-                    lr_scheduler.step()
-                    client_lr = lr_scheduler.get_last_lr()[0]
+                if server_lr_scheduler:
+                    server_lr_scheduler.step()
+
+                if client_lr_scheduler:
+                    client_lr_scheduler.step()
+                    client_lr = client_lr_scheduler.get_last_lr()[0]
                 # else:
                 
                 # client_lr = self.server_opt.param_groups[0]['lr']
                 # client_lr = self.server_opt.param_groups[0]['lr']
                 
                 ret.append(time() - round_start)
+                server_lr = self.server.get_opt().param_groups[0]['lr']
                 self.debug_logger.info(
-                    f"E={global_rounds}; Learning rate = {client_lr:}; Time cost = {time() - global_start}")
+                    f"E={global_rounds}; Server learning rate = {server_lr:}; Client learning rate = {client_lr:}; Time cost = {time() - global_start}")
             
             return ret

@@ -1,11 +1,13 @@
 import logging
-import shutil
-from importlib import reload
 import os
 import random
-from torch import nn
+import shutil
+from importlib import reload
+
 import numpy as np
 import torch
+from torch import nn
+
 
 class BColors(object):
     HEADER = "\033[95m"
@@ -17,6 +19,7 @@ class BColors(object):
     END_C = "\033[0m"
     BOLD = "\033[1m"
     UNDERLINE = "\033[4m"
+
 
 
 def touch(fname: str, times=None, create_dirs: bool = False):

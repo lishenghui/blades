@@ -5,11 +5,10 @@ A mini example
 """
 
 import ray
+
 from blades.datasets import MNIST
 from blades.models.mnist import MLP
 from blades.simulator import Simulator
-
-
 
 # os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
 # os.environ["CUDA_VISIBLE_DEVICES"]="2,3"
@@ -23,7 +22,7 @@ conf_params = {
     "aggregator": "mean",  # aggregation
     "num_byzantine": 4,  # number of Byzantine input
     "attack": "alie",  # attack strategy
-    "attack_params": {"num_clients": 10,  # attacker parameters
+    "attack_kws": {"num_clients": 10,  # attacker parameters
                      "num_byzantine": 4},
     "num_actors": 4,  # number of training actors
     # "num_actors": 10,  # number of training actors
