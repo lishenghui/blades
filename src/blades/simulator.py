@@ -62,7 +62,8 @@ class Simulator(object):
     ):
     
         self.use_actor = True if mode == 'actor' else False
-        
+        if not adversary_kws:
+            adversary_kws = {}
         if use_cuda or ("gpu_per_actor" in kwargs and kwargs["gpu_per_actor"] > 0.0):
             self.device = torch.device("cuda")
         else:
