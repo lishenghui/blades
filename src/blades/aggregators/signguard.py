@@ -70,7 +70,6 @@ class Signguard(_BaseAggregator):
 
         flag = 1 if np.sum(kmeans.labels_) > num // 2 else 0
         S2_idxs = list([idx for idx, label in enumerate(kmeans.labels_) if label==flag])
-        print(S2_idxs)
 
         inter = list(set(S1_idxs) & set(S2_idxs))
 
