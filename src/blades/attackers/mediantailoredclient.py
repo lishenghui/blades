@@ -1,7 +1,5 @@
-from typing import Optional
-
 import torch
-import numpy as np
+
 from blades.client import ByzantineClient
 
 
