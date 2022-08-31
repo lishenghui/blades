@@ -1,3 +1,4 @@
+import logging
 import os
 import pickle
 from abc import ABC, abstractmethod
@@ -8,8 +9,6 @@ import torch
 
 from blades.utils.utils import set_random_seed
 from .customdataset import CustomTensorDataset
-import logging
-import os
 
 logger = logging.getLogger(__name__)
 

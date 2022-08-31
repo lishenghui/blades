@@ -1,11 +1,13 @@
-import torch
 import numpy as np
-from blades.client import ByzantineClient
-from blades.aggregators.clippedclustering import Clippedclustering
-from sklearn.cluster import AgglomerativeClustering
+import torch
 from numpy import inf
 from scipy import spatial
-from blades.utils import torch_utils
+from sklearn.cluster import AgglomerativeClustering
+
+from blades.aggregators.clippedclustering import Clippedclustering
+from blades.client import ByzantineClient
+
+
 class AttackclippedclusteringClient(ByzantineClient):
     r"""
     """

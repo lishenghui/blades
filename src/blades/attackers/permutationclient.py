@@ -1,5 +1,7 @@
-from blades.client import ByzantineClient
 import torch
+
+from blades.client import ByzantineClient
+
 
 class PermutationClient(ByzantineClient):
     def __init__(self, *args, **kwargs):
