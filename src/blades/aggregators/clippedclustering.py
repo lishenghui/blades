@@ -1,5 +1,3 @@
-import os
-import sys
 from typing import Union, List
 
 import numpy as np
@@ -9,13 +7,9 @@ from scipy import spatial
 from sklearn.cluster import AgglomerativeClustering, KMeans
 
 from blades.client import BladesClient
+from blades.utils import torch_utils
 from .mean import _BaseAggregator, Mean
 from .median import Median
-
-file_dir = os.path.dirname(__file__)
-sys.path.append(file_dir)
-
-import torch_utils
 
 
 class Clippedclustering(_BaseAggregator):
