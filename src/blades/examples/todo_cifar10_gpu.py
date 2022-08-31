@@ -9,7 +9,6 @@ This example doesn't do much, it just makes a simple plot
 import sys
 
 import ray
-import torch
 
 sys.path.insert(0, '../..')
 from blades.simulator import Simulator
