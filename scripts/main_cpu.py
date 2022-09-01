@@ -16,7 +16,7 @@ from blades.models.cifar10 import CCTNet
 # os.environ["CUDA_VISIBLE_DEVICES"]="2,3"
 
 args = options
-ray.init(address='auto')
+ray.init(address='auto', local_mode=True)
 
 if not os.path.exists(options.log_dir):
     os.makedirs(options.log_dir)
@@ -70,6 +70,7 @@ if options.algorithm == 'fedsgd':
         "client_lr": 1.0,
         "validate_interval": 20,
         "server_lr_scheduler": lr_scheduler,
+        "dp_kws": {"clip_threshold": 0.1, "noise_factor": 0.5}
     }
 
 

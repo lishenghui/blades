@@ -20,7 +20,16 @@ class _RayActor(object):
         traindls, testdls = dataset.get_dls()
         self.dataset = FLDataset(traindls, testdls)
     
-    def local_training(self, clients, model, local_round, lr):
+    def local_training(self, clients, model, local_round, lr, *args, **kwargs):
+        if "dp" in kwargs and kwargs["dp"] == True:
+            assert "clip_threshold" in kwargs and "noise_factor" in kwargs
+            dp = True
+            clip_threshold = kwargs["clip_threshold"]
+            noise_factor = kwargs["noise_factor"]
+        else:
+            dp = False
+            clip_threshold = 0
+            noise_factor = 0
         update = []
         for i in range(len(clients)):
             clients[i].set_para(model)
@@ -28,7 +37,7 @@ class _RayActor(object):
             clients[i].on_train_round_begin()
             data = self.dataset.get_train_data(clients[i].id(), local_round)
             clients[i].local_training(data_batches=data)
-            clients[i].on_train_round_end()
+            clients[i].on_train_round_end(dp=dp, clip_threshold=clip_threshold, noise_factor=noise_factor)
             update.append(clients[i].get_update())
         return update
     
