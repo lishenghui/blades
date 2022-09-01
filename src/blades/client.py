@@ -7,7 +7,7 @@ import ray.train as train
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
-
+from blades.utils.torch_utils import clip_tensor_norm_
 
 class BladesClient(object):
     r"""Base class for all clients.
@@ -19,23 +19,21 @@ class BladesClient(object):
         device (str): target device if specified, all parameters will be copied to that device
     """
     
-    _is_byzantine: bool = False
-    _is_trusted: bool = False
-    device: str = 'cpu'
-    
     def __init__(
             self,
             id: Optional[str] = None,
             device: Optional[str] = 'cpu',
     ):
         self._state = defaultdict(dict)
-        self.set_id(id)
         self.device = device
-        
-        self._running = {}
+        self._is_byzantine: bool = False
+        self._is_trusted: bool = False
+        self.device: str = 'cpu'
         
         self._json_logger = logging.getLogger("stats")
         self.debug_logger = logging.getLogger("debug")
+
+        self.set_id(id)
     
     def set_id(self, id: str) -> None:
         r"""Sets the unique id of the client.
@@ -124,11 +122,18 @@ class BladesClient(object):
         self.model = self.model.to(self.device)
         self.model.train()
         
-    def on_train_round_end(self) -> None:
+    def on_train_round_end(self, dp=False, clip_threshold=None, noise_factor=None) -> None:
         """Called at the end of local optimization.
         """
         update = (self._get_para(current=True) - self._get_para(current=False))
+        if dp:
+            assert clip_threshold != None
+            clip_tensor_norm_(update, max_norm=clip_threshold)
+    
+            sigma = noise_factor * clip_threshold
+            update += torch.normal(mean=0.0, std=sigma, size=update.shape)
         self.save_update(update)
+        
     
     def on_train_batch_begin(self, data, target, logs=None):
         """Called at the beginning of a training batch in `local_training` methods.
