@@ -213,6 +213,8 @@ class Simulator(object):
                     num_rounds: int,
                     clients: List[BladesClient],
                     lr: float,
+                    *args,
+                    **kwargs,
                     ) -> None:
         r"""Run local training using ``ray`` actors
         
@@ -236,6 +238,8 @@ class Simulator(object):
                 model=global_model,
                 local_round=num_rounds,
                 lr=lr,
+                *args,
+                **kwargs,
             ),
             client_groups
         )
@@ -394,6 +398,7 @@ class Simulator(object):
             client_lr: Optional[float] = 0.1,
             server_lr_scheduler: Optional[torch.optim.lr_scheduler.MultiStepLR] = None,
             client_lr_scheduler: Optional[torch.optim.lr_scheduler.MultiStepLR] = None,
+            dp_kws: Optional[Dict[str, float]] = None,
     ):
         """Run the adversarial training.
 
@@ -426,9 +431,12 @@ class Simulator(object):
         :type client_lr_scheduler: torch.optim.lr_scheduler.MultiStepLR, optional
         :return: None
         """
+        if dp_kws:
+            dp_kws.update({"dp": True})
+        
         reset_model_weights(model)
         if server_optimizer == 'SGD':
-            self.server_opt = torch.optim.SGD(model.parameters(), lr=server_lr)
+            self.server_opt = torch.optim.SGD(model.parameters(), lr=server_lr, **dp_kws)
         else:
             self.server_opt = server_optimizer
         
@@ -449,7 +457,7 @@ class Simulator(object):
             for global_rounds in t:
                 round_start = time()
                 if self.use_actor:
-                    self.train_actor(global_rounds, local_steps, self.get_clients(), client_lr)
+                    self.train_actor(global_rounds, local_steps, self.get_clients(), client_lr, **dp_kws)
                 else:
                     self.train_trainer(global_rounds, local_steps, self._clients)
                 
