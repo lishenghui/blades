@@ -433,6 +433,8 @@ class Simulator(object):
         """
         if dp_kws:
             dp_kws.update({"dp": True})
+        else:
+            dp_kws = {}
         
         reset_model_weights(model)
         if server_optimizer == 'SGD':
@@ -456,10 +458,7 @@ class Simulator(object):
         with trange(1, global_rounds + 1) as t:
             for global_rounds in t:
                 round_start = time()
-                if self.use_actor:
-                    self.train_actor(global_rounds, local_steps, self.get_clients(), client_lr, **dp_kws)
-                else:
-                    self.train_trainer(global_rounds, local_steps, self._clients)
+                self.train_actor(global_rounds, local_steps, self.get_clients(), client_lr, **dp_kws)
                 
                 if self.use_actor and global_rounds % validate_interval == 0:
                     loss, top1 = self.test_actor(global_round=global_rounds, batch_size=test_batch_size)
