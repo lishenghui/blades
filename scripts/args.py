@@ -20,7 +20,7 @@ def parse_arguments():
     parser.add_argument('--metrics_name', help='name for metrics file;', type=str, default='none', required=False)
     parser.add_argument("--attack", type=str, default='signflipping', help="Select attack types.")
     parser.add_argument("--dataset", type=str, default='cifar10', help="Dataset")
-    parser.add_argument("--algorithm", type=str, default='fedavg', help="Optimization algorithm, either 'fedavg' or 'fedsgd'.")
+    parser.add_argument("--algorithm", type=str, default='fedsgd', help="Optimization algorithm, either 'fedavg' or 'fedsgd'.")
     parser.add_argument("--agg", type=str, default='clippedclustering', help="Aggregator.")
     parser.add_argument("--lr", type=float, default=0.1, help="learning rate")
     parser.add_argument("--num_actors", type=int, default=1)
@@ -28,8 +28,17 @@ def parse_arguments():
     parser.add_argument("--num_clients", type=int, default=20)
     parser.add_argument("--num_byzantine", type=int, default=5)
     parser.add_argument("--num_gpus", type=int, default=4)
+    
+    # Parameters for DP
+    parser.add_argument("--privacy_delta", type=float, default=1e-6)
+    parser.add_argument("--privacy_epsilon", type=float, default=0.9)
+    parser.add_argument("--clip_threshold", type=float, default=5.0)
     options = parser.parse_args()
     
+    if options.algorithm == "fedsgd":
+        options.local_round = 1
+        
+    options.privacy_sensitivity = 2 * options.clip_threshold / options.batch_size
     ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
     
     EXP_DIR = os.path.join(ROOT_DIR, f"outputs/{options.dataset}")

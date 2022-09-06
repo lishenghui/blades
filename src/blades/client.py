@@ -130,8 +130,9 @@ class BladesClient(object):
             assert clip_threshold != None
             clip_tensor_norm_(update, max_norm=clip_threshold)
     
-            sigma = noise_factor * clip_threshold
-            update += torch.normal(mean=0.0, std=sigma, size=update.shape)
+            sigma = noise_factor
+            noise = torch.normal(mean=0.0, std=sigma, size=update.shape)
+            update += noise
         self.save_update(update)
         
     
