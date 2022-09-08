@@ -10,6 +10,7 @@ def parse_arguments():
     parser.add_argument("--use_actor", action="store_true", default=False)
     parser.add_argument("--noniid", action="store_true", default=False)
     parser.add_argument("--ipmlarge", action="store_true", default=False)
+    parser.add_argument("--dp", action="store_true", default=False)
     parser.add_argument("--seed", type=int, default=1)
     parser.add_argument("--global_round", type=int, default=400)
     parser.add_argument("--local_round", type=int, default=50)
@@ -31,8 +32,8 @@ def parse_arguments():
     
     # Parameters for DP
     parser.add_argument("--privacy_delta", type=float, default=1e-6)
-    parser.add_argument("--privacy_epsilon", type=float, default=0.9)
-    parser.add_argument("--clip_threshold", type=float, default=5.0)
+    parser.add_argument("--privacy_epsilon", type=float, default=1.0)
+    parser.add_argument("--clip_threshold", type=float, default=0.5)
     options = parser.parse_args()
     
     if options.algorithm == "fedsgd":
@@ -83,6 +84,7 @@ def parse_arguments():
             + (f"_bz{options.batch_size}")
             + (f"_localround{options.local_round}")
             + ("_noniid" if options.noniid else "")
+            + (f"_privacy_epsilon{options.privacy_epsilon}_clip_threshold{options.clip_threshold}" if options.dp else "")
             + f"_seed{options.seed}"
     )
     
