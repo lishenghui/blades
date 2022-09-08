@@ -248,12 +248,14 @@ class Simulator(object):
         for client, update in zip(clients, updates):
             client.save_update(update)
         
+        if self.adversary:
+            self.adversary.omniscient_callback(self)
+            
         # If there are Byzantine workers, ask them to craft attackers based on the updated settings.
         for omniscient_attacker_callback in self.omniscient_callbacks:
             omniscient_attacker_callback(self)
         
-        if self.adversary:
-            self.adversary.omniscient_callback(self)
+        
         updates = self.parallel_get(clients, lambda w: w.get_update())
         aggregated = self.server.aggregator(clients)
         self.server.apply_update(aggregated)
@@ -464,7 +466,6 @@ class Simulator(object):
                     loss, top1 = self.test_actor(global_round=global_rounds, batch_size=test_batch_size)
                     t.set_postfix(loss=loss, top1=top1)
                 
-                # TODO(Shenghui): When using trainer, the test method is not implemented so far.
                 if server_lr_scheduler:
                     server_lr_scheduler.step()
 

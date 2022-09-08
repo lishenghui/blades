@@ -10,6 +10,9 @@ from torch.utils.data import DataLoader
 from blades.utils.torch_utils import clip_tensor_norm_
 
 class BladesClient(object):
+
+    _is_byzantine: bool = False
+
     r"""Base class for all clients.
     
         .. note::
@@ -26,9 +29,8 @@ class BladesClient(object):
     ):
         self._state = defaultdict(dict)
         self.device = device
-        self._is_byzantine: bool = False
         self._is_trusted: bool = False
-        self.device: str = 'cpu'
+        # self.device: str = device
         
         self._json_logger = logging.getLogger("stats")
         self.debug_logger = logging.getLogger("debug")
