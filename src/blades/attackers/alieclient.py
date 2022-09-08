@@ -23,7 +23,14 @@ class AlieClient(ByzantineClient):
         self.n_good = num_clients - num_byzantine
     
     def omniscient_callback(self, simulator):
-        # Loop over good workers and accumulate their gradients
+        return 
+       
+
+class AlieAdversary():
+    def __init__(self):
+        pass
+
+    def omniscient_callback(self, simulator):
         updates = []
         for client in simulator._clients.values():
             if not client.is_byzantine():
@@ -32,6 +39,8 @@ class AlieClient(ByzantineClient):
         stacked_updates = torch.stack(updates, 1)
         mu = torch.mean(stacked_updates, 1)
         std = torch.std(stacked_updates, 1)
-        
-        self._gradient = mu - std * self.z_max
-        self._state['saved_update'] = self._gradient
+        for client in simulator._clients.values():
+            if client.is_byzantine():
+                update = mu - std * client.z_max
+                client.save_update(update)
+
