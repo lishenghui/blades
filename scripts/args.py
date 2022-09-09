@@ -60,6 +60,7 @@ def parse_arguments():
         'mean': {},
         'signguard': {},
         'geomed': {},
+        'dnc': {"num_byzantine": options.num_byzantine},
         'autogm': {"lamb": 2.0},
         'clippedclustering': {"max_tau": 2.0, "signguard": True, "linkage": 'average'},
         'clustering': {},
