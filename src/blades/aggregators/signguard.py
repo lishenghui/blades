@@ -13,7 +13,7 @@ from .median import Median
 file_dir = os.path.dirname(__file__)
 sys.path.append(file_dir)
 
-import torch_utils
+from blades.utils import torch_utils
 
 
 class Signguard(_BaseAggregator):
