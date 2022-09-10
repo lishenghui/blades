@@ -53,14 +53,6 @@ class Dnc(_BaseAggregator):
             good = s.argsort()[:len(updates) - int(self.fliter_frac * self.num_byzantine)]
             benign_ids.extend(good)
             
-            # full_cov = sub_updates.cpu().numpy()
-            # full_mean = mu.cpu().numpy()
-            # centered_cov = full_cov - full_mean
-            # u, s, vh = np.linalg.svd(centered_cov, full_matrices=False)
-            # # print('Top 7 Singular Values: ', s[0:7])
-            # eigs = vh[0:1]
-            # corrs = np.matmul(eigs, np.transpose(full_cov))  # shape num_top, num_active_indices
-            # scores = np.linalg.norm(corrs, axis=0)  # shape num_active_indices
         benign_ids = list(set(benign_ids))
         benign_updates = updates[benign_ids, :].mean(dim=0)
         return benign_updates
