@@ -14,7 +14,7 @@ run_all_aggs() {
     do
         for batch_size in 64 512 128 
         do
-            args="--dataset $1 --algorithm $2 --global_round $3 --local_round $4  --agg $5 $6 --num_gpus 4 --num_byzantine 3 --use-cuda --batch_size $batch_size --seed 0 --serv_momentum $serv_momentum --attack $attack"
+            args="--dataset $1 --algorithm $2 --global_round $3 --local_round $4  --agg $5 $6 --num_byzantine 3 --batch_size $batch_size --seed 0 --serv_momentum $serv_momentum --attack $attack"
             echo ${args}
             python main.py ${args}
         done

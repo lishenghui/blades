@@ -14,7 +14,7 @@ run_all_aggs() {
         serv_momentum=0.9
         for num_byzantine in 7
         do
-            args="--dataset $1 --algorithm $2 --global_round $3 --local_round $4  --agg $5 --num_gpus 4 --num_byzantine $num_byzantine --use-cuda --batch_size $6 $7 --seed 0 --serv_momentum $serv_momentum --attack $attack"
+            args="--dataset $1 --algorithm $2 --global_round $3 --local_round $4  --agg $5 --num_byzantine $num_byzantine --batch_size $6 $7 --seed 0 --serv_momentum $serv_momentum --attack $attack"
             echo ${args}
             python main.py ${args}
         done
