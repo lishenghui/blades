@@ -3,7 +3,6 @@ from typing import Union, List
 import numpy as np
 import torch
 from numpy import inf
-from scipy import spatial
 from sklearn.cluster import AgglomerativeClustering, KMeans
 
 from blades.client import BladesClient
