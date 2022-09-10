@@ -3,11 +3,12 @@ import logging
 from collections import defaultdict
 from typing import Optional
 
-import ray.train as train
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
+
 from blades.utils.torch_utils import clip_tensor_norm_
+
 
 class BladesClient(object):
 
