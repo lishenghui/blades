@@ -70,6 +70,6 @@ class BladesServer(object):
                     continue
                 end = beg + len(p.data.view(-1))
                 x = update[beg:end].reshape_as(p.data)
-                p.grad = -x.clone().detach()
+                p.grad = -x.clone().detach().to(p.device)
                 beg = end
         self.optimizer.step()

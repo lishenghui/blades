@@ -61,7 +61,6 @@ class Simulator(object):
             **kwargs,
     ):
     
-        self.use_actor = True if mode == 'actor' else False
         if not adversary_kws:
             adversary_kws = {}
         if use_cuda or ("gpu_per_actor" in kwargs and kwargs["gpu_per_actor"] > 0.0):
@@ -89,15 +88,10 @@ class Simulator(object):
             unknown = ", ".join(kwargs)
             raise RuntimeError(f"Unknown keyword argument(s): {unknown}")
         
-        if self.use_actor:
-            self.ray_actors = [_RayActor.options(num_gpus=gpu_per_actor).remote(dataset)
-                               for _ in range(num_actors)]
-            self.actor_pool = ActorPool(self.ray_actors)
-        else:
-            self.executor = ThreadPoolExecutor(max_workers=num_trainers)
-            self.ray_trainers = [Trainer(backend="torch", num_workers=num_actors // num_trainers, use_gpu=use_cuda,
-                                         resources_per_worker={'GPU': gpu_per_actor}) for _ in range(num_trainers)]
-            [trainer.start() for trainer in self.ray_trainers]
+        self.ray_actors = [_RayActor.options(num_gpus=gpu_per_actor).remote(dataset)
+                            for _ in range(num_actors)]
+        self.actor_pool = ActorPool(self.ray_actors)
+        
         
         if type(dataset) != FLDataset:
             traindls, testdls = dataset.get_dls()
@@ -228,8 +222,9 @@ class Simulator(object):
         # TODO: randomly select a subset of input for local training
         self.debug_logger.info(f"Train global round {global_round}")
         
+        t_s = time()
         # Allocate input to actors:
-        global_model = self.server.get_model().to('cpu')
+        global_model = self.server.get_model()
         client_groups = np.array_split(self.get_clients(), len(self.ray_actors))
         all_results = self.actor_pool.map(
             lambda actor, clients:
@@ -244,6 +239,7 @@ class Simulator(object):
             client_groups
         )
         
+       
         updates = [update for returns in list(all_results) for update in returns]
         for client, update in zip(clients, updates):
             client.save_update(update)
@@ -255,45 +251,10 @@ class Simulator(object):
         for omniscient_attacker_callback in self.omniscient_callbacks:
             omniscient_attacker_callback(self)
         
-        
         updates = self.parallel_get(clients, lambda w: w.get_update())
         aggregated = self.server.aggregator(clients)
         self.server.apply_update(aggregated)
-        
         # self.log_variance(global_round, updates)
-    
-    def train_trainer(self, epoch, num_rounds, clients):
-        self.debug_logger.info(f"Train epoch {epoch}")
-        
-        def local_training(config):
-            update = []
-            for i in range(len(config['client'])):
-                config['client'][i].set_para(config['model'])
-                config['client'][i].on_train_round_begin()
-                config['client'][i].local_training(config['local_round'], config['use_actor'], config['data'][i])
-                update.append(config['client'][i].get_update())
-            return update
-        
-        def train_function(clients, trainer, model, num_rounds):
-            data = [self.dataset.get_train_data(client._id, num_rounds) for client in clients]
-            return trainer.run(local_training,
-                               config={'client': clients, 'data': data, 'model': model, 'use_actor': self.use_actor,
-                                       'local_round': num_rounds})
-        
-        client_per_trainer = len(clients) // len(self.ray_trainers)
-        all_tasks = [
-            self.executor.submit(train_function, clients[i * client_per_trainer:(i + 1) * client_per_trainer],
-                                 self.ray_trainers[i],
-                                 self.server.get_model().to('cpu'), num_rounds) for i in range(len(self.ray_trainers))]
-        
-        update = []
-        for task in as_completed(all_tasks):
-            update.extend(task.result()[0])
-        
-        aggregated = self.aggregator(update)
-        self.server.apply_update(aggregated)
-        
-        # self.log_variance(epoch, update)
     
     def test_actor(self, global_round, batch_size):
         """Evaluates the global model using test set.
@@ -301,7 +262,7 @@ class Simulator(object):
        :param global_round: the current global round number
        :param batch_size: test batch size
        """
-        global_model = self.server.get_model().to('cpu')
+        global_model = self.server.get_model()
         client_groups = np.array_split(self.get_clients(), len(self.ray_actors))
         
         all_results = self.actor_pool.map(
@@ -457,15 +418,14 @@ class Simulator(object):
         self.parallel_call(self.get_clients(),
                            lambda client: client.set_model(global_model, torch.optim.SGD, client_lr))
         
-        with trange(1, global_rounds + 1) as t:
+        with trange(0, global_rounds) as t:
             for global_rounds in t:
                 round_start = time()
-                self.train_actor(global_rounds, local_steps, self.get_clients(), client_lr, **dp_kws)
-                
-                if self.use_actor and global_rounds % validate_interval == 0:
+                if global_rounds % validate_interval == 0:
                     loss, top1 = self.test_actor(global_round=global_rounds, batch_size=test_batch_size)
                     t.set_postfix(loss=loss, top1=top1)
                 
+                self.train_actor(global_rounds, local_steps, self.get_clients(), client_lr, **dp_kws)
                 if server_lr_scheduler:
                     server_lr_scheduler.step()
 
@@ -482,4 +442,5 @@ class Simulator(object):
                 self.debug_logger.info(
                     f"E={global_rounds}; Server learning rate = {server_lr:}; Client learning rate = {client_lr:}; Time cost = {time() - global_start}")
             
+            loss, top1 = self.test_actor(global_round=global_rounds, batch_size=test_batch_size)
             return ret

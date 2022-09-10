@@ -8,7 +8,7 @@ from args import options
 from blades.simulator import Simulator
 from blades.datasets import CIFAR10
 from blades.datasets import MNIST
-
+import math
 from blades.models.cifar10 import CCTNet
 
 
@@ -32,18 +32,24 @@ elif options.dataset == 'mnist':
 else:
     raise NotImplementedError
 
+if options.gpu_per_actor > 0.0:
+    model = model.to("cuda")
+
+
+privacy_factor = args.privacy_sensitivity * math.sqrt(2 * math.log(1.25 / args.privacy_delta)) / args.privacy_epsilon
+   
 # configuration parameters
 conf_args = {
     "dataset": dataset,
     "aggregator": options.agg,  # defense: robust aggregation
     "aggregator_kws": options.agg_args[options.agg],
     "num_byzantine": options.num_byzantine,  # number of byzantine input
-    "use_cuda": True,
+    "use_cuda": options.gpu_per_actor > 0.0,
     "attack": options.attack,  # attack strategy
     "attack_kws": options.attack_args[options.attack],
     "adversary_kws": options.adversary_args,
-    "num_actors": 5,  # number of training actors
-    "gpu_per_actor": 0.2,
+    "num_actors": options.num_actors,  # number of training actors
+    "gpu_per_actor": options.gpu_per_actor,
     "log_path": options.log_dir,
     "seed": options.seed,  # reproducibility
 }
@@ -68,8 +74,10 @@ if options.algorithm == 'fedsgd':
         "global_rounds": options.global_round,  # number of global rounds
         "local_steps": options.local_round,  # number of seps "client_lr": 0.1,  # learning rateteps per round
         "client_lr": 1.0,
-        "validate_interval": 20,
+        "validate_interval": options.validate_interval,
         "server_lr_scheduler": lr_scheduler,
+        "dp_kws": {"clip_threshold": options.clip_threshold, "noise_factor": privacy_factor} if options.dp 
+                    else {}
     }
 
 
