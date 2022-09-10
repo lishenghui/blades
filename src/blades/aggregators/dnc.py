@@ -48,7 +48,7 @@ class Dnc(_BaseAggregator):
             mu = sub_updates.mean(dim=0)
             centered_update = sub_updates - mu
             v = torch.linalg.svd(centered_update, full_matrices=False)[2][0, :]
-            s = np.array([torch.dot(update - mu, v) ** 2 for update in sub_updates])
+            s = np.array([(torch.dot(update - mu, v) ** 2).item() for update in sub_updates])
 
             good = s.argsort()[:len(updates) - int(self.fliter_frac * self.num_byzantine)]
             benign_ids.extend(good)

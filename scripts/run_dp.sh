@@ -54,7 +54,7 @@ export -f run_one_agg
  
 
 cuda=0
-for agg in 'median' 'trimmedmean' 'mean' 'geomed'
+for agg in 'clippedclustering' 'krum' 'dnc' 'clustering'
 do 
     export CUDA_VISIBLE_DEVICES=$(((cuda + 1)))
     cuda=$(((cuda + 1) % 3))
