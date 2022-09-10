@@ -8,10 +8,55 @@ pushd ../src || exit
   python setup.py develop
 popd || exit
 
-for privacy_epsilon in 100.0 #5.0 10.0 20
+
+run_one_agg() {
+for privacy_epsilon in 1.0 5.0 10.0
   do
-    args="--privacy_epsilon $privacy_epsilon --dp --num_clients 50 --global_round 6000 --num_byzantine 5 --dataset cifar10 --agg median --serv_momentum 0.9 --batch_size 64 --attack labelflipping"
-    python main.py ${args}
-    # nohup python dp_cpu.py ${args} &
-    # python dp_cpu.py ${args}
+    for num_byzantine in 5 10
+    do
+      args="
+            --agg $1 \
+            --privacy_epsilon $privacy_epsilon \
+            --dp \
+            --num_clients 50 \
+            --global_round 6000 \
+            --num_byzantine $num_byzantine \
+            --dataset cifar10 \
+            --serv_momentum 0.9 \
+            --batch_size 64 \
+            --attack alie \
+            "
+      python main.py ${args}
+    done
   done
+
+  for privacy_epsilon in 100.0
+  do
+    for num_byzantine in 0 5 10
+    do
+      args="
+            --agg $1 \
+            --privacy_epsilon $privacy_epsilon \
+            --num_clients 50 \
+            --global_round 6000 \
+            --num_byzantine $num_byzantine \
+            --dataset cifar10 \
+            --serv_momentum 0.9 \
+            --batch_size 64 \
+            --attack alie \
+            "
+      python main.py ${args}
+    done
+  done
+}
+
+export -f run_one_agg
+ 
+
+cuda=0
+for agg in 'median' 'trimmedmean' 'mean' 'geomed'
+do 
+    export CUDA_VISIBLE_DEVICES=$(((cuda + 1)))
+    cuda=$(((cuda + 1) % 3))
+    nohup bash -c "run_one_agg $agg" &
+done

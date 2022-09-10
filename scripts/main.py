@@ -8,7 +8,7 @@ from args import options
 from blades.simulator import Simulator
 from blades.datasets import CIFAR10
 from blades.datasets import MNIST
-
+import math
 from blades.models.cifar10 import CCTNet
 
 
@@ -34,7 +34,10 @@ else:
 
 if options.gpu_per_actor > 0.0:
     model = model.to("cuda")
-    
+
+
+privacy_factor = args.privacy_sensitivity * math.sqrt(2 * math.log(1.25 / args.privacy_delta)) / args.privacy_epsilon
+   
 # configuration parameters
 conf_args = {
     "dataset": dataset,
@@ -71,7 +74,7 @@ if options.algorithm == 'fedsgd':
         "global_rounds": options.global_round,  # number of global rounds
         "local_steps": options.local_round,  # number of seps "client_lr": 0.1,  # learning rateteps per round
         "client_lr": 1.0,
-        "validate_interval": 20,
+        "validate_interval": options.validate_interval,
         "server_lr_scheduler": lr_scheduler,
         "dp_kws": {"clip_threshold": options.clip_threshold, "noise_factor": privacy_factor} if options.dp 
                     else {}
