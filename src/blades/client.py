@@ -111,7 +111,7 @@ class BladesClient(object):
     def __str__(self) -> str:
         return "BladesClient"
     
-    def on_train_round_begin(self, use_actor=True) -> None:
+    def on_train_round_begin(self) -> None:
         """Called at the beginning of each local training round in `local_training` methods.
 
         Subclasses should override for any actions to run.
@@ -119,8 +119,6 @@ class BladesClient(object):
         :param logs: Dict. Aggregated metric results up until this batch.
         """
         self._save_para()
-        if not use_actor:
-            self.model = train.torch.prepare_model(self.model)
         self.model = self.model.to(self.device)
         self.model.train()
         
@@ -133,7 +131,7 @@ class BladesClient(object):
             clip_tensor_norm_(update, max_norm=clip_threshold)
     
             sigma = noise_factor
-            noise = torch.normal(mean=0.0, std=sigma, size=update.shape)
+            noise = torch.normal(mean=0.0, std=sigma, size=update.shape).to(update.device)
             update += noise
         self.save_update(update)
         
@@ -149,7 +147,7 @@ class BladesClient(object):
          """
         return data, target
     
-    def evaluate(self, round_number, test_set, batch_size, metrics, use_actor=True):
+    def evaluate(self, round_number, test_set, batch_size, metrics):
         dataloader = DataLoader(dataset=test_set, batch_size=batch_size)
         self.model.eval()
         r = {
@@ -219,7 +217,7 @@ class BladesClient(object):
         for name, param in self.model.named_parameters():
             if not param.requires_grad:
                 continue
-            self._state['saved_para'][name] = torch.clone(param.data).detach()
+            self._state['saved_para'][name] = torch.clone(param.data).detach().to(self.device)
     
     def _get_para(self, current=True) -> torch.Tensor:
         layer_parameters = []
@@ -233,7 +231,7 @@ class BladesClient(object):
                 saved_param = self._state['saved_para'][name]
                 layer_parameters.append(saved_param.data.view(-1))
         
-        return torch.cat(layer_parameters).to('cpu')
+        return torch.cat(layer_parameters)
 
 
 class ByzantineClient(BladesClient):

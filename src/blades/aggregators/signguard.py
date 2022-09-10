@@ -18,12 +18,7 @@ from blades.utils import torch_utils
 
 class Signguard(_BaseAggregator):
     r"""
-         A robust aggregator from paper `"An Experimental Study of Byzantine-Robust sAggregation Schemes in Federated Learning" <https://www.techrxiv.org/articles/preprint/An_Experimental_Study_of_Byzantine-Robust_Aggregation_Schemes_in_Federated_Learning/19560325>`_
-
-         it separates the client population into two groups based on the cosine similarities
-
-    Args:
-        tau (float): threshold of clipping norm. If it is not given, updates are clipped according the median of historical norm.
+         A robust aggregator from paper `Xu et al. SignGuard: Byzantine-robust Federated Learning through Collaborative Malicious Gradient Filtering <https://arxiv.org/abs/2109.05872>`_
     """
     
     def __init__(self, agg='mean', max_tau=1e5, linkage='average') -> None:
