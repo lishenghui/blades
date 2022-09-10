@@ -1,12 +1,10 @@
 import importlib
 import logging
-from concurrent.futures import ThreadPoolExecutor, as_completed
 from time import time
 from typing import Any, Callable, Optional, Union, List, Dict
 
 import numpy as np
 import torch
-from ray.train import Trainer
 from ray.util import ActorPool
 from tqdm import trange
 
