@@ -35,6 +35,12 @@ class Dnc(_BaseAggregator):
         updates = self._get_updates(inputs)
         d = len(updates[0])
         l2norms = [torch.norm(update).item() for update in updates]
+        threshold = np.median(l2norms)
+
+        # for idx, l2 in enumerate(l2norms):
+        #     if l2 > threshold:
+        #         updates[idx] = torch_utils.clip_tensor_norm_(updates[idx], threshold)
+                
         benign_ids = []
         for i in range(self.num_iters):
             indices = torch.randperm(d)[:self.sub_dim]
@@ -56,5 +62,5 @@ class Dnc(_BaseAggregator):
             # corrs = np.matmul(eigs, np.transpose(full_cov))  # shape num_top, num_active_indices
             # scores = np.linalg.norm(corrs, axis=0)  # shape num_active_indices
         benign_ids = list(set(benign_ids))
-        benign_updates = updates[benign_ids, :]
+        benign_updates = updates[benign_ids, :].mean(dim=0)
         return benign_updates

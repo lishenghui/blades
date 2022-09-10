@@ -23,8 +23,10 @@ class AlieClient(ByzantineClient):
         self.n_good = num_clients - num_byzantine
     
     def omniscient_callback(self, simulator):
-        return 
-       
+        pass 
+    
+    def local_training(self, data_batches):
+        pass
 
 class AlieAdversary():
     def __init__(self):
@@ -39,8 +41,10 @@ class AlieAdversary():
         stacked_updates = torch.stack(updates, 1)
         mu = torch.mean(stacked_updates, 1)
         std = torch.std(stacked_updates, 1)
+        update = None
         for client in simulator._clients.values():
             if client.is_byzantine():
-                update = mu - std * client.z_max
+                if update is None:
+                    update = mu - std * client.z_max
                 client.save_update(update)
 

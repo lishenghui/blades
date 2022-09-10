@@ -32,18 +32,21 @@ elif options.dataset == 'mnist':
 else:
     raise NotImplementedError
 
+if options.gpu_per_actor > 0.0:
+    model = model.to("cuda")
+    
 # configuration parameters
 conf_args = {
     "dataset": dataset,
     "aggregator": options.agg,  # defense: robust aggregation
     "aggregator_kws": options.agg_args[options.agg],
     "num_byzantine": options.num_byzantine,  # number of byzantine input
-    "use_cuda": True,
+    "use_cuda": options.gpu_per_actor > 0.0,
     "attack": options.attack,  # attack strategy
     "attack_kws": options.attack_args[options.attack],
     "adversary_kws": options.adversary_args,
-    "num_actors": 5,  # number of training actors
-    "gpu_per_actor": 0.2,
+    "num_actors": options.num_actors,  # number of training actors
+    "gpu_per_actor": options.gpu_per_actor,
     "log_path": options.log_dir,
     "seed": options.seed,  # reproducibility
 }
