@@ -73,6 +73,8 @@ if options.algorithm == 'fedsgd':
         "client_lr": 1.0,
         "validate_interval": 20,
         "server_lr_scheduler": lr_scheduler,
+        "dp_kws": {"clip_threshold": options.clip_threshold, "noise_factor": privacy_factor} if options.dp 
+                    else {}
     }
 
 
