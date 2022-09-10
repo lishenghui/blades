@@ -80,11 +80,9 @@ class Clippedclustering(_BaseAggregator):
                 features.append([feature0, feature1, feature2])
     
             kmeans = KMeans(n_clusters=2, random_state=0).fit(features)
-            print(kmeans)
     
             flag = 1 if np.sum(kmeans.labels_) > num // 2 else 0
             S2_idxs = list([idx for idx, label in enumerate(kmeans.labels_) if label == flag])
-            print(S2_idxs)
 
             selected_idxs = list(set(S1_idxs) & set(S2_idxs))
         
