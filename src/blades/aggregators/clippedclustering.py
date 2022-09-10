@@ -44,21 +44,17 @@ class Clippedclustering(_BaseAggregator):
         threshold = np.median(self.l2norm_his)
         threshold = min(threshold, self.tau)
         
-        print(threshold, l2norms)
+        # print(threshold, l2norms)
         for idx, l2 in enumerate(l2norms):
             if l2 > threshold:
                 updates[idx] = torch_utils.clip_tensor_norm_(updates[idx], threshold)
         
-        # stacked_models = torch.vstack(updates)
-        np_models = updates.cpu().detach().numpy()
         num = len(updates)
         dis_max = np.zeros((num, num))
         for i in range(num):
-            for j in range(num):
-                if i == j:
-                    dis_max[i, j] = 0
-                else:
-                    dis_max[i, j] = spatial.distance.cosine(np_models[i, :], np_models[j, :])
+            for j in range(i+1, num):
+                dis_max[i, j] = 1 - torch.nn.functional.cosine_similarity(updates[i, :], updates[j, :], dim=0)
+                dis_max[j, i] = dis_max[i, j] 
         dis_max[dis_max == -inf] = 0
         dis_max[dis_max == inf] = 2
         dis_max[np.isnan(dis_max)] = 2
