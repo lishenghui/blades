@@ -442,4 +442,5 @@ class Simulator(object):
                 self.debug_logger.info(
                     f"E={global_rounds}; Server learning rate = {server_lr:}; Client learning rate = {client_lr:}; Time cost = {time() - global_start}")
             
+            loss, top1 = self.test_actor(global_round=global_rounds, batch_size=test_batch_size)
             return ret
