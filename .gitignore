@@ -1,0 +1,8 @@
+*.gz
+*.obj
+*.out
+*.egg-info
+*__pycache__*
+*outputs
+scripts/data
+*.pyc
