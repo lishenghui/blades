@@ -416,7 +416,7 @@ class Simulator(object):
         self.parallel_call(self.get_clients(),
                            lambda client: client.set_model(global_model, torch.optim.SGD, client_lr))
         
-        with trange(0, global_rounds) as t:
+        with trange(0, global_rounds+1) as t:
             for global_rounds in t:
                 round_start = time()
                 if global_rounds % validate_interval == 0:
@@ -430,9 +430,7 @@ class Simulator(object):
                 if client_lr_scheduler:
                     client_lr_scheduler.step()
                     client_lr = client_lr_scheduler.get_last_lr()[0]
-                # else:
                 
-                # client_lr = self.server_opt.param_groups[0]['lr']
                 # client_lr = self.server_opt.param_groups[0]['lr']
                 
                 ret.append(time() - round_start)
