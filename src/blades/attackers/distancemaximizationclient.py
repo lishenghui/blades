@@ -32,7 +32,7 @@ class DistancemaximizationAdversary():
         elif self.dev_type == 'std':
             deviation = torch.std(all_updates, 0)
     
-        lamda = torch.Tensor([self.threshold])
+        lamda = torch.Tensor([self.threshold]).to(all_updates.device)
     
         threshold_diff = self.threshold_diff
         prev_loss = -1
