@@ -70,14 +70,6 @@ Take `ALIE Attack <https://github.com/bladesteam/blades/blob/master/src/blades/a
    :code: python
 
 
-Illustration of Blades
-==================================================
-
-.. figure:: https://i.postimg.cc/Xq73SgxS/blade-architecture.png
-   :width: 800
-   :alt: Blades architecture
-
-
 Build-in Implementations
 ==================================================
 In detail, the following strategies are currently implemented:

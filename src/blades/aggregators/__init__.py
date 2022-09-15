@@ -2,12 +2,12 @@ from .autogm import Autogm
 from .clippedclustering import Clippedclustering
 from .clustering import Clustering
 from .geomed import Geomed
-from .krum import Krum
+from .multikrum import Multikrum
 from .mean import Mean
 from .median import Median
 from .trimmedmean import Trimmedmean
 
-__all__ = ['Krum',
+__all__ = ['Multikrum',
            'Median',
            'Geomed',
            'Autogm',
