@@ -24,13 +24,7 @@ class Dnc(_BaseAggregator):
     def __call__(self, inputs: Union[List[BladesClient], List[torch.Tensor], torch.Tensor]):
         updates = self._get_updates(inputs)
         d = len(updates[0])
-        l2norms = [torch.norm(update).item() for update in updates]
-        threshold = np.median(l2norms)
-
-        # for idx, l2 in enumerate(l2norms):
-        #     if l2 > threshold:
-        #         updates[idx] = torch_utils.clip_tensor_norm_(updates[idx], threshold)
-                
+                        
         benign_ids = []
         for i in range(self.num_iters):
             indices = torch.randperm(d)[:self.sub_dim]
