@@ -66,7 +66,7 @@ def parse_arguments():
         'clippedclustering': {"max_tau": 2.0, "signguard": True, "linkage": 'average'},
         'clustering': {},
         'centeredclipping': {},
-        'krum': {"num_clients": options.num_clients, "num_byzantine": options.num_byzantine},
+        'multikrum': {"num_clients": options.num_clients, "num_byzantine": options.num_byzantine, "k": 5},
     }
 
     options.adversary_args = {

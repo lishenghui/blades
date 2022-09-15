@@ -90,7 +90,7 @@ def _pairwise_euclidean_distances(vectors):
     return distances
 
 
-class Krum(_BaseAggregator):
+class Multikrum(_BaseAggregator):
     r"""
     
       A robust aggregator from paper `"Machine Learning with Adversaries: Byzantine Tolerant Gradient Descent" <https://proceedings.neurips.cc/paper/2017/hash/f4b9ec30ad9f68f89b29639786cb62ef-Abstract.html>`_
@@ -108,17 +108,17 @@ class Krum(_BaseAggregator):
       
     """
     
-    def __init__(self, num_clients=20, num_byzantine=5):
+    def __init__(self, num_clients=20, num_byzantine=5, k=1):
         self.n = num_clients
         self.f = num_byzantine
-        self.m = 1
-        super(Krum, self).__init__()
+        self.m = k
+        super(Multikrum, self).__init__()
     
     def __call__(self, inputs: Union[List[BladesClient], List[torch.Tensor]]):
         updates = self._get_updates(inputs)
         distances = _pairwise_euclidean_distances(updates)
         top_m_indices = _multi_krum(distances, self.n, self.f, self.m)
-        values = sum(updates[i] for i in top_m_indices)
+        values = torch.stack([updates[i] for i in top_m_indices], dim=0).mean(dim=0)
         return values
     
     def __str__(self):
