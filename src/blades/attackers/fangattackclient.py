@@ -12,11 +12,7 @@ class FangattackClient(ByzantineClient):
         pass
     
 class FangattackAdversary():
-    r"""Uploads random noise as local update. The noise is drawn from a
-    ``normal`` distribution.  The ``means`` and ``standard deviation`` are shared among all drawn elements.
-
-    :param mean: the mean for all distributions
-    :param std: the standard deviation for all distributions
+    r""" 
     """
     
     def __init__(self, num_byzantine: int, agg: str, dev_type='std', *args, **kwargs):
