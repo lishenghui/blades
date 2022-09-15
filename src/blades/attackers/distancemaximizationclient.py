@@ -1,8 +1,6 @@
-import numpy as np
 import torch
 
 from blades.client import ByzantineClient
-from blades.aggregators.trimmedmean import Trimmedmean
 
 class DistancemaximizationClient(ByzantineClient):
     def omniscient_callback(self, simulator):
@@ -24,14 +22,13 @@ class DistancemaximizationAdversary():
         self.num_byzantine = num_byzantine
     
     def attack(self, simulator):
-        tr_mean = Trimmedmean(self.num_byzantine)
         all_updates = torch.stack(list(map(lambda w: w.get_update(), simulator._clients.values())))
         model_re = torch.mean(all_updates, 0)
     
         if self.dev_type == 'sign':
             deviation = torch.sign(model_re)
         elif self.dev_type == 'unit_vec':
-            deviation = model_re / torch.norm(model_re)  # unit vector, dir opp to good dir
+            deviation = model_re / torch.norm(model_re)
         elif self.dev_type == 'std':
             deviation = torch.std(all_updates, 0)
     
@@ -52,7 +49,6 @@ class DistancemaximizationAdversary():
             loss = torch.norm(agg_updates - model_re)
         
             if prev_loss < loss:
-                # print('successful lamda is ', lamda)
                 lamda_succ = lamda
                 lamda = lamda + lamda_fail / 2
             else:
