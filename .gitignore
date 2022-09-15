@@ -6,3 +6,4 @@
 *outputs
 scripts/data
 *.pyc
+*.idea

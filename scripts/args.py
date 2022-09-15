@@ -9,6 +9,7 @@ def parse_arguments():
     parser.add_argument("--noniid", action="store_true", default=False)
     parser.add_argument("--ipmlarge", action="store_true", default=False)
     parser.add_argument("--dp", action="store_true", default=False)
+    parser.add_argument("--local_mode", action="store_true", default=False)
     parser.add_argument("--seed", type=int, default=1)
     parser.add_argument("--global_round", type=int, default=400)
     parser.add_argument("--local_round", type=int, default=50)
@@ -49,6 +50,7 @@ def parse_arguments():
         'labelflipping': {},
         'permutation': {},
         'attackclippedclustering': {},
+        'fangattack': {},
         'ipm': {"epsilon": 100 if options.ipmlarge else 0.5},
         'alie': {"num_clients": options.num_clients, "num_byzantine": options.num_byzantine},
     }
@@ -66,9 +68,12 @@ def parse_arguments():
         'centeredclipping': {},
         'krum': {"num_clients": options.num_clients, "num_byzantine": options.num_byzantine},
     }
-    
+
+    options.adversary_args = {
+        'fangattack': {"num_byzantine": options.num_byzantine, "agg": "median"},
+    }
     # options.adversary_args = {"linkage": "average"}
-    options.adversary_args = {}
+    # options.adversary_args = {}
     options.log_dir = (
             EXP_DIR
             + f"_{options.algorithm}"
