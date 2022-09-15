@@ -2,7 +2,7 @@ import numpy as np
 import torch
 
 from blades.client import ByzantineClient
-
+from blades.aggregators.multikrum import Multikrum
 
 class FangattackClient(ByzantineClient):
     def omniscient_callback(self, simulator):
@@ -58,8 +58,63 @@ class FangattackAdversary():
         for i, client in enumerate(simulator._clients.values()):
             if client.is_byzantine():
                 client.save_update(mal_vec[i])
+
+    def attack_multikrum(self, simulator):
+        num_clients = len(simulator.get_clients())
+        multi_krum = Multikrum(num_clients=num_clients, num_byzantine=self.num_byzantine, k=1)
+        benign_update = []
+        for w in simulator.get_clients():
+            if not w.is_byzantine():
+                benign_update.append(w.get_update())
+        benign_update = torch.stack(benign_update, 0)
+        agg_updates = torch.mean(benign_update, 0)
+        deviation = torch.sign(agg_updates)
+        
+        def compute_lambda(all_updates, model_re, n_attackers):
+        
+            distances = []
+            n_benign, d = all_updates.shape
+            for update in all_updates:
+                distance = torch.norm((all_updates - update), dim=1)
+                distances = distance[None, :] if not len(distances) else torch.cat((distances, distance[None, :]), 0)
+        
+            distances[distances == 0] = 10000
+            distances = torch.sort(distances, dim=1)[0]
+            scores = torch.sum(distances[:, :n_benign - 2 - n_attackers], dim=1)
+            min_score = torch.min(scores)
+            term_1 = min_score / ((n_benign - n_attackers - 1) * torch.sqrt(torch.Tensor([d]))[0])
+            max_wre_dist = torch.max(torch.norm((all_updates - model_re), dim=1)) / (torch.sqrt(torch.Tensor([d]))[0])
+        
+            return (term_1 + max_wre_dist)
+
+        all_updates = torch.stack(list(map(lambda w: w.get_update(), simulator._clients.values())))
+        lamda = compute_lambda(all_updates, agg_updates, self.num_byzantine)
+    
+        threshold = 1e-5
+        mal_update = []
+    
+        while lamda > threshold:
+            mal_update = (-lamda * deviation)
+            mal_updates = torch.stack([mal_update] * self.num_byzantine)
+            mal_updates = torch.cat((mal_updates, all_updates), 0)
+        
+            # print(mal_updates.shape, n_attackers)
+            agg_grads, krum_candidate = multi_krum(mal_updates)
+            if krum_candidate < self.num_byzantine:
+                # print('successful lamda is ', lamda)
+                return mal_update
+            else:
+                mal_update = []
+        
+            lamda *= 0.5
+    
+        if not len(mal_update):
+            mal_update = (agg_updates - lamda * deviation)
+    
+        return mal_update
     
     def omniscient_callback(self, simulator):
         if self.agg in ["median", "trimmedmean"]:
             self.attack_median_and_trimmedmean(simulator)
-
+        else:
+            raise NotImplementedError(f"Adaptive attacks to {self.agg} is not supported yet.")

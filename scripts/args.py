@@ -51,6 +51,7 @@ def parse_arguments():
         'permutation': {},
         'attackclippedclustering': {},
         'fangattack': {},
+        'distancemaximization': {},
         'ipm': {"epsilon": 100 if options.ipmlarge else 0.5},
         'alie': {"num_clients": options.num_clients, "num_byzantine": options.num_byzantine},
     }
@@ -71,6 +72,7 @@ def parse_arguments():
 
     options.adversary_args = {
         'fangattack': {"num_byzantine": options.num_byzantine, "agg": "median"},
+        'distancemaximization': {"num_byzantine": options.num_byzantine, "agg": "trimmedmean"},
     }
     # options.adversary_args = {"linkage": "average"}
     # options.adversary_args = {}
