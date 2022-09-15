@@ -2,7 +2,7 @@ import os
 
 import ray
 import torch
-
+import os
 from blades.models.mnist import MLP
 from args import options
 from blades.simulator import Simulator
@@ -21,7 +21,9 @@ ray.init(address='auto')
 if not os.path.exists(options.log_dir):
     os.makedirs(options.log_dir)
 
-data_root = "./data"
+# Use absolute path name, as Ray might have trouble in fetching relative path
+data_root = os.path.abspath("./data")
+
 cache_name = options.dataset + "_" + options.algorithm + ("_noniid" if not options.noniid else "") + f"_{str(options.num_clients)}_{str(options.seed)}"
 if options.dataset == 'cifar10':
     dataset = CIFAR10(data_root=data_root, cache_name=cache_name, train_bs=options.batch_size, num_clients=options.num_clients, iid=not options.noniid, seed=0)  # built-in federated cifar10 dataset
@@ -47,7 +49,7 @@ conf_args = {
     "use_cuda": options.gpu_per_actor > 0.0,
     "attack": options.attack,  # attack strategy
     "attack_kws": options.attack_args[options.attack],
-    "adversary_kws": options.adversary_args,
+    "adversary_kws": options.adversary_args[options.attack] if options.attack in options.adversary_args else {},
     "num_actors": options.num_actors,  # number of training actors
     "gpu_per_actor": options.gpu_per_actor,
     "log_path": options.log_dir,
