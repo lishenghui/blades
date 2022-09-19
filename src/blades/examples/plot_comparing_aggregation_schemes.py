@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import torch
 
-from blades.aggregators import Krum, Median, Geomed, Autogm, Mean, Clustering, Trimmedmean, Clippedclustering
+from blades.aggregators import Multikrum, Median, Geomed, Autogm, Mean, Clustering, Trimmedmean, Clippedclustering
 
 plt.rcParams['axes.linewidth'] = 1.5 #set the value globally
 plt.rcParams["font.weight"] = "bold"

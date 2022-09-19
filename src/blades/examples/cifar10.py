@@ -1,16 +1,5 @@
-"""
-"This" is my example-script
-===========================
-
-This example doesn't do much, it just makes a simple plot
-"""
-
-
-import sys
-
 import ray
 
-sys.path.insert(0, '../..')
 from blades.simulator import Simulator
 from blades.datasets import CIFAR10
 from blades.models.cifar10 import CCTNet
@@ -23,11 +12,11 @@ conf_params = {
     "aggregator": "median",  # defense: robust aggregation
     "num_byzantine": 5,  # number of byzantine input
     "use_cuda": True,
-    # "attack": "noise",  # attack strategy
-    "attack": "mediantailored", #" fangattackmedian",  # attack strategy
+    "attack": "noise",  # attack strategy
     "attack_kws": {
         # "num_clients": 20,
-        "num_byzantine": 8},
+        # "num_byzantine": 8,
+        },
     "num_actors": 20,  # number of training actors
     "gpu_per_actor": 0.19,
     "seed": 1,  # reproducibility

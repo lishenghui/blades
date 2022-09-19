@@ -7,3 +7,8 @@
 scripts/data
 *.pyc
 *.idea
+*data_batch_*
+*.meta
+*.html
+*test_batch*
+src/blades/examples/data/*
