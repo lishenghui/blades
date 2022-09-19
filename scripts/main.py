@@ -12,9 +12,6 @@ import math
 from blades.models.cifar10 import CCTNet
 
 
-# os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
-# os.environ["CUDA_VISIBLE_DEVICES"]="2,3"
-
 args = options
 ray.init(address='auto')
 
@@ -38,7 +35,7 @@ if options.gpu_per_actor > 0.0:
     model = model.to("cuda")
 
 
-privacy_factor = args.privacy_sensitivity * math.sqrt(2 * math.log(1.25 / args.privacy_delta)) / args.privacy_epsilon
+privacy_factor = args.dp_privacy_sensitivity * math.sqrt(2 * math.log(1.25 / args.dp_privacy_delta)) / args.dp_privacy_epsilon
    
 # configuration parameters
 conf_args = {
@@ -78,7 +75,7 @@ if options.algorithm == 'fedsgd':
         "client_lr": 1.0,
         "validate_interval": options.validate_interval,
         "server_lr_scheduler": lr_scheduler,
-        "dp_kws": {"clip_threshold": options.clip_threshold, "noise_factor": privacy_factor} if options.dp 
+        "dp_kws": {"clip_threshold": options.dp_clip_threshold, "noise_factor": privacy_factor} if options.dp 
                     else {}
     }
 
@@ -107,6 +104,5 @@ elif options.algorithm == 'fedavg':
 
 else:
     raise NotImplementedError
-
 
 simulator.run(**run_args)

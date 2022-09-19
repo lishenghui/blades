@@ -24,7 +24,6 @@ run_all_aggs() {
 
 export -f run_all_aggs 
 
-
 dataset='cifar10'
 
 for agg in 'clippedclustering' #'median' 'trimmedmean' 'centeredclipping' 'mean' 'krum' 'clustering' 'geomed' 'autogm'
@@ -32,13 +31,4 @@ do
     # nohup bash -c "run_all_aggs $dataset fedsgd 6000 1 $agg 64 --noniid" &
     # nohup bash -c "run_all_aggs $dataset fedavg 600 50 $agg 64 --noniid" &
     nohup bash -c "run_all_aggs $dataset fedavg 600 50 $agg 64" &
-done
-
-dataset='mnist'
-
-for agg in 'clippedclustering' #'median' 'trimmedmean' 'centeredclipping' 'mean' 'krum' 'clustering' 'geomed' 'autogm'
-do 
-    nohup bash -c "run_all_aggs $dataset fedsgd 6000 1 $agg 128" &
-    # nohup bash -c "run_all_aggs $dataset fedsgd 6000 1 $agg 128 --noniid" &
-    # nohup bash -c "run_all_aggs $dataset fedavg 600 50 $agg 128 --noniid" &
 done

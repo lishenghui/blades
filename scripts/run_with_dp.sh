@@ -10,13 +10,13 @@ popd || exit
 
 
 run_one_agg() {
-for privacy_epsilon in 1.0 5.0 10.0
+for privacy_epsilon in 1.0 #5.0 10.0
   do
-    for num_byzantine in 5 10
+    for num_byzantine in 5 #10
     do
       args="
             --agg $1 \
-            --privacy_epsilon $privacy_epsilon \
+            --dp_privacy_epsilon $privacy_epsilon \
             --dp \
             --num_clients 50 \
             --global_round 6000 \
@@ -32,11 +32,11 @@ for privacy_epsilon in 1.0 5.0 10.0
 
   for privacy_epsilon in 100.0
   do
-    for num_byzantine in 0 5 10
+    for num_byzantine in 0 #5 10
     do
       args="
             --agg $1 \
-            --privacy_epsilon $privacy_epsilon \
+            --dp_privacy_epsilon $privacy_epsilon \
             --num_clients 50 \
             --global_round 6000 \
             --num_byzantine $num_byzantine \
@@ -54,7 +54,7 @@ export -f run_one_agg
  
 
 cuda=0
-for agg in 'clippedclustering' 'krum' 'dnc' 'clustering'
+for agg in 'clippedclustering' 'multikrum' 'dnc' 'clustering'
 do 
     export CUDA_VISIBLE_DEVICES=$(((cuda + 1)))
     cuda=$(((cuda + 1) % 3))
