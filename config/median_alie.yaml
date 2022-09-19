@@ -1,0 +1,28 @@
+dataset: mnist
+non_iid: False
+alpha: 0.1
+num_clients: 50
+num_byzantine: 5
+
+attack: ALIE
+attack_kws: {"num_clients": 50, "num_byzantine": 5}
+
+agg: ClippedClustering
+aggregator_kws: {"linkage": "average"}
+
+dp: False
+dp_privacy_delta: 1e-6
+dp_privacy_epsilon: 1.0
+dp_clip_threshold: 0.5
+
+local_round: 1
+global_round: 6000
+serv_momentum: 0.9
+batch_size: 64
+test_batch_size: 128
+validate_interval: 50
+algorithm: fedsgd
+local_mode: True
+num_actors: 4
+gpu_per_actor: 0.2
+

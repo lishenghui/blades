@@ -11,6 +11,7 @@ requirements = [
     'matplotlib>=3.4.1',
     'requests>=2.27.1',
     'setuptools~=58.0.4',
+    'ruamel.yaml',
 ]
 setup(
     name='blades',

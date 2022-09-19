@@ -7,7 +7,7 @@ from importlib import reload
 import numpy as np
 import torch
 from torch import nn
-
+import ruamel.yaml as yaml
 
 class BColors(object):
     HEADER = "\033[95m"
@@ -122,3 +122,15 @@ def set_random_seed(seed_value=0, use_cuda=False):
         torch.cuda.manual_seed_all(seed_value)
         torch.backends.cudnn.deterministic = True
         torch.backends.cudnn.benchmark = False
+        
+        
+def over_write_args_from_file(args, yml):
+    """
+    overwrite arguments according to config file
+    """
+    if yml == '':
+        return
+    with open(yml, 'r', encoding='utf-8') as f:
+        dic = yaml.load(f.read(), Loader=yaml.Loader)
+        for k in dic:
+            setattr(args, k, dic[k])

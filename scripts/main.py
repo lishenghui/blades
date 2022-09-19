@@ -13,7 +13,10 @@ from blades.models.cifar10 import CCTNet
 
 
 args = options
-ray.init(address='auto')
+if not ray.is_initialized():
+    ray.init()
+else:
+    ray.init(address='auto')
 
 if not os.path.exists(options.log_dir):
     os.makedirs(options.log_dir)
@@ -21,12 +24,12 @@ if not os.path.exists(options.log_dir):
 # Use absolute path name, as Ray might have trouble in fetching relative path
 data_root = os.path.abspath("./data")
 
-cache_name = options.dataset + "_" + options.algorithm + ("_noniid" if not options.noniid else "") + f"_{str(options.num_clients)}_{str(options.seed)}"
+cache_name = options.dataset + "_" + options.algorithm + ("_noniid" if not options.non_iid else "") + f"_{str(options.num_clients)}_{str(options.seed)}"
 if options.dataset == 'cifar10':
-    dataset = CIFAR10(data_root=data_root, cache_name=cache_name, train_bs=options.batch_size, num_clients=options.num_clients, iid=not options.noniid, seed=0)  # built-in federated cifar10 dataset
+    dataset = CIFAR10(data_root=data_root, cache_name=cache_name, train_bs=options.batch_size, num_clients=options.num_clients, iid=not options.non_iid, seed=0)  # built-in federated cifar10 dataset
     model = CCTNet()
 elif options.dataset == 'mnist':
-    dataset = MNIST(data_root=data_root, cache_name=cache_name, train_bs=options.batch_size, num_clients=options.num_clients, iid=not options.noniid, seed=0)  # built-in federated cifar10 dataset
+    dataset = MNIST(data_root=data_root, cache_name=cache_name, train_bs=options.batch_size, num_clients=options.num_clients, iid=not options.non_iid, seed=0)  # built-in federated cifar10 dataset
     model = MLP()
 else:
     raise NotImplementedError
@@ -41,11 +44,12 @@ privacy_factor = args.dp_privacy_sensitivity * math.sqrt(2 * math.log(1.25 / arg
 conf_args = {
     "dataset": dataset,
     "aggregator": options.agg,  # defense: robust aggregation
-    "aggregator_kws": options.agg_args[options.agg],
+    "aggregator_kws": options.aggregator_kws,
     "num_byzantine": options.num_byzantine,  # number of byzantine input
     "use_cuda": options.gpu_per_actor > 0.0,
     "attack": options.attack,  # attack strategy
-    "attack_kws": options.attack_args[options.attack],
+    "attack_kws": options.attack_kws,
+    # "attack_kws": options.attack_args[options.attack],
     "adversary_kws": options.adversary_args[options.attack] if options.attack in options.adversary_args else {},
     "num_actors": options.num_actors,  # number of training actors
     "gpu_per_actor": options.gpu_per_actor,
@@ -58,7 +62,6 @@ simulator = Simulator(**conf_args)
 if options.algorithm == 'fedsgd':
     opt = torch.optim.SGD(model.parameters(), lr=0.1, momentum=options.serv_momentum)
     lr_scheduler = torch.optim.lr_scheduler.MultiStepLR(
-        # opt, milestones=[200, 300, 500], gamma=0.5p
         opt, milestones=[2000, 3000, 5000], gamma=0.5
     )
 
