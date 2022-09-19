@@ -1,3 +1,10 @@
+"""
+A example for CIFAR10
+===========================
+
+"""
+
+
 import ray
 
 from blades.simulator import Simulator

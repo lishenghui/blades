@@ -59,6 +59,9 @@ conf_args = {
 
 simulator = Simulator(**conf_args)
 
+if options.trusted_id:
+    simulator.set_trusted_clients([options.trusted_id])
+
 if options.algorithm == 'fedsgd':
     opt = torch.optim.SGD(model.parameters(), lr=0.1, momentum=options.serv_momentum)
     lr_scheduler = torch.optim.lr_scheduler.MultiStepLR(

@@ -33,11 +33,11 @@ all_data_tensor = torch.Tensor(np.concatenate([benign, outliers]))
 
 
 aggs = [Mean(),
-        Krum(len(all_data), len(outliers)),
+        Multikrum(len(all_data), len(outliers), 10),
         Geomed(),
         Median(),
         Autogm(lamb=1.0),
-        Trimmedmean(nb=len(outliers)),
+        Trimmedmean(num_byzantine=len(outliers)),
         Clustering(),
         Clippedclustering(),
        ]

@@ -3,12 +3,14 @@ non_iid: False
 alpha: 0.1
 num_clients: 50
 num_byzantine: 5
+trusted_id: 49
 
 attack: ALIE
 attack_kws: {"num_clients": 50, "num_byzantine": 5}
 
-agg: ClippedClustering
-aggregator_kws: {"linkage": "average"}
+agg: FLTrust
+aggregator_kws: {}
+#aggregator_kws: {"linkage": "average"}
 
 dp: False
 dp_privacy_delta: 1e-6

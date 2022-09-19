@@ -3,7 +3,6 @@ import os
 from blades.utils.utils import over_write_args_from_file
 import torch
 
-
 def parse_arguments():
     parser = argparse.ArgumentParser()
     parser.add_argument("--non_iid", action="store_true", default=False)
@@ -15,6 +14,7 @@ def parse_arguments():
     parser.add_argument("--batch_size", type=int, default=32)
     parser.add_argument("--test_batch_size", type=int, default=128)
     parser.add_argument("--validate_interval", type=int, default=100)
+    parser.add_argument("--trusted_id", type=int, default=49)
     parser.add_argument("--attack", type=str, default='signflipping', help="Select attack types.")
     parser.add_argument("--dataset", type=str, default='cifar10', help="Dataset")
     parser.add_argument("--algorithm", type=str, default='fedsgd', help="Optimization algorithm, either 'fedavg' or 'fedsgd'.")
@@ -83,6 +83,7 @@ def parse_arguments():
     }
     
     if options.config_path:
+        options.aggregator_kws = {}
         over_write_args_from_file(options, options.config_path)
         options.agg = options.agg.lower()
         options.attack = options.attack.lower()
