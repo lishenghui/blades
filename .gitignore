@@ -10,5 +10,9 @@ scripts/data
 *data_batch_*
 *.meta
 *.html
+*.whl
 *test_batch*
-src/blades/examples/data/*
+src/blades/examples/data/*s
+*/build/
+/docs/source/examples/
+/docs/source/_static/
