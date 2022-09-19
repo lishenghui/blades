@@ -8,7 +8,6 @@ def parse_arguments():
     parser = argparse.ArgumentParser()
     parser.add_argument("--noniid", action="store_true", default=False)
     parser.add_argument("--ipmlarge", action="store_true", default=False)
-    parser.add_argument("--dp", action="store_true", default=False)
     parser.add_argument("--local_mode", action="store_true", default=False)
     parser.add_argument("--seed", type=int, default=1)
     parser.add_argument("--global_round", type=int, default=400)
@@ -30,16 +29,19 @@ def parse_arguments():
     parser.add_argument("--num_actors", type=int, default=5)
     parser.add_argument("--gpu_per_actor", type=float, default=0.2)
     
-    # Parameters for DP
-    parser.add_argument("--privacy_delta", type=float, default=1e-6)
-    parser.add_argument("--privacy_epsilon", type=float, default=1.0)
-    parser.add_argument("--clip_threshold", type=float, default=0.5)
+    parser.add_argument("--dp", action="store_true", default=False)
+
+    # Parameters for DP. They will take effect only if `dp` is set to be `True`.
+    parser.add_argument("--dp_privacy_delta", type=float, default=1e-6)
+    parser.add_argument("--dp_privacy_epsilon", type=float, default=1.0)
+    parser.add_argument("--dp_clip_threshold", type=float, default=0.5)
+
     options = parser.parse_args()
     
     if options.algorithm == "fedsgd":
         options.local_round = 1
         
-    options.privacy_sensitivity = 2 * options.clip_threshold / options.batch_size
+    options.dp_privacy_sensitivity = 2 * options.dp_clip_threshold / options.batch_size
     ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
     
     EXP_DIR = os.path.join(ROOT_DIR, f"outputs/{options.dataset}")
@@ -74,8 +76,7 @@ def parse_arguments():
         'fangattack': {"num_byzantine": options.num_byzantine, "agg": "median"},
         'distancemaximization': {"num_byzantine": options.num_byzantine, "agg": "trimmedmean"},
     }
-    # options.adversary_args = {"linkage": "average"}
-    # options.adversary_args = {}
+
     options.log_dir = (
             EXP_DIR
             + f"_{options.algorithm}"
@@ -91,7 +92,7 @@ def parse_arguments():
             + (f"_bz{options.batch_size}")
             + (f"_localround{options.local_round}")
             + ("_noniid" if options.noniid else "")
-            + (f"_privacy_epsilon{options.privacy_epsilon}_clip_threshold{options.clip_threshold}" if options.dp else "")
+            + (f"_privacy_epsilon{options.dp_privacy_epsilon}_clip_threshold{options.dp_clip_threshold}" if options.dp else "")
             + f"_seed{options.seed}"
     )
     

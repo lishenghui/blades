@@ -52,11 +52,19 @@ If you are interested in this project, don't hesitate to contact me or make a PR
 ========================================================================================================================================================================================================
 
 
-
 Installation
 ==================================================
 
 >>> pip install blades
+
+
+Development
+==================================================
+
+You can also develop your own attack/defense and evaluate it by cloning Blades:
+
+>>> git clone https://github.com/lishenghui/blades.git
+
 
 Get Started
 ==================================================
