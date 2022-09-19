@@ -14,7 +14,7 @@ requirements = [
 ]
 setup(
     name='blades',
-    version='0.0.17',
+    version='0.1.1',
     description="""Blades: A simulator for Byzantine-robust federated Learning with Attacks and Defenses Experimental Simulation""",
     # long_description=open('../README.rst').read(),
     # long_description_content_type="text/markdown",

@@ -397,6 +397,9 @@ class Simulator(object):
         else:
             dp_kws = {}
         
+        if self.device != torch.device("cpu"):
+            model = model.to("cuda")
+
         reset_model_weights(model)
         if server_optimizer == 'SGD':
             self.server_opt = torch.optim.SGD(model.parameters(), lr=server_lr, **dp_kws)
