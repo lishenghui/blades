@@ -51,11 +51,11 @@ for privacy_epsilon in 1.0 #5.0 10.0
 }
 
 export -f run_one_agg
- 
+
 
 cuda=0
 for agg in 'clippedclustering' 'multikrum' 'dnc' 'clustering'
-do 
+do
     export CUDA_VISIBLE_DEVICES=$(((cuda + 1)))
     cuda=$(((cuda + 1) % 3))
     nohup bash -c "run_one_agg $agg" &
