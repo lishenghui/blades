@@ -11,6 +11,7 @@ scripts/data
 *.meta
 *.html
 *.whl
+*.egg
 *test_batch*
 src/blades/examples/data/*s
 */build/

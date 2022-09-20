@@ -63,7 +63,14 @@ Development
 
 You can also develop your own attack/defense and evaluate it by cloning Blades:
 
->>> git clone https://github.com/lishenghui/blades.git
+
+.. code-block:: bash
+    git clone https://github.com/lishenghui/blades.git
+    cd src
+    python setup.py install develop
+    # "-v" means verbose, or more output
+    # "-e" means installing a project in editable mode,
+    # thus any local modifications made to the code will take effect without reinstallation.
 
 
 Get Started
@@ -176,9 +183,3 @@ Please cite our `paper <https://arxiv.org/abs/2206.05359>`_ (and the respective 
      journal={arXiv preprint arXiv:2206.05359},
      year={2022}
    }
-
-
-Reference
-==========
-
-* Part of the code is from *Karimireddy*'s `repository <https://github.com/epfml/byzantine-robust-optimizer>`_. *Paper:* `Karimireddy et al. Learning from History for Byzantine Robust Optimization <http://proceedings.mlr.press/v139/karimireddy21a.html>`_.
