@@ -73,6 +73,9 @@ class BladesClient(object):
         r"""
         Trusts the client as an honest participant. This property is useful
         for trust-based algorithms.
+        
+        Args:
+            trusted: Boolean; whether the client is trusted; default to True.
         """
         self._is_trusted = trusted
     
@@ -147,7 +150,25 @@ class BladesClient(object):
          :param logs: Dict. Aggregated metric results up until this batch.
          """
         return data, target
-    
+
+    def local_training(self, data_batches: list) -> None:
+        r''' Local optimizaiton of the ``client``. Byzantine input can override this method to perform adversarial attack.
+
+            Args:
+                num_rounds: Number of local optimization steps.
+                data_batches: A list of training batches for local training.
+        '''
+        for data, target in data_batches:
+            data, target = data.to(self.device), target.to(self.device)
+            data, target = self.on_train_batch_begin(data=data, target=target)
+            self.optimizer.zero_grad()
+        
+            output = self.model(data)
+            # Clamp loss value to avoid possible 'Nan' gradient with some attack types.
+            loss = torch.clamp(self.loss_func(output, target), 0, 1e6)
+            loss.backward()
+            self.optimizer.step()
+            
     def evaluate(self, round_number, test_set, batch_size, metrics):
         dataloader = DataLoader(dataset=test_set, batch_size=batch_size)
         self.model.eval()
@@ -181,23 +202,6 @@ class BladesClient(object):
             + "\n"
         )
         return r
-    
-    def local_training(self, data_batches: list) -> None:
-        r''' Local optimizaiton of the ``client``. Byzantine input can override this method to perform adversarial attack.
-        
-            :param num_rounds: Number of local optimization steps.
-            :param data_batches: A list of training batches for local training.
-        '''
-        for data, target in data_batches:
-            data, target = data.to(self.device), target.to(self.device)
-            data, target = self.on_train_batch_begin(data=data, target=target)
-            self.optimizer.zero_grad()
-            
-            output = self.model(data)
-            # Clamp loss value to avoid possible 'Nan' gradient with some attack types.
-            loss = torch.clamp(self.loss_func(output, target), 0, 1e6)
-            loss.backward()
-            self.optimizer.step()
     
     def get_update(self) -> torch.Tensor:
         r'''Returns the saved update of local optimization, represented as a vector.
