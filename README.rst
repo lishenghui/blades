@@ -94,13 +94,12 @@ Option II. Developer Mode
     python main.py --config_path ../config/example.yaml
 
 
-
-Get Started
-==================================================
-
-How fast can we simulate attack and defense in federated learning?
-Take `ALIE Attack <https://github.com/bladesteam/blades/blob/master/src/blades/attackers/alieclient.py>`_ and
-`Trimmedmean Aggregation <https://github.com/bladesteam/blades/blob/master/src/blades/aggregators/trimmedmean.py>`_ as an `example <https://github.com/bladesteam/blades/blob/master/src/blades/examples/mini_example.py>`_.
+.. 
+    Get Started
+    ==================================================
+    How fast can we simulate attack and defense in federated learning?
+    Take `ALIE Attack <https://github.com/bladesteam/blades/blob/master/src/blades/attackers/alieclient.py>`_ and
+    `Trimmedmean Aggregation <https://github.com/bladesteam/blades/blob/master/src/blades/aggregators/trimmedmean.py>`_ as an `example <https://github.com/bladesteam/blades/blob/master/src/blades/examples/mini_example.py>`_.
 
 
 .. include:: ../../src/blades/examples/mini_example.py
