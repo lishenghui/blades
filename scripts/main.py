@@ -26,10 +26,22 @@ data_root = os.path.abspath("./data")
 
 cache_name = options.dataset + "_" + options.algorithm + ("_noniid" if not options.non_iid else "") + f"_{str(options.num_clients)}_{str(options.seed)}"
 if options.dataset == 'cifar10':
-    dataset = CIFAR10(data_root=data_root, cache_name=cache_name, train_bs=options.batch_size, num_clients=options.num_clients, iid=not options.non_iid, seed=0)  # built-in federated cifar10 dataset
+    dataset = CIFAR10(data_root=data_root,
+                      cache_name=cache_name,
+                      train_bs=options.batch_size,
+                      num_clients=options.num_clients,
+                      iid=not options.non_iid,
+                      seed=0,
+                      )  # built-in federated cifar10 dataset
     model = CCTNet()
 elif options.dataset == 'mnist':
-    dataset = MNIST(data_root=data_root, cache_name=cache_name, train_bs=options.batch_size, num_clients=options.num_clients, iid=not options.non_iid, seed=0)  # built-in federated cifar10 dataset
+    dataset = MNIST(data_root=data_root,
+                    cache_name=cache_name,
+                    train_bs=options.batch_size,
+                    num_clients=options.num_clients,
+                    iid=not options.non_iid,
+                    seed=0,
+                    )  # built-in federated MNIST dataset
     model = MLP()
 else:
     raise NotImplementedError
@@ -92,9 +104,6 @@ elif options.algorithm == 'fedavg':
         opt, milestones=[options.global_round / 3, options.global_round / 2, 2 * options.global_round / 3], gamma=0.5
     )
     server_opt = torch.optim.SGD(model.parameters(), lr=1.0)
-    # lr_scheduler = torch.optim.lr_scheduler.MultiStepLR(
-    #     opt, milestones=[200, 300, 500], gamma=0.5
-    # )
     # runtime parameters
     run_args = {
         "model": model,  # global model

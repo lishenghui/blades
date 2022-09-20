@@ -106,18 +106,20 @@ class Multikrum(_BaseAggregator):
       measured by squared ``Euclidean distance``,  :math:`K` is the number of input in total, and :math:`M`
       is the number of Byzantine input.
       
+      Args:
+            lr (float): target learning rate.
+            
     """
     
-    def __init__(self, num_clients=20, num_byzantine=5, k=1):
-        self.n = num_clients
-        self.f = num_byzantine
+    def __init__(self, num_excluded=5, k=1):
+        self.f = num_excluded
         self.m = k
         super(Multikrum, self).__init__()
     
     def __call__(self, inputs: Union[List[BladesClient], List[torch.Tensor]]):
         updates = self._get_updates(inputs)
         distances = _pairwise_euclidean_distances(updates)
-        top_m_indices = _multi_krum(distances, self.n, self.f, self.m)
+        top_m_indices = _multi_krum(distances, len(updates), self.f, self.m)
         values = torch.stack([updates[i] for i in top_m_indices], dim=0).mean(dim=0)
         return values
     

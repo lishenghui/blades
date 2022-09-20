@@ -55,11 +55,14 @@ If you are interested in this project, don't hesitate to contact me or make a PR
 Installation
 ==================================================
 
+Option (a). User Mode
+---------------------------
+
 >>> pip install blades
 
 
-Development
-==================================================
+Option (b). Developer Mode
+---------------------------
 
 You can also develop your own attack/defense and evaluate it by cloning Blades:
 
@@ -72,6 +75,19 @@ You can also develop your own attack/defense and evaluate it by cloning Blades:
     # "-v" means verbose, or more output
     # "-e" means installing a project in editable mode,
     # thus any local modifications made to the code will take effect without reinstallation.
+
+
+Verify the installation
+=========================
+
+Option (b). Developer Mode
+---------------------------
+
+.. code-block:: bash
+
+    cd scripts
+    python main.py --config_path ../config/example.yaml
+
 
 
 Get Started
