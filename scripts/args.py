@@ -59,7 +59,7 @@ def parse_arguments():
         'alie': {"num_clients": options.num_clients, "num_byzantine": options.num_byzantine},
     }
     agg_args = {
-        'trimmedmean': {"num_byzantine": options.num_byzantine},
+        'trimmedmean': {"num_excluded": options.num_byzantine},
         'median': {},
         'mean': {},
         'signguard': {},
@@ -69,7 +69,7 @@ def parse_arguments():
         'clippedclustering': {"max_tau": 2.0, "signguard": True, "linkage": 'average'},
         'clustering': {},
         'centeredclipping': {},
-        'multikrum': {"num_clients": options.num_clients, "num_byzantine": options.num_byzantine, "k": 5},
+        'multikrum': {"num_excluded": options.num_byzantine, "k": 5},
     }
     
     options.attack_kws = attack_args[options.attack]
