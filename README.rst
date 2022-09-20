@@ -55,13 +55,13 @@ If you are interested in this project, don't hesitate to contact me or make a PR
 Installation
 ==================================================
 
-Option (a). User Mode
+Option I. User Mode
 ---------------------------
 
 >>> pip install blades
 
 
-Option (b). Developer Mode
+Option II (Recommended). Developer Mode
 ---------------------------
 
 You can also develop your own attack/defense and evaluate it by cloning Blades:
@@ -78,9 +78,14 @@ You can also develop your own attack/defense and evaluate it by cloning Blades:
 
 
 Verify the installation
-=========================
+==============================
 
-Option (b). Developer Mode
+Option I. Developer Mode
+---------------------------
+
+TBD
+
+Option II. Developer Mode
 ---------------------------
 
 .. code-block:: bash
