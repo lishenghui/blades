@@ -68,7 +68,7 @@ You can also develop your own attack/defense and evaluate it by cloning Blades:
 
     git clone https://github.com/lishenghui/blades.git
     cd src
-    python setup.py install develop
+    pip install -v -e .
     # "-v" means verbose, or more output
     # "-e" means installing a project in editable mode,
     # thus any local modifications made to the code will take effect without reinstallation.
