@@ -1,18 +1,21 @@
 from .autogm import Autogm
 from .clippedclustering import Clippedclustering
 from .clustering import Clustering
+from .dnc import Dnc
 from .geomed import Geomed
-from .multikrum import Multikrum
 from .mean import Mean
 from .median import Median
+from .multikrum import Multikrum
 from .trimmedmean import Trimmedmean
 
-__all__ = ['Multikrum',
-           'Median',
-           'Geomed',
-           'Autogm',
-           'Mean',
-           'Clustering',
-           'Trimmedmean',
-           'Clippedclustering',
-           ]
+__all__ = [
+    'Autogm',
+    'Clippedclustering',
+    'Clustering',
+    'Dnc',
+    'Geomed',
+    'Mean',
+    'Median',
+    'Multikrum',
+    'Trimmedmean',
+]

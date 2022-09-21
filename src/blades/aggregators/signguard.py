@@ -6,7 +6,7 @@ import numpy as np
 import torch
 from sklearn.cluster import KMeans
 
-from blades.client import BladesClient
+from blades.core.client import BladesClient
 from .mean import _BaseAggregator, Mean
 from .median import Median
 
@@ -48,7 +48,7 @@ class Signguard(_BaseAggregator):
             if l2norm >= L * M and l2norm <= R * M:
                 # S1.append(update)
                 S1_idxs.append(idx)
-                
+        
         features = []
         num_para = len(updates[0])
         for update in updates:
@@ -57,15 +57,15 @@ class Signguard(_BaseAggregator):
             feature2 = (update == 0).sum().item() / num_para
             
             features.append([feature0, feature1, feature2])
-
+        
         kmeans = KMeans(n_clusters=2, random_state=0).fit(features)
         print(kmeans)
-
+        
         flag = 1 if np.sum(kmeans.labels_) > num // 2 else 0
-        S2_idxs = list([idx for idx, label in enumerate(kmeans.labels_) if label==flag])
-
+        S2_idxs = list([idx for idx, label in enumerate(kmeans.labels_) if label == flag])
+        
         inter = list(set(S1_idxs) & set(S2_idxs))
-
+        
         benign_updates = []
         for idx in inter:
             if l2norms[idx] > M:

@@ -12,9 +12,11 @@ from .customdataset import CustomTensorDataset
 
 logger = logging.getLogger(__name__)
 
+
 class BaseDataset(ABC):
     train_transform = None
     test_transform = None
+    
     def __init__(
             self,
             data_root: str = './data',
@@ -23,7 +25,7 @@ class BaseDataset(ABC):
             iid: Optional[bool] = True,
             alpha: Optional[float] = 0.1,
             num_clients: Optional[int] = 20,
-            seed = 1,
+            seed=1,
     ):
         self.train_bs = train_bs
         if cache_name == "":
@@ -44,7 +46,7 @@ class BaseDataset(ABC):
         regenerate = True
         if os.path.exists(self._data_path):
             with open(self._data_path, 'rb') as f:
-                loaded_meta_info  = pickle.load(f)
+                loaded_meta_info = pickle.load(f)
                 if loaded_meta_info == meta_info:
                     regenerate = False
                 else:
@@ -52,14 +54,13 @@ class BaseDataset(ABC):
                         "arguments for data partitioning didn't match the cache,"
                         " datasets will be regenerated using the new setting."
                     )
-
+        
         if regenerate:
             returns = self.generate_datasets(data_root, iid, alpha, num_clients, seed)
             with open(self._data_path, 'wb') as f:
                 pickle.dump(meta_info, f)
                 for obj in returns:
                     pickle.dump(obj, f)
-                    
     
     @abstractmethod
     def generate_datasets(self, path='./data', iid=True, alpha=0.1, num_clients=20, seed=1):
@@ -123,4 +124,3 @@ class BaseDataset(ABC):
                                                        labels=np.array(test_data[u_id]['y']),
                                                        ))
         return train_dls, test_dls
-

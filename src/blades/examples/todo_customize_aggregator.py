@@ -8,9 +8,9 @@ This example doesn't do much, it just makes a simple plot
 import ray
 import torch
 
+from blades.core.simulator import Simulator
 from blades.datasets import CIFAR10
 from blades.models.cifar10 import CCTNet
-from blades.simulator import Simulator
 
 cifar10 = CIFAR10(num_clients=20, iid=True)  # built-in federated cifar10 dataset
 

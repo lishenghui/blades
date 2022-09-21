@@ -17,3 +17,4 @@ src/blades/examples/data/*s
 */build/
 /docs/source/examples/
 /docs/source/_static/
+/src/dist/

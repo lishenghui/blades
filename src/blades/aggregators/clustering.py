@@ -5,7 +5,7 @@ import torch
 from numpy import inf
 from sklearn.cluster import AgglomerativeClustering
 
-from blades.client import BladesClient
+from blades.core.client import BladesClient
 from .mean import _BaseAggregator
 
 
@@ -24,7 +24,7 @@ class Clustering(_BaseAggregator):
         num = len(updates)
         dis_max = np.zeros((num, num))
         for i in range(num):
-            for j in range(i+1, num):
+            for j in range(i + 1, num):
                 dis_max[i, j] = 1 - torch.nn.functional.cosine_similarity(updates[i, :], updates[j, :], dim=0)
                 dis_max[j, i] = dis_max[i, j]
         dis_max[dis_max == -inf] = -1

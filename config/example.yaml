@@ -2,16 +2,16 @@
 dataset: mnist
 non_iid: False
 alpha: 0.1
-num_clients: 50
-num_byzantine: 5
+num_clients: 10
+num_byzantine: 1
 #trusted_id: 49
 
 
 attack: ALIE
-attack_kws: {"num_clients": 50, "num_byzantine": 5}
+attack_kws: {"num_clients": 10, "num_byzantine": 1}
 
 agg: MultiKrum
-aggregator_kws: {num_excluded: 5, k: 5}
+aggregator_kws: {num_excluded: 1, k: 5}
 #aggregator_kws: {"linkage": "average"}
 
 

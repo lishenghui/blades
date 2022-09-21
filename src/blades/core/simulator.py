@@ -8,10 +8,10 @@ import torch
 from ray.util import ActorPool
 from tqdm import trange
 
-from blades.actor import _RayActor
+from blades.core.actor import _RayActor
 from blades.core.client import BladesClient, ByzantineClient
+from blades.core.server import BladesServer
 from blades.datasets.dataset import FLDataset
-from blades.server import BladesServer
 from blades.utils.utils import reset_model_weights, set_random_seed
 from blades.utils.utils import top1_accuracy, initialize_logger
 
@@ -56,7 +56,7 @@ class Simulator(object):
             seed: Optional[int] = None,
             **kwargs,
     ):
-    
+        
         if not adversary_kws:
             adversary_kws = {}
         if use_cuda or ("gpu_per_actor" in kwargs and kwargs["gpu_per_actor"] > 0.0):
@@ -85,9 +85,8 @@ class Simulator(object):
             raise RuntimeError(f"Unknown keyword argument(s): {unknown}")
         
         self.ray_actors = [_RayActor.options(num_gpus=gpu_per_actor).remote(dataset)
-                            for _ in range(num_actors)]
+                           for _ in range(num_actors)]
         self.actor_pool = ActorPool(self.ray_actors)
-        
         
         if type(dataset) != FLDataset:
             traindls, testdls = dataset.get_dls()
@@ -97,7 +96,7 @@ class Simulator(object):
             attack_kws = {}
         self._setup_clients(attack, num_byzantine=num_byzantine, attack_kws=attack_kws)
         self._setup_adversary(attack, adversary_kws=adversary_kws)
-
+        
         set_random_seed(seed)
     
     def _init_aggregator(self, aggregator, aggregator_kws):
@@ -112,7 +111,7 @@ class Simulator(object):
         module_path = importlib.import_module('blades.attackers.%sclient' % attack)
         adversary_cls = getattr(module_path, '%sAdversary' % attack.capitalize(), lambda: None)
         self.adversary = adversary_cls(**adversary_kws) if adversary_cls else None
-        
+    
     def _setup_clients(self, attack: str, num_byzantine, attack_kws):
         import importlib
         if attack is None:
@@ -235,14 +234,13 @@ class Simulator(object):
             client_groups
         )
         
-       
         updates = [update for returns in list(all_results) for update in returns]
         for client, update in zip(clients, updates):
             client.save_update(update)
         
         if self.adversary:
             self.adversary.omniscient_callback(self)
-            
+        
         # If there are Byzantine workers, ask them to craft attackers based on the updated settings.
         for omniscient_attacker_callback in self.omniscient_callbacks:
             omniscient_attacker_callback(self)
@@ -288,7 +286,8 @@ class Simulator(object):
         var_avg = torch.mean(torch.var(torch.vstack(updates), dim=0, unbiased=False)).item()
         norm = torch.norm(torch.var(torch.vstack(updates), dim=0, unbiased=False)).item()
         avg_norm = torch.norm(mean_update)
-        var_norm = torch.sqrt(torch.mean(torch.tensor([torch.norm(model_update - mean_update) ** 2 for model_update in updates])))
+        var_norm = torch.sqrt(
+            torch.mean(torch.tensor([torch.norm(model_update - mean_update) ** 2 for model_update in updates])))
         
         r = {
             "_meta": {"type": "variance"},
@@ -298,10 +297,9 @@ class Simulator(object):
             "avg_norm": avg_norm,
             "VN_ratio": var_norm / avg_norm,
         }
-
+        
         # Output to file
         self.json_logger.info(r)
-        
     
     def log_validate(self, metrics):
         top1 = np.average([metric['top1'] for metric in metrics], weights=[metric['Length'] for metric in metrics])
@@ -397,7 +395,7 @@ class Simulator(object):
         
         if self.device != torch.device("cpu"):
             model = model.to("cuda")
-
+        
         reset_model_weights(model)
         if server_optimizer == 'SGD':
             self.server_opt = torch.optim.SGD(model.parameters(), lr=server_lr, **dp_kws)
@@ -417,7 +415,7 @@ class Simulator(object):
         self.parallel_call(self.get_clients(),
                            lambda client: client.set_model(global_model, torch.optim.SGD, client_lr))
         
-        with trange(0, global_rounds+1) as t:
+        with trange(0, global_rounds + 1) as t:
             for global_rounds in t:
                 round_start = time()
                 if global_rounds % validate_interval == 0:
@@ -427,7 +425,7 @@ class Simulator(object):
                 self.train_actor(global_rounds, local_steps, self.get_clients(), client_lr, **dp_kws)
                 if server_lr_scheduler:
                     server_lr_scheduler.step()
-
+                
                 if client_lr_scheduler:
                     client_lr_scheduler.step()
                     client_lr = client_lr_scheduler.get_last_lr()[0]

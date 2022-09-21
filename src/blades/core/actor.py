@@ -57,4 +57,3 @@ class _RayActor(object):
             )
             update.append(result)
         return update
-

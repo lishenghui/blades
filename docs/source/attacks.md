@@ -23,10 +23,10 @@ The following example shows how to customize attack strategy.
 
 ```python
 import ray
-from blades.client import ByzantineClient
+from blades.core.client import ByzantineClient
 from blades.datasets import CIFAR10
 from blades.models.cifar10 import CCTNet
-from blades.simulator import Simulator
+from blades.core.simulator import Simulator
 
 cifar10 = CIFAR10(num_clients=20, iid=True)  # built-in federated cifar10 dataset
 

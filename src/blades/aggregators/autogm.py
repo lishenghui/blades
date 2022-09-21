@@ -3,7 +3,7 @@ from typing import Union, Optional, List
 import numpy as np
 import torch
 
-from blades.client import BladesClient
+from blades.core.client import BladesClient
 from .geomed import Geomed
 from .mean import _BaseAggregator
 

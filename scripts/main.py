@@ -1,13 +1,10 @@
-import os
-
 import ray
 import torch
 import os
 from blades.models.mnist import MLP
 from args import options
-from blades.simulator import Simulator
-from blades.datasets import CIFAR10
-from blades.datasets import MNIST
+from blades.core.simulator import Simulator
+from blades.datasets import CIFAR10, MNIST, CIFAR100
 import math
 from blades.models.cifar10 import CCTNet
 
@@ -43,6 +40,16 @@ elif options.dataset == 'mnist':
                     seed=0,
                     )  # built-in federated MNIST dataset
     model = MLP()
+elif options.dataset == 'cifar100':
+    dataset = CIFAR100(data_root=data_root,
+                    cache_name=cache_name,
+                    train_bs=options.batch_size,
+                    num_clients=options.num_clients,
+                    iid=not options.non_iid,
+                    seed=0,
+                    )  # built-in federated cifar100 dataset
+    model = MLP()
+    
 else:
     raise NotImplementedError
 
@@ -61,7 +68,6 @@ conf_args = {
     "use_cuda": options.gpu_per_actor > 0.0,
     "attack": options.attack,  # attack strategy
     "attack_kws": options.attack_kws,
-    # "attack_kws": options.attack_args[options.attack],
     "adversary_kws": options.adversary_args[options.attack] if options.attack in options.adversary_args else {},
     "num_actors": options.num_actors,  # number of training actors
     "gpu_per_actor": options.gpu_per_actor,
@@ -112,7 +118,6 @@ elif options.algorithm == 'fedavg':
         "loss": "crossentropy",  # loss funcstion
         "global_rounds": options.global_round,  # number of global rounds
         "local_steps": options.local_round,  # number of seps "client_lr": 0.1,  # learning rateteps per round
-        # "server_lr": 1.0,
         "validate_interval": 20,
         "client_lr_scheduler": lr_scheduler,
     }

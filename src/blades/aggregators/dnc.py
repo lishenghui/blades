@@ -3,7 +3,7 @@ from typing import Union, List
 import numpy as np
 import torch
 
-from blades.client import BladesClient
+from blades.core.client import BladesClient
 from .mean import _BaseAggregator
 
 
@@ -24,7 +24,7 @@ class Dnc(_BaseAggregator):
     def __call__(self, inputs: Union[List[BladesClient], List[torch.Tensor], torch.Tensor]):
         updates = self._get_updates(inputs)
         d = len(updates[0])
-                        
+        
         benign_ids = []
         for i in range(self.num_iters):
             indices = torch.randperm(d)[:self.sub_dim]
@@ -33,10 +33,10 @@ class Dnc(_BaseAggregator):
             centered_update = sub_updates - mu
             v = torch.linalg.svd(centered_update, full_matrices=False)[2][0, :]
             s = np.array([(torch.dot(update - mu, v) ** 2).item() for update in sub_updates])
-
+            
             good = s.argsort()[:len(updates) - int(self.fliter_frac * self.num_byzantine)]
             benign_ids.extend(good)
-            
+        
         benign_ids = list(set(benign_ids))
         benign_updates = updates[benign_ids, :].mean(dim=0)
         return benign_updates

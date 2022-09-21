@@ -1,6 +1,6 @@
 import torch
 
-from blades.client import ByzantineClient
+from blades.core.client import ByzantineClient
 
 
 class SignflippingClient(ByzantineClient):

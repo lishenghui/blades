@@ -2,7 +2,7 @@ import numpy as np
 import torch
 from scipy.stats import norm
 
-from blades.client import ByzantineClient
+from blades.core.client import ByzantineClient
 
 
 class AlieClient(ByzantineClient):
@@ -23,15 +23,16 @@ class AlieClient(ByzantineClient):
         self.n_good = num_clients - num_byzantine
     
     def omniscient_callback(self, simulator):
-        pass 
+        pass
     
     def local_training(self, data_batches):
         pass
 
+
 class AlieAdversary():
     def __init__(self):
         pass
-
+    
     def omniscient_callback(self, simulator):
         updates = []
         for client in simulator._clients.values():
@@ -47,4 +48,3 @@ class AlieAdversary():
                 if update is None:
                     update = mu - std * client.z_max
                 client.save_update(update)
-
