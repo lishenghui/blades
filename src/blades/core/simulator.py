@@ -9,7 +9,7 @@ from ray.util import ActorPool
 from tqdm import trange
 
 from blades.actor import _RayActor
-from blades.client import BladesClient, ByzantineClient
+from blades.core.client import BladesClient, ByzantineClient
 from blades.datasets.dataset import FLDataset
 from blades.server import BladesServer
 from blades.utils.utils import reset_model_weights, set_random_seed
