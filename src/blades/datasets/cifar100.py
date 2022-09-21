@@ -8,7 +8,7 @@ from sklearn.utils import shuffle
 from .basedataset import BaseDataset
 
 
-class CIFAR10(BaseDataset):
+class CIFAR100(BaseDataset):
     """`CIFAR10 <https://www.cs.toronto.edu/~kriz/cifar.html>`_ Dataset.
 
     Args:
@@ -23,8 +23,8 @@ class CIFAR10(BaseDataset):
             downloaded again.
     """
     stats = {
-        "mean": (0.4914, 0.4822, 0.4465),
-        "std": (0.2023, 0.1994, 0.2010),
+        "mean": (0.5071, 0.4867, 0.4408),
+        "std": (0.2675, 0.2565, 0.2761),
     }
     test_transform = transforms.Compose([
         transforms.Normalize(mean=stats["mean"], std=stats["std"]),
@@ -48,7 +48,7 @@ class CIFAR10(BaseDataset):
             num_clients: Optional[int] = 20,
             seed: Optional[int] = 1,
     ):
-        super(CIFAR10, self).__init__(data_root, cache_name, train_bs, iid, alpha, num_clients, seed)
+        super(CIFAR100, self).__init__(data_root, cache_name, train_bs, iid, alpha, num_clients, seed)
     
     def generate_datasets(self, path='./data', iid=True, alpha=0.1, num_clients=20, seed=1):
         train_set = torchvision.datasets.CIFAR10(train=True, download=True, root=path)

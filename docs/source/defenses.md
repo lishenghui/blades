@@ -34,7 +34,7 @@ import ray
 import torch
 from blades.datasets import CIFAR10
 from blades.models.cifar10 import CCTNet
-from blades.simulator import Simulator
+from blades.core.simulator import Simulator
 
 cifar10 = CIFAR10(num_clients=20, iid=True)  # built-in federated cifar10 dataset
 
@@ -45,7 +45,7 @@ class Median():
         values_upper, _ = stacked.median(dim=0)
         values_lower, _ = (-stacked).median(dim=0)
         return (values_upper - values_lower) / 2
-    
+
 
 # configuration parameters
 conf_params = {

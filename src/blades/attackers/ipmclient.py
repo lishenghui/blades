@@ -1,11 +1,11 @@
-from blades.client import ByzantineClient
+from blades.core.client import ByzantineClient
 
 
 class IpmClient(ByzantineClient):
     def __init__(self, epsilon: float = 0.5, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.epsilon = epsilon
-        
+    
     def omniscient_callback(self, simulator):
         # Loop over good workers and accumulate their updates
         updates = []

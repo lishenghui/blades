@@ -12,7 +12,7 @@ import torch
 
 from blades.aggregators import Multikrum, Median, Geomed, Autogm, Mean, Clustering, Trimmedmean, Clippedclustering
 
-plt.rcParams['axes.linewidth'] = 1.5 #set the value globally
+plt.rcParams['axes.linewidth'] = 1.5  # set the value globally
 plt.rcParams["font.weight"] = "bold"
 plt.rcParams["font.size"] = 16
 plt.rcParams["axes.labelweight"] = "bold"
@@ -31,7 +31,6 @@ all_data = np.concatenate([benign, outliers])
 
 all_data_tensor = torch.Tensor(np.concatenate([benign, outliers]))
 
-
 aggs = [Mean(),
         Multikrum(len(all_data), len(outliers), 10),
         Geomed(),
@@ -40,19 +39,20 @@ aggs = [Mean(),
         Trimmedmean(num_byzantine=len(outliers)),
         Clustering(),
         Clippedclustering(),
-       ]
+        ]
 
 # sphinx_gallery_thumbnail_number = 1
-fig, axs = plt.subplots(figsize=(8,8))
-
+fig, axs = plt.subplots(figsize=(8, 8))
 
 ax = axs
 ax.scatter(benign[:, 0], benign[:, 1], s=sample_sz, alpha=0.6, color='r', linewidths=0.2, edgecolors='black')
-ax.scatter(outliers[:, 0], outliers[:, 1], s=sample_sz, color=[0.,  0.7, 0.,  1. ], linewidths=0.2, edgecolors='black')
+ax.scatter(outliers[:, 0], outliers[:, 1], s=sample_sz, color=[0., 0.7, 0., 1.], linewidths=0.2, edgecolors='black')
+
 
 def plot_agg(ax, agg):
     target = agg(all_data_tensor).cpu().detach().numpy()
     ax.scatter(target[0], target[1], s=sz * 3, label=type(agg).__name__, linewidths=0.3, edgecolors='black')
+
 
 list(map(lambda agg: plot_agg(ax, agg), aggs))
 ax.set_xticks([])

@@ -76,7 +76,7 @@ from warnings import warn
 #                                                        ))
 #         return train_dls, test_dls
 #
-    
+
 class FLDataset(object):
     """ Federated Larning dataset
 

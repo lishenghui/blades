@@ -11,9 +11,8 @@ from blades.utils.torch_utils import clip_tensor_norm_
 
 
 class BladesClient(object):
-
     _is_byzantine: bool = False
-
+    
     r"""Base class for all clients.
     
         .. note::
@@ -35,13 +34,13 @@ class BladesClient(object):
         
         self._json_logger = logging.getLogger("stats")
         self.debug_logger = logging.getLogger("debug")
-
+        
         self.set_id(id)
     
     def set_id(self, id: str) -> None:
         r"""Sets the unique id of the client.
         """
-
+        
         # if not isinstance(id,str):
         #     raise TypeError(f'Client _id must be str, but got {type(id)}')
         self._id = id
@@ -98,10 +97,10 @@ class BladesClient(object):
         Args:
             lr (float): target learning rate.
         """
-
+        
         for g in self.optimizer.param_groups:
             g['lr'] = lr
-
+    
     def set_loss(self, loss_func='crossentropy'):
         if loss_func == 'crossentropy':
             self.loss_func = nn.modules.loss.CrossEntropyLoss()
@@ -125,7 +124,7 @@ class BladesClient(object):
         self._save_para()
         self.model = self.model.to(self.device)
         self.model.train()
-        
+    
     def on_train_round_end(self, dp=False, clip_threshold=None, noise_factor=None) -> None:
         """Called at the end of local optimization.
         """
@@ -133,12 +132,11 @@ class BladesClient(object):
         if dp:
             assert clip_threshold != None
             clip_tensor_norm_(update, max_norm=clip_threshold)
-    
+            
             sigma = noise_factor
             noise = torch.normal(mean=0.0, std=sigma, size=update.shape).to(update.device)
             update += noise
         self.save_update(update)
-        
     
     def on_train_batch_begin(self, data, target, logs=None):
         """Called at the beginning of a training batch in `local_training` methods.
@@ -150,7 +148,7 @@ class BladesClient(object):
          :param logs: Dict. Aggregated metric results up until this batch.
          """
         return data, target
-
+    
     def local_training(self, data_batches: list) -> None:
         r''' Local optimizaiton of the ``client``. Byzantine input can override this method to perform adversarial attack.
 
@@ -162,13 +160,13 @@ class BladesClient(object):
             data, target = data.to(self.device), target.to(self.device)
             data, target = self.on_train_batch_begin(data=data, target=target)
             self.optimizer.zero_grad()
-        
+            
             output = self.model(data)
             # Clamp loss value to avoid possible 'Nan' gradient with some attack types.
             loss = torch.clamp(self.loss_func(output, target), 0, 1e6)
             loss.backward()
             self.optimizer.step()
-            
+    
     def evaluate(self, round_number, test_set, batch_size, metrics):
         dataloader = DataLoader(dataset=test_set, batch_size=batch_size)
         self.model.eval()

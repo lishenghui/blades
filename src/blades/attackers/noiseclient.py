@@ -2,7 +2,7 @@ from typing import Optional
 
 import torch
 
-from blades.client import ByzantineClient
+from blades.core.client import ByzantineClient
 
 
 class NoiseClient(ByzantineClient):
@@ -20,7 +20,7 @@ class NoiseClient(ByzantineClient):
     
     def omniscient_callback(self, simulator):
         noise = torch.normal(self._noise_mean,
-                            self._noise_std,
-                            size=super().get_update().shape
-                            ).to(simulator.device)
+                             self._noise_std,
+                             size=super().get_update().shape
+                             ).to(simulator.device)
         self.save_update(noise)

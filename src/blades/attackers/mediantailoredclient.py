@@ -1,6 +1,6 @@
 import torch
 
-from blades.client import ByzantineClient
+from blades.core.client import ByzantineClient
 
 
 class MediantailoredClient(ByzantineClient):
@@ -26,16 +26,16 @@ class MediantailoredClient(ByzantineClient):
                 benign_update.append(w.get_update())
         benign_update = torch.stack(benign_update, 0)
         model_re = torch.mean(benign_update, 0)
-
+        
         if self.dev_type == 'unit_vec':
             deviation = model_re / torch.norm(model_re)  # unit vector, dir opp to good dir
         elif self.dev_type == 'sign':
             deviation = torch.sign(model_re)
         elif self.dev_type == 'std':
             deviation = torch.std(benign_update, 0)
-
+        
         lamda = torch.Tensor([10.0])  # compute_lambda_our(all_updates, model_re, n_attackers)
-
+        
         threshold_diff = 1e-5
         prev_loss = -1
         lamda_fail = lamda
@@ -45,22 +45,20 @@ class MediantailoredClient(ByzantineClient):
             mal_update = (model_re - lamda * deviation)
             mal_updates = torch.stack([mal_update] * self.num_byzantine)
             mal_updates = torch.cat((mal_updates, benign_update), 0)
-    
+            
             agg_grads = torch.median(mal_updates, 0)[0]
-    
+            
             loss = torch.norm(agg_grads - model_re)
-    
+            
             if prev_loss < loss:
                 lamda_succ = lamda
                 lamda = lamda + lamda_fail / 2
             else:
                 lamda = lamda - lamda_fail / 2
-    
+            
             lamda_fail = lamda_fail / 2
             prev_loss = loss
-
+        
         mal_update = (model_re - lamda_succ * deviation)
         
         self._state['saved_update'] = mal_update
-
-

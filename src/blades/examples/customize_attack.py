@@ -17,17 +17,17 @@ At present, there are three methods for the customization of attack strategies, 
     accordingly. This method is especially useful for adaptive attacks.
 """
 
-
 import ray
 import torch
 
-from blades.client import ByzantineClient
+from blades.core.client import ByzantineClient
+from blades.core.simulator import Simulator
 from blades.datasets import MNIST
 from blades.models.mnist import MLP
-from blades.simulator import Simulator
 
 # built-in federated MNIST dataset
 mnist = MNIST(data_root="./data", train_bs=32, num_clients=10)
+
 
 # Subclass the ``ByzantineClient``
 class MaliciousClient(ByzantineClient):
@@ -41,14 +41,14 @@ class MaliciousClient(ByzantineClient):
             data, target = data.to(self.device), target.to(self.device)
             data, target = self.on_train_batch_begin(data=data, target=target)
             self.optimizer.zero_grad()
-        
+            
             output = self.model(data)
             loss = torch.clamp(self.loss_func(output, target), 0, 1e5)
             loss.backward()
             for name, p in self.model.named_parameters():
                 p.grad.data = -p.grad.data
             self.optimizer.step()
-            
+    
     # Attack by flipping the labels of training samples.
     def on_train_batch_begin(self, data, target, logs=None):
         return data, self.num_classes - 1 - target
@@ -72,7 +72,6 @@ conf_params = {
 
 ray.init(num_gpus=0, local_mode=True)
 simulator = Simulator(**conf_params)
-
 
 # %%
 # Register attacks in the simulator.

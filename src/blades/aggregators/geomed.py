@@ -3,7 +3,7 @@ from typing import Union, Optional, List
 import numpy as np
 import torch
 
-from blades.client import BladesClient
+from blades.core.client import BladesClient
 from .mean import _BaseAggregator
 
 
