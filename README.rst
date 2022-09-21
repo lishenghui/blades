@@ -80,7 +80,7 @@ You can also develop your own attack/defense and evaluate it by cloning Blades:
 Verify the installation
 ==============================
 
-Option I. Developer Mode
+Option I. User Mode
 ---------------------------
 
 TBD
