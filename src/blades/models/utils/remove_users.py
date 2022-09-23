@@ -1,6 +1,4 @@
-'''
-removes users with less than the given number of samples
-'''
+"""removes users with less than the given number of samples."""
 
 import argparse
 import json
@@ -16,10 +14,11 @@ parser.add_argument('--name',
                     choices=DATASETS,
                     default='FEMNIST')
 
-parser.add_argument('--min_samples',
-                    help='users with less than x samples are discarded; default: 10;',
-                    type=int,
-                    default=400)
+parser.add_argument(
+    '--min_samples',
+    help='users with less than x samples are discarded; default: 10;',
+    type=int,
+    default=400)
 
 args = parser.parse_args()
 
@@ -42,11 +41,11 @@ for f in files:
     hierarchies = []
     num_samples = []
     user_data = {}
-    
+
     file_dir = os.path.join(subdir, f)
     with open(file_dir, 'r') as inf:
         data = json.load(inf)
-    
+
     num_users = len(data['users'])
     for i in range(num_users):
         curr_user = data['users'][i]
@@ -60,7 +59,7 @@ for f in files:
             if curr_hierarchy is not None:
                 hierarchies.append(curr_hierarchy)
             num_samples.append(data['num_samples'][i])
-    
+
     if not users:
         continue
     all_data = {}
@@ -69,10 +68,10 @@ for f in files:
         all_data['hierarchies'] = hierarchies
     all_data['num_samples'] = num_samples
     all_data['user_data'] = user_data
-    
+
     file_name = '%s_keep_%d.json' % ((f[:-5]), args.min_samples)
     ouf_dir = os.path.join(dir, 'rem_user_data', file_name)
-    
+
     print('writing %s' % file_name)
     with open(ouf_dir, 'w') as outfile:
         json.dump(all_data, outfile)

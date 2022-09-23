@@ -1,7 +1,6 @@
 import torch.nn.functional as F
 from torch import nn
 
-
 # class MLP(nn.Module):
 #     def __init__(self):
 #         super(MLP, self).__init__()
@@ -33,7 +32,7 @@ class MLP(nn.Module):
         # dropout layer (p=0.2)
         # dropout prevents overfitting of data
         self.dropout = nn.Dropout(0.2)
-    
+
     def forward(self, x):
         # flatten image input
         x = x.view(-1, 28 * 28)
