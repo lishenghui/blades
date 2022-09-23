@@ -1,4 +1,4 @@
-from setuptools import setup, find_packages
+from setuptools import find_packages, setup
 
 requirements = [
     'torch>=1.10.2',
@@ -16,7 +16,9 @@ requirements = [
 setup(
     name='blades',
     version='0.1.1',
-    description="""Blades: A simulator for Byzantine-robust federated Learning with Attacks and Defenses Experimental Simulation""",
+    description="""
+    Blades: A simulator for Byzantine-robust federated Learning with Attacks and Defenses
+    """,
     # long_description=open('../README.rst').read(),
     # long_description_content_type="text/markdown",
     author='Blades Team',
@@ -33,8 +35,8 @@ setup(
     keywords='Federated learning',
     packages=find_packages(),
     classifiers=[
-        "Programming Language :: Python :: 3",
-        "License :: OSI Approved :: MIT License",
-        "Operating System :: OS Independent",
+        'Programming Language :: Python :: 3',
+        'License :: OSI Approved :: MIT License',
+        'Operating System :: OS Independent',
     ],
 )
