@@ -49,7 +49,7 @@ class BladesClient(object):
 
         :Example:
 
-        >>> from blades.client import BladesClient
+        >>> from blades.core.client import BladesClient
         >>> client = BladesClient(id='1')
         >>> client.id()
         '1'

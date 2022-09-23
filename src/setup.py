@@ -26,7 +26,7 @@ setup(
     url='https://bladesteam.github.io/',
     # py_modules=['blades'],
     python_requires='>=3.8',
-    license='MIT license',
+    license='Apache License 2.0',
     zip_safe=False,
     # entry_points={
     #     'console_scripts': [""]
@@ -36,7 +36,7 @@ setup(
     packages=find_packages(),
     classifiers=[
         'Programming Language :: Python :: 3',
-        'License :: OSI Approved :: MIT License',
+        'License :: OSI Approved :: Apache Software License',
         'Operating System :: OS Independent',
     ],
 )
