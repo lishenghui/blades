@@ -18,3 +18,4 @@ src/blades/examples/data/*s
 /docs/source/examples/
 /docs/source/_static/
 /src/dist/
+*.pytest_cache/
