@@ -46,7 +46,7 @@ class _RayActor(object):
                 noise_factor=noise_factor,
             )
             update.append(clients[i].get_update())
-        return update
+        return clients
 
     def evaluate(self, clients, model, round_number, batch_size, metrics):
         update = []
