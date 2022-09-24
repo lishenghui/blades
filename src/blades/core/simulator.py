@@ -255,11 +255,12 @@ class Simulator(object):
                 **kwargs,
             ), client_groups)
 
-        updates = [
+        clients = [
             update for returns in list(all_results) for update in returns
         ]
-        for client, update in zip(clients, updates):
-            client.save_update(update)
+
+        for client in clients:
+            self._clients[client._id] = client
 
         if self.adversary:
             self.adversary.omniscient_callback(self)
@@ -269,7 +270,7 @@ class Simulator(object):
         for omniscient_attacker_callback in self.omniscient_callbacks:
             omniscient_attacker_callback(self)
 
-        updates = self.parallel_get(clients, lambda w: w.get_update())
+        # updates = self.parallel_get(clients, lambda w: w.get_update())
         aggregated = self.server.aggregator(clients)
         self.server.apply_update(aggregated)
         # self.log_variance(global_round, updates)
