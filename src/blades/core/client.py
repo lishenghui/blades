@@ -22,14 +22,13 @@ class BladesClient(object):
                         copied to that device.
     """
     def __init__(
-        self,
-        id: Optional[str] = None,
-        device: Optional[str] = 'cpu',
+            self,
+            id: Optional[str] = None,
+            device: Optional[torch.device] = torch.device('cpu'),
     ):
         self._state = defaultdict(dict)
         self.device = device
         self._is_trusted: bool = False
-        # self.device: str = device
 
         self._json_logger = logging.getLogger('stats')
         self.debug_logger = logging.getLogger('debug')

@@ -101,9 +101,11 @@ class Simulator(object):
 
         if attack_kws is None:
             attack_kws = {}
-        self._setup_clients(attack,
-                            num_byzantine=num_byzantine,
-                            attack_kws=attack_kws)
+        self._setup_clients(
+            attack,
+            num_byzantine=num_byzantine,
+            attack_kws=attack_kws,
+        )
         self._setup_adversary(attack, adversary_kws=adversary_kws)
 
         set_random_seed(seed)
@@ -265,8 +267,7 @@ class Simulator(object):
         if self.adversary:
             self.adversary.omniscient_callback(self)
 
-        # If there are Byzantine workers, ask them to craft attackers based on
-        # the updated settings.
+        # If there are Byzantine workers, ask them to craft attackers based on the updated settings.
         for omniscient_attacker_callback in self.omniscient_callbacks:
             omniscient_attacker_callback(self)
 
@@ -461,8 +462,10 @@ class Simulator(object):
         ret = []
         global_model = self.server.get_model()
         self.parallel_call(
-            self.get_clients(), lambda client: client.set_model(
-                global_model, torch.optim.SGD, client_lr))
+            self.get_clients(),
+            lambda client: client.set_model(global_model, torch.optim.SGD,
+                                            client_lr),
+        )
 
         with trange(0, global_rounds + 1) as t:
             for global_rounds in t:
@@ -480,8 +483,6 @@ class Simulator(object):
                 if client_lr_scheduler:
                     client_lr_scheduler.step()
                     client_lr = client_lr_scheduler.get_last_lr()[0]
-
-                # client_lr = self.server_opt.param_groups[0]['lr']
 
                 ret.append(time() - round_start)
                 server_lr = self.server.get_opt().param_groups[0]['lr']
