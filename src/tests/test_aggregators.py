@@ -7,12 +7,14 @@ from blades.aggregators import Mean, Median, Trimmedmean
 #                                 Fltrust, Geomed, Mean, Median, Multikrum,
 #                                 Signguard, Trimmedmean)
 
-test_data = torch.Tensor([
-    [1, 2, 3],
-    [-1, 4, -1],
-    [2., 2, 3],
-    [3., 1., 3],
-])
+test_data = torch.Tensor(
+    [
+        [1, 2, 3],
+        [-1, 4, -1],
+        [2.0, 2, 3],
+        [3.0, 1.0, 3],
+    ]
+)
 
 
 def test_median():

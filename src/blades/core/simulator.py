@@ -12,8 +12,12 @@ from blades.core.actor import _RayActor
 from blades.core.client import BladesClient, ByzantineClient
 from blades.core.server import BladesServer
 from blades.datasets.dataset import FLDataset
-from blades.utils.utils import (initialize_logger, reset_model_weights,
-                                set_random_seed, top1_accuracy)
+from blades.utils.utils import (
+    initialize_logger,
+    reset_model_weights,
+    set_random_seed,
+    top1_accuracy,
+)
 
 
 class Simulator(object):
@@ -41,6 +45,7 @@ class Simulator(object):
     :param log_path: The path of logging
     :type log_path: str
     """
+
     def __init__(
         self,
         dataset: FLDataset,
@@ -48,11 +53,11 @@ class Simulator(object):
         attack: Optional[str] = None,
         attack_kws: Optional[Dict[str, float]] = None,
         adversary_kws: Optional[Dict[str, float]] = None,
-        aggregator: Union[Callable[[list], torch.Tensor], str] = 'mean',
+        aggregator: Union[Callable[[list], torch.Tensor], str] = "mean",
         aggregator_kws: Optional[Dict[str, float]] = None,
         num_actors: Optional[int] = 1,
         gpu_per_actor: Optional[float] = 0,
-        log_path: str = './outputs',
+        log_path: str = "./outputs",
         metrics: Optional[dict] = None,
         use_cuda: Optional[bool] = False,
         seed: Optional[int] = None,
@@ -61,22 +66,20 @@ class Simulator(object):
 
         if not adversary_kws:
             adversary_kws = {}
-        if use_cuda or \
-                ('gpu_per_actor' in kwargs and kwargs['gpu_per_actor'] > 0.0):
-            self.device = torch.device('cuda')
+        if use_cuda or ("gpu_per_actor" in kwargs and kwargs["gpu_per_actor"] > 0.0):
+            self.device = torch.device("cuda")
         else:
-            self.device = torch.device('cpu')
+            self.device = torch.device("cpu")
 
         if aggregator_kws is None:
             aggregator_kws = {}
-        self._init_aggregator(aggregator=aggregator,
-                              aggregator_kws=aggregator_kws)
+        self._init_aggregator(aggregator=aggregator, aggregator_kws=aggregator_kws)
 
         # Setup logger
         initialize_logger(log_path)
-        self.metrics = {'top1': top1_accuracy} if metrics is None else metrics
-        self.json_logger = logging.getLogger('stats')
-        self.debug_logger = logging.getLogger('debug')
+        self.metrics = {"top1": top1_accuracy} if metrics is None else metrics
+        self.json_logger = logging.getLogger("stats")
+        self.debug_logger = logging.getLogger("debug")
         self.debug_logger.info(self.__str__())
 
         self.random_states = {}
@@ -86,8 +89,8 @@ class Simulator(object):
             # User passed in extra keyword arguments but isn't connecting
             # through the simulator. Raise an error, since most likely a typo
             # in keyword
-            unknown = ', '.join(kwargs)
-            raise RuntimeError(f'Unknown keyword argument(s): {unknown}')
+            unknown = ", ".join(kwargs)
+            raise RuntimeError(f"Unknown keyword argument(s): {unknown}")
 
         self.ray_actors = [
             _RayActor.options(num_gpus=gpu_per_actor).remote(dataset)
@@ -112,24 +115,22 @@ class Simulator(object):
 
     def _init_aggregator(self, aggregator, aggregator_kws):
         if type(aggregator) == str:
-            agg_path = importlib.import_module('blades.aggregators.%s' %
-                                               aggregator)
+            agg_path = importlib.import_module("blades.aggregators.%s" % aggregator)
             agg_scheme = getattr(agg_path, aggregator.capitalize())
             self.aggregator = agg_scheme(**aggregator_kws)
         else:
             self.aggregator = aggregator
 
     def _setup_adversary(self, attack: str, adversary_kws):
-        module_path = importlib.import_module('blades.attackers.%sclient' %
-                                              attack)
-        adversary_cls = getattr(module_path,
-                                '%sAdversary' % attack.capitalize(),
-                                lambda: None)
-        self.adversary = adversary_cls(
-            **adversary_kws) if adversary_cls else None
+        module_path = importlib.import_module("blades.attackers.%sclient" % attack)
+        adversary_cls = getattr(
+            module_path, "%sAdversary" % attack.capitalize(), lambda: None
+        )
+        self.adversary = adversary_cls(**adversary_kws) if adversary_cls else None
 
     def _setup_clients(self, attack: str, num_byzantine, attack_kws):
         import importlib
+
         if attack is None:
             num_byzantine = 0
         users = self.dataset.get_clients()
@@ -138,9 +139,9 @@ class Simulator(object):
             # u = str(u)
             if i < num_byzantine:
                 module_path = importlib.import_module(
-                    'blades.attackers.%sclient' % attack)
-                attack_scheme = getattr(module_path,
-                                        '%sClient' % attack.capitalize())
+                    "blades.attackers.%sclient" % attack
+                )
+                attack_scheme = getattr(module_path, "%sClient" % attack.capitalize())
                 client = attack_scheme(id=u, device=self.device, **attack_kws)
                 self._register_omniscient_callback(client.omniscient_callback)
             else:
@@ -151,13 +152,12 @@ class Simulator(object):
         self.omniscient_callbacks.append(callback)
 
     def get_clients(self) -> List:
-        r"""Return all clients as a list.
-        """
+        r"""Return all clients as a list."""
         return list(self._clients.values())
 
     def set_trusted_clients(self, ids: List[str]) -> None:
-        r"""Set a list of input as trusted. This is usable for trusted-based algorithms
-        that assume some clients are known as not Byzantine.
+        r"""Set a list of input as trusted. This is usable for trusted-based
+        algorithms that assume some clients are known as not Byzantine.
 
         :param ids: a list of client ids that are trusted
         :type ids: list
@@ -167,21 +167,21 @@ class Simulator(object):
 
     def cache_random_state(self) -> None:
         # This function should be used for reproducibility
-        if self.device != torch.device('cpu'):
-            self.random_states['torch_cuda'] = torch.cuda.get_rng_state()
-        self.random_states['torch'] = torch.get_rng_state()
-        self.random_states['numpy'] = np.random.get_state()
+        if self.device != torch.device("cpu"):
+            self.random_states["torch_cuda"] = torch.cuda.get_rng_state()
+        self.random_states["torch"] = torch.get_rng_state()
+        self.random_states["numpy"] = np.random.get_state()
 
     def restore_random_state(self) -> None:
         # This function should be used for reproducibility
-        if self.device != torch.device('cpu'):
-            torch.cuda.set_rng_state(self.random_states['torch_cuda'])
-        torch.set_rng_state(self.random_states['torch'])
-        np.random.set_state(self.random_states['numpy'])
+        if self.device != torch.device("cpu"):
+            torch.cuda.set_rng_state(self.random_states["torch_cuda"])
+        torch.set_rng_state(self.random_states["torch"])
+        np.random.set_state(self.random_states["numpy"])
 
-    def register_attackers(self,
-                           clients: List[ByzantineClient],
-                           replace_indices=None) -> None:
+    def register_attackers(
+        self, clients: List[ByzantineClient], replace_indices=None
+    ) -> None:
         r"""Register a list of clients as attackers. Those malicious clients
         replace the first few clients.
 
@@ -208,8 +208,7 @@ class Simulator(object):
             self._clients[id] = clients[i]
             self._register_omniscient_callback(clients[i].omniscient_callback)
 
-    def parallel_call(self, clients, f: Callable[[BladesClient],
-                                                 None]) -> None:
+    def parallel_call(self, clients, f: Callable[[BladesClient], None]) -> None:
         self.cache_random_state()
         _ = [f(worker) for worker in clients]
         self.restore_random_state()
@@ -231,7 +230,7 @@ class Simulator(object):
         *args,
         **kwargs,
     ) -> None:
-        r"""Run local training using ``ray`` actors
+        r"""Run local training using ``ray`` actors.
 
         Args:
             global_round (int): The current global round.
@@ -241,12 +240,11 @@ class Simulator(object):
         """
 
         # TODO: randomly select a subset of input for local training
-        self.debug_logger.info(f'Train global round {global_round}')
+        self.debug_logger.info(f"Train global round {global_round}")
 
         # Allocate input to actors:
         global_model = self.server.get_model()
-        client_groups = np.array_split(self.get_clients(),
-                                       len(self.ray_actors))
+        client_groups = np.array_split(self.get_clients(), len(self.ray_actors))
         all_results = self.actor_pool.map(
             lambda actor, clients: actor.local_training.remote(
                 clients=clients,
@@ -255,11 +253,11 @@ class Simulator(object):
                 lr=lr,
                 *args,
                 **kwargs,
-            ), client_groups)
+            ),
+            client_groups,
+        )
 
-        clients = [
-            update for returns in list(all_results) for update in returns
-        ]
+        clients = [update for returns in list(all_results) for update in returns]
 
         for client in clients:
             self._clients[client._id] = client
@@ -267,7 +265,8 @@ class Simulator(object):
         if self.adversary:
             self.adversary.omniscient_callback(self)
 
-        # If there are Byzantine workers, ask them to craft attackers based on the updated settings.
+        # If there are Byzantine workers, ask them to craft attackers based on
+        # the updated settings.
         for omniscient_attacker_callback in self.omniscient_callbacks:
             omniscient_attacker_callback(self)
 
@@ -283,8 +282,7 @@ class Simulator(object):
         :param batch_size: test batch size
         """
         global_model = self.server.get_model()
-        client_groups = np.array_split(self.get_clients(),
-                                       len(self.ray_actors))
+        client_groups = np.array_split(self.get_clients(), len(self.ray_actors))
 
         all_results = self.actor_pool.map(
             lambda actor, clients: actor.evaluate.remote(
@@ -293,15 +291,16 @@ class Simulator(object):
                 round_number=global_round,
                 batch_size=batch_size,
                 metrics=self.metrics,
-            ), client_groups)
+            ),
+            client_groups,
+        )
 
-        metrics = [
-            update for returns in list(all_results) for update in returns
-        ]
+        metrics = [update for returns in list(all_results) for update in returns]
 
         loss, top1 = self.log_validate(metrics)
         self.debug_logger.info(
-            f'Test global round {global_round}, loss: {loss}, top1: {top1}')
+            f"Test global round {global_round}, loss: {loss}, top1: {top1}"
+        )
         return loss, top1
 
     def log_variance(self, cur_round, update):
@@ -311,93 +310,96 @@ class Simulator(object):
                 updates.append(client.get_update())
         mean_update = torch.mean(torch.vstack(updates), dim=0)
         var_avg = torch.mean(
-            torch.var(torch.vstack(updates), dim=0, unbiased=False)).item()
+            torch.var(torch.vstack(updates), dim=0, unbiased=False)
+        ).item()
         norm = torch.norm(
-            torch.var(torch.vstack(updates), dim=0, unbiased=False)).item()
+            torch.var(torch.vstack(updates), dim=0, unbiased=False)
+        ).item()
         avg_norm = torch.norm(mean_update)
         var_norm = torch.sqrt(
             torch.mean(
-                torch.tensor([
-                    torch.norm(model_update - mean_update)**2
-                    for model_update in updates
-                ])))
+                torch.tensor(
+                    [
+                        torch.norm(model_update - mean_update) ** 2
+                        for model_update in updates
+                    ]
+                )
+            )
+        )
 
         r = {
-            '_meta': {
-                'type': 'variance'
-            },
-            'Round': cur_round,
-            'avg': var_avg,
-            'norm': norm,
-            'avg_norm': avg_norm,
-            'VN_ratio': var_norm / avg_norm,
+            "_meta": {"type": "variance"},
+            "Round": cur_round,
+            "avg": var_avg,
+            "norm": norm,
+            "avg_norm": avg_norm,
+            "VN_ratio": var_norm / avg_norm,
         }
 
         # Output to file
         self.json_logger.info(r)
 
     def log_validate(self, metrics):
-        top1 = np.average([metric['top1'] for metric in metrics],
-                          weights=[metric['Length'] for metric in metrics])
-        loss = np.average([metric['Loss'] for metric in metrics],
-                          weights=[metric['Length'] for metric in metrics])
+        top1 = np.average(
+            [metric["top1"] for metric in metrics],
+            weights=[metric["Length"] for metric in metrics],
+        )
+        loss = np.average(
+            [metric["Loss"] for metric in metrics],
+            weights=[metric["Length"] for metric in metrics],
+        )
         r = {
-            '_meta': {
-                'type': 'test'
-            },
-            'Round': metrics[0]['E'],
-            'top1': top1,
-            'Length': np.sum([metric['Length'] for metric in metrics]),
-            'Loss': loss,
+            "_meta": {"type": "test"},
+            "Round": metrics[0]["E"],
+            "top1": top1,
+            "Length": np.sum([metric["Length"] for metric in metrics]),
+            "Loss": loss,
         }
         self.json_logger.info(r)
         return loss, top1
 
     def log_train(self, progress, batch_idx, epoch, results):
-        length = sum(res['length'] for res in results)
+        length = sum(res["length"] for res in results)
 
         r = {
-            '_meta': {
-                'type': 'train'
-            },
-            'Round': epoch,
-            'B': batch_idx,
-            'Length': length,
-            'Loss':
-            sum(res['loss'] * res['length'] for res in results) / length,
+            "_meta": {"type": "train"},
+            "Round": epoch,
+            "B": batch_idx,
+            "Length": length,
+            "Loss": sum(res["loss"] * res["length"] for res in results) / length,
         }
 
         for metric_name in self.metrics:
-            r[metric_name] = (sum(res['metrics'][metric_name] * res['length']
-                                  for res in results) / length)
+            r[metric_name] = (
+                sum(res["metrics"][metric_name] * res["length"] for res in results)
+                / length
+            )
 
         # Output to console
         total = len(self._clients.values()[0].data_loader.dataset)
         pct = 100 * progress / total
         self.debug_logger.info(
             f"[Round{r['E']:2}B{r['B']:<3}| {progress:6}/{total} ({pct:3.0f}%)"
-            f" ] Loss: {r['Loss']:.4f} " +
-            ' '.join(name + '=' + '{:>8.4f}'.format(r[name])
-                     for name in self.metrics))
+            f" ] Loss: {r['Loss']:.4f} "
+            + " ".join(name + "=" + "{:>8.4f}".format(r[name]) for name in self.metrics)
+        )
         # Output to file
         self.json_logger.info(r)
 
     def run(
         self,
         model: torch.nn.Module,
-        server_optimizer: Union[torch.optim.Optimizer, str] = 'SGD',
-        client_optimizer: Union[torch.optim.Optimizer, str] = 'SGD',
-        loss: Optional[str] = 'crossentropy',
+        server_optimizer: Union[torch.optim.Optimizer, str] = "SGD",
+        client_optimizer: Union[torch.optim.Optimizer, str] = "SGD",
+        loss: Optional[str] = "crossentropy",
         global_rounds: Optional[int] = 1,
         local_steps: Optional[int] = 1,
         validate_interval: Optional[int] = 1,
         test_batch_size: Optional[int] = 64,
         server_lr: Optional[float] = 0.1,
         client_lr: Optional[float] = 0.1,
-        server_lr_scheduler: Optional[
-            torch.optim.lr_scheduler.MultiStepLR] = None,
-        client_lr_scheduler: Optional[
-            torch.optim.lr_scheduler.MultiStepLR] = None,
+        server_lr_scheduler: Optional[torch.optim.lr_scheduler.MultiStepLR] = None,
+        client_lr_scheduler: Optional[torch.optim.lr_scheduler.MultiStepLR] = None,
         dp_kws: Optional[Dict[str, float]] = None,
     ):
         """Run the adversarial training.
@@ -434,18 +436,18 @@ class Simulator(object):
         :return: None
         """
         if dp_kws:
-            dp_kws.update({'dp': True})
+            dp_kws.update({"dp": True})
         else:
             dp_kws = {}
 
-        if self.device != torch.device('cpu'):
-            model = model.to('cuda')
+        if self.device != torch.device("cpu"):
+            model = model.to("cuda")
 
         reset_model_weights(model)
-        if server_optimizer == 'SGD':
-            self.server_opt = torch.optim.SGD(model.parameters(),
-                                              lr=server_lr,
-                                              **dp_kws)
+        if server_optimizer == "SGD":
+            self.server_opt = torch.optim.SGD(
+                model.parameters(), lr=server_lr, **dp_kws
+            )
         else:
             self.server_opt = server_optimizer
 
@@ -456,27 +458,27 @@ class Simulator(object):
             aggregator=self.aggregator,
         )
 
-        self.parallel_call(self.get_clients(),
-                           lambda client: client.set_loss(loss))
+        self.parallel_call(self.get_clients(), lambda client: client.set_loss(loss))
         global_start = time()
         ret = []
         global_model = self.server.get_model()
         self.parallel_call(
             self.get_clients(),
-            lambda client: client.set_model(global_model, torch.optim.SGD,
-                                            client_lr),
+            lambda client: client.set_model(global_model, torch.optim.SGD, client_lr),
         )
 
         with trange(0, global_rounds + 1) as t:
             for global_rounds in t:
                 round_start = time()
                 if global_rounds % validate_interval == 0:
-                    loss, top1 = self.test_actor(global_round=global_rounds,
-                                                 batch_size=test_batch_size)
+                    loss, top1 = self.test_actor(
+                        global_round=global_rounds, batch_size=test_batch_size
+                    )
                     t.set_postfix(loss=loss, top1=top1)
 
-                self.train_actor(global_rounds, local_steps,
-                                 self.get_clients(), client_lr, **dp_kws)
+                self.train_actor(
+                    global_rounds, local_steps, self.get_clients(), client_lr, **dp_kws
+                )
                 if server_lr_scheduler:
                     server_lr_scheduler.step()
 
@@ -485,12 +487,14 @@ class Simulator(object):
                     client_lr = client_lr_scheduler.get_last_lr()[0]
 
                 ret.append(time() - round_start)
-                server_lr = self.server.get_opt().param_groups[0]['lr']
+                server_lr = self.server.get_opt().param_groups[0]["lr"]
                 self.debug_logger.info(
-                    f'E={global_rounds}; Server learning rate = {server_lr:}; '
-                    f'Client learning rate = {client_lr:}; Time cost = '
-                    f'{time() - global_start}')
+                    f"E={global_rounds}; Server learning rate = {server_lr:}; "
+                    f"Client learning rate = {client_lr:}; Time cost = "
+                    f"{time() - global_start}"
+                )
 
-            loss, top1 = self.test_actor(global_round=global_rounds,
-                                         batch_size=test_batch_size)
+            loss, top1 = self.test_actor(
+                global_round=global_rounds, batch_size=test_batch_size
+            )
             return ret

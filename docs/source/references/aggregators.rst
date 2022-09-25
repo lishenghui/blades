@@ -6,7 +6,7 @@ Aggregators
     :show-inheritance:
     :member-order: bysource
 
-.. automodule:: aggregators.krum
+.. automodule:: aggregators.multikrum
     :members:
     :show-inheritance:
     :member-order: bysource

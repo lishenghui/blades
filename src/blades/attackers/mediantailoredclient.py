@@ -11,7 +11,8 @@ class MediantailoredClient(ByzantineClient):
     :param mean: the mean for all distributions
     :param std: the standard deviation for all distributions
     """
-    def __init__(self, num_byzantine: int, dev_type='std', *args, **kwargs):
+
+    def __init__(self, num_byzantine: int, dev_type="std", *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.dev_type = dev_type
         self.num_byzantine = num_byzantine
@@ -27,23 +28,23 @@ class MediantailoredClient(ByzantineClient):
         benign_update = torch.stack(benign_update, 0)
         model_re = torch.mean(benign_update, 0)
 
-        if self.dev_type == 'unit_vec':
+        if self.dev_type == "unit_vec":
             # unit vector, dir opp to good dir
             deviation = model_re / torch.norm(model_re)
-        elif self.dev_type == 'sign':
+        elif self.dev_type == "sign":
             deviation = torch.sign(model_re)
-        elif self.dev_type == 'std':
+        elif self.dev_type == "std":
             deviation = torch.std(benign_update, 0)
 
         # compute_lambda_our(all_updates, model_re, n_attackers)
-        lamda = torch.Tensor([10.0])
+        lambda_ = torch.Tensor([10.0])
 
         threshold_diff = 1e-5
         prev_loss = -1
-        lamda_fail = lamda
+        lamda_fail = lambda_
         lamda_succ = 0
-        while torch.abs(lamda_succ - lamda) > threshold_diff:
-            mal_update = (model_re - lamda * deviation)
+        while torch.abs(lamda_succ - lambda_) > threshold_diff:
+            mal_update = model_re - lambda_ * deviation
             mal_updates = torch.stack([mal_update] * self.num_byzantine)
             mal_updates = torch.cat((mal_updates, benign_update), 0)
 
@@ -52,14 +53,14 @@ class MediantailoredClient(ByzantineClient):
             loss = torch.norm(agg_grads - model_re)
 
             if prev_loss < loss:
-                lamda_succ = lamda
-                lamda = lamda + lamda_fail / 2
+                lamda_succ = lambda_
+                lambda_ = lambda_ + lamda_fail / 2
             else:
-                lamda = lamda - lamda_fail / 2
+                lambda_ = lambda_ - lamda_fail / 2
 
             lamda_fail = lamda_fail / 2
             prev_loss = loss
 
-        mal_update = (model_re - lamda_succ * deviation)
+        mal_update = model_re - lamda_succ * deviation
 
-        self._state['saved_update'] = mal_update
+        self._state["saved_update"] = mal_update

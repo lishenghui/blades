@@ -1,4 +1,4 @@
 Simulator
 ==========
-.. automodule:: simulator    
+.. automodule:: core.simulator
     :members:

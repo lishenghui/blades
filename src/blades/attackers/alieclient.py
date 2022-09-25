@@ -7,9 +7,10 @@ from blades.core.client import ByzantineClient
 
 class AlieClient(ByzantineClient):
     """
-        :param num_clients: Total number of input
-        :param num_byzantine: Number of Byzantine input
+    :param num_clients: Total number of input
+    :param num_byzantine: Number of Byzantine input
     """
+
     def __init__(
         self,
         num_clients: int,
@@ -24,8 +25,9 @@ class AlieClient(ByzantineClient):
             self.z_max = z
         else:
             s = np.floor(num_clients / 2 + 1) - num_byzantine
-            cdf_value = (num_clients - num_byzantine - s) / \
-                        (num_clients - num_byzantine)
+            cdf_value = (num_clients - num_byzantine - s) / (
+                num_clients - num_byzantine
+            )
             self.z_max = norm.ppf(cdf_value)
         self.n_good = num_clients - num_byzantine
 
@@ -36,7 +38,7 @@ class AlieClient(ByzantineClient):
         pass
 
 
-class AlieAdversary():
+class AlieAdversary:
     def __init__(self):
         pass
 
