@@ -16,7 +16,7 @@ from blades.models.cifar10 import CCTNet
 cifar10 = CIFAR10(num_clients=20, iid=True)
 
 
-class Median():
+class Median:
     def __call__(self, inputs):
         stacked = torch.stack(inputs, dim=0)
         values_upper, _ = stacked.median(dim=0)
@@ -26,11 +26,11 @@ class Median():
 
 # configuration parameters
 conf_params = {
-    'dataset': cifar10,
-    'aggregator': Median(),  # defense: robust aggregation
-    'num_actors': 20,  # number of training actors
-    'gpu_per_actor': 0.19,
-    'seed': 1,  # reproducibility
+    "dataset": cifar10,
+    "aggregator": Median(),  # defense: robust aggregation
+    "num_actors": 20,  # number of training actors
+    "gpu_per_actor": 0.19,
+    "seed": 1,  # reproducibility
 }
 
 ray.init(num_gpus=4)
@@ -38,12 +38,12 @@ simulator = Simulator(**conf_params)
 
 # runtime parameters
 run_params = {
-    'model': CCTNet(),  # global model
-    'server_optimizer': 'SGD',  # server optimizer
-    'client_optimizer': 'SGD',  # client optimizer
-    'loss': 'crossentropy',  # loss function
-    'global_rounds': 400,  # number of global rounds
-    'local_steps': 20,  # number of steps per round
-    'client_lr': 0.1,  # learning rate
+    "model": CCTNet(),  # global model
+    "server_optimizer": "SGD",  # server optimizer
+    "client_optimizer": "SGD",  # client optimizer
+    "loss": "crossentropy",  # loss function
+    "global_rounds": 400,  # number of global rounds
+    "local_steps": 20,  # number of steps per round
+    "client_lr": 0.1,  # learning rate
 }
 simulator.run(**run_params)

@@ -12,26 +12,29 @@ from .median import Median
 
 
 class Signguard(_BaseAggregator):
-    r"""
-         A robust aggregator from paper `Xu et al. SignGuard: Byzantine-robust Federated Learning through Collaborative
-          Malicious Gradient Filtering <https://arxiv.org/abs/2109.05872>`_
+    r"""A robust aggregator from paper `Xu et al. SignGuard: Byzantine-robust
+    Federated Learning through Collaborative Malicious Gradient Filtering.
+
+    <https://arxiv.org/abs/2109.05872>`_
     """
-    def __init__(self, agg='mean', max_tau=1e5, linkage='average') -> None:
+
+    def __init__(self, agg="mean", max_tau=1e5, linkage="average") -> None:
         super(Signguard, self).__init__()
 
-        assert linkage in ['average', 'single']
+        assert linkage in ["average", "single"]
         self.tau = max_tau
         self.linkage = linkage
         self.l2norm_his = []
-        if agg == 'mean':
+        if agg == "mean":
             self.agg = Mean()
-        elif agg == 'median':
+        elif agg == "median":
             self.agg = Median()
         else:
-            raise NotImplementedError(f'{agg} is not supported yet.')
+            raise NotImplementedError(f"{agg} is not supported yet.")
 
-    def __call__(self, inputs: Union[List[BladesClient], List[torch.Tensor],
-                                     torch.Tensor]):
+    def __call__(
+        self, inputs: Union[List[BladesClient], List[torch.Tensor], torch.Tensor]
+    ):
         updates = self._get_updates(inputs)
         num = len(updates)
         l2norms = [torch.norm(update).item() for update in updates]
@@ -59,7 +62,8 @@ class Signguard(_BaseAggregator):
 
         flag = 1 if np.sum(kmeans.labels_) > num // 2 else 0
         S2_idxs = list(
-            [idx for idx, label in enumerate(kmeans.labels_) if label == flag])
+            [idx for idx, label in enumerate(kmeans.labels_) if label == flag]
+        )
 
         inter = list(set(S1_idxs) & set(S2_idxs))
 

@@ -10,13 +10,21 @@ import matplotlib.pyplot as plt
 import numpy as np
 import torch
 
-from blades.aggregators import (Autogm, Clippedclustering, Clustering, Geomed,
-                                Mean, Median, Multikrum, Trimmedmean)
+from blades.aggregators import (
+    Autogm,
+    Clippedclustering,
+    Clustering,
+    Geomed,
+    Mean,
+    Median,
+    Multikrum,
+    Trimmedmean,
+)
 
-plt.rcParams['axes.linewidth'] = 1.5  # set the value globally
-plt.rcParams['font.weight'] = 'bold'
-plt.rcParams['font.size'] = 16
-plt.rcParams['axes.labelweight'] = 'bold'
+plt.rcParams["axes.linewidth"] = 1.5  # set the value globally
+plt.rcParams["font.weight"] = "bold"
+plt.rcParams["font.size"] = 16
+plt.rcParams["axes.labelweight"] = "bold"
 
 np.random.seed(1)
 sz = 40
@@ -34,11 +42,11 @@ all_data_tensor = torch.Tensor(np.concatenate([benign, outliers]))
 
 aggs = [
     Mean(),
-    Multikrum(len(all_data), len(outliers), 10),
+    Multikrum(len(outliers), 10),
     Geomed(),
     Median(),
     Autogm(lamb=1.0),
-    Trimmedmean(num_byzantine=len(outliers)),
+    Trimmedmean(num_excluded=len(outliers)),
     Clustering(),
     Clippedclustering(),
 ]
@@ -52,28 +60,30 @@ ax.scatter(
     benign[:, 1],
     s=sample_sz,
     alpha=0.6,
-    color='r',
+    color="r",
     linewidths=0.2,
-    edgecolors='black',
+    edgecolors="black",
 )
 ax.scatter(
     outliers[:, 0],
     outliers[:, 1],
     s=sample_sz,
-    color=[0., 0.7, 0., 1.],
+    color=[0.0, 0.7, 0.0, 1.0],
     linewidths=0.2,
-    edgecolors='black',
+    edgecolors="black",
 )
 
 
 def plot_agg(ax, agg):
     target = agg(all_data_tensor).cpu().detach().numpy()
-    ax.scatter(target[0],
-               target[1],
-               s=sz * 3,
-               label=type(agg).__name__,
-               linewidths=0.3,
-               edgecolors='black')
+    ax.scatter(
+        target[0],
+        target[1],
+        s=sz * 3,
+        label=type(agg).__name__,
+        linewidths=0.3,
+        edgecolors="black",
+    )
 
 
 list(map(lambda agg: plot_agg(ax, agg), aggs))

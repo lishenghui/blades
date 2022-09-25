@@ -12,17 +12,20 @@ class _BaseAggregator(object):
     Args:
         dist_communicator (object): A link object which can broadcast / gather, etc.
     """
+
     def __init__(self, *args, **kwargs):
         pass
         # log("Init aggregators: " + self.__str__())
         # log_dict({"Aggregator": self.__str__(), "Type": "Setup"})
 
-    def _get_updates(self, inputs: Union[List[BladesClient],
-                                         List[torch.Tensor], torch.Tensor]):
+    def _get_updates(
+        self, inputs: Union[List[BladesClient], List[torch.Tensor], torch.Tensor]
+    ):
         if all(isinstance(element, BladesClient) for element in inputs):
             updates = torch.stack(list(map(lambda w: w.get_update(), inputs)))
         elif isinstance(inputs, List) and all(
-                isinstance(element, torch.Tensor) for element in inputs):
+            isinstance(element, torch.Tensor) for element in inputs
+        ):
             updates = torch.stack(inputs, dim=0)
         else:
             updates = inputs
@@ -42,6 +45,7 @@ class _BaseAggregator(object):
 
 class _BaseAsyncAggregator(object):
     """AsyncAggregator base object."""
+
     def __init__(self):
         pass
         # log("Init aggregators: " + self.__str__())
@@ -60,20 +64,20 @@ class _BaseAsyncAggregator(object):
 
 
 class Mean(_BaseAggregator):
-    r"""
-    Computes the ``sample mean`` over the updates from all give clients.
-    """
+    r"""Computes the ``sample mean`` over the updates from all give clients."""
+
     def __int__(self):
         super(Mean, self).__init__()
 
-    def __call__(self, inputs: Union[List[BladesClient], List[torch.Tensor],
-                                     torch.Tensor]):
+    def __call__(
+        self, inputs: Union[List[BladesClient], List[torch.Tensor], torch.Tensor]
+    ):
         updates = self._get_updates(inputs)
         values = updates.mean(dim=0)
         return values
 
     def __str__(self):
-        return 'Mean'
+        return "Mean"
 
 
 class _AsyncMean(_BaseAsyncAggregator):
@@ -83,7 +87,7 @@ class _AsyncMean(_BaseAsyncAggregator):
         return values
 
     def __str__(self):
-        return '_AsyncMean'
+        return "_AsyncMean"
 
 
 class _DecentralizedAggregator(_BaseAggregator):
@@ -91,13 +95,15 @@ class _DecentralizedAggregator(_BaseAggregator):
 
     It has access to the node information and a row of mixing matrix.
     """
+
     def __init__(self, node, weights):
         super().__init__()
         assert len(weights.shape) == 1
         self.node = node
         self.weights = weights
-        logging.getLogger('debug').info(
-            f'Aggregator: node={node.index} weights={weights}')
+        logging.getLogger("debug").info(
+            f"Aggregator: node={node.index} weights={weights}"
+        )
 
     def __call__(self, inputs):
         """The `inputs` is a list of tensors.
@@ -113,4 +119,4 @@ class _DecentralizedAggregator(_BaseAggregator):
         return s
 
     def __str__(self):
-        return '_DecentralizedAggregator'
+        return "_DecentralizedAggregator"

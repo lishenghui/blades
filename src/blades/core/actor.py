@@ -6,26 +6,27 @@ from blades.datasets.dataset import FLDataset
 @ray.remote
 class _RayActor(object):
     """Ray Actor."""
+
     def __init__(self, dataset: object, *args, **kwargs):
         """
-       Args:
-           aggregator (callable): A callable which takes a list of tensors and
-           returns an aggregated tensor.
-           log_interval (int): Control the frequency of logging training
-            batches
-           metrics (dict): dict of metric names and their functions
-           use_cuda (bool): Use cuda or not
-           debug (bool):
-       """
+        Args:
+            aggregator (callable): A callable which takes a list of tensors and
+            returns an aggregated tensor.
+            log_interval (int): Control the frequency of logging training
+             batches
+            metrics (dict): dict of metric names and their functions
+            use_cuda (bool): Use cuda or not
+            debug (bool):
+        """
         traindls, testdls = dataset.get_dls()
         self.dataset = FLDataset(traindls, testdls)
 
     def local_training(self, clients, model, local_round, lr, *args, **kwargs):
-        if 'dp' in kwargs and kwargs['dp'] is True:
-            assert 'clip_threshold' in kwargs and 'noise_factor' in kwargs
+        if "dp" in kwargs and kwargs["dp"] is True:
+            assert "clip_threshold" in kwargs and "noise_factor" in kwargs
             dp = True
-            clip_threshold = kwargs['clip_threshold']
-            noise_factor = kwargs['noise_factor']
+            clip_threshold = kwargs["clip_threshold"]
+            noise_factor = kwargs["noise_factor"]
         else:
             dp = False
             clip_threshold = 0
