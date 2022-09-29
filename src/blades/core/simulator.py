@@ -243,7 +243,6 @@ class Simulator(object):
         self.debug_logger.info(f"Train global round {global_round}")
 
         # Allocate input to actors:
-        # global_model = self.server.get_model()
         global_model = ray.put(self.server.get_model())
         client_groups = np.array_split(self.get_clients(), len(self.ray_actors))
         all_results = []
@@ -499,7 +498,4 @@ class Simulator(object):
                     f"{time() - global_start}"
                 )
 
-            # loss, top1 = self.test_actor(
-            #     global_round=global_rounds, batch_size=test_batch_size
-            # )
             return ret

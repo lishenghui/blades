@@ -56,6 +56,7 @@ class BladesServer(object):
             .. note::
                 The input should be a ``Tensor``, which will be converted to
                 ``pseudo-gradient`` layer by layer.
+
         Args:
             update: The aggregated update.
         """
