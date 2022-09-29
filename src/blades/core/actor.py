@@ -37,10 +37,6 @@ class _RayActor(object):
         self.model = copy.deepcopy(model)
         self.optimizer = opt(self.model.parameters(), lr=lr)
 
-    def load_global_para(self, model):
-        state_dict = model.state_dict()
-        self.model.load_state_dict(state_dict)
-
     def set_lr(self, lr: float) -> None:
         r"""change the learning rate of the client optimizer.
 
@@ -51,7 +47,18 @@ class _RayActor(object):
         for g in self.optimizer.param_groups:
             g["lr"] = lr
 
-    def local_training(self, clients, model, local_round, lr, *args, **kwargs):
+    def local_training(self, clients, global_model, local_round, lr, **kwargs):
+        """A proxy method that provides local training for a set of clients.
+
+        Args:
+            clients: a list of clients.
+            global_model: the global global_model from server.
+            local_round: number of local SGD.
+            lr: client learning rate.
+            **kwargs:
+
+        Returns: a list of ``clients``.
+        """
         if "dp" in kwargs and kwargs["dp"] is True:
             assert "clip_threshold" in kwargs and "noise_factor" in kwargs
             dp = True
@@ -64,7 +71,7 @@ class _RayActor(object):
         update = []
 
         for client in clients:
-            self.load_global_para(model)
+            self.model.load_state_dict(global_model.state_dict())
             self.set_lr(lr)
 
             self.model.train()
@@ -83,11 +90,10 @@ class _RayActor(object):
 
         return clients
 
-    def evaluate(self, clients, model, round_number, batch_size, metrics):
+    def evaluate(self, clients, global_model, round_number, batch_size, metrics):
         update = []
-        self.load_global_para(model)
+        self.model.load_state_dict(global_model.state_dict())
         for i in range(len(clients)):
-            # clients[i].set_para(global_model)
             clients[i].set_model_ref(self.model)
             data = self.dataset.get_all_test_data(clients[i].id())
             result = clients[i].evaluate(

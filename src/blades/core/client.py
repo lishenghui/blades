@@ -74,10 +74,10 @@ class BladesClient(object):
         self._is_trusted = trusted
 
     def set_model_ref(self, model):
-        """Copy an existing model reference.
+        """Copy an existing global_model reference.
 
         Args:
-            model: ``Torch`` model
+            model: ``Torch`` global_model
 
         Returns:
         """
