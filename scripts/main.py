@@ -58,7 +58,7 @@ elif options.dataset == "cifar100":
         iid=not options.non_iid,
         seed=0,
     )  # built-in federated cifar100 dataset
-    model = MLP()
+    model = CCTNet()
 
 else:
     raise NotImplementedError
