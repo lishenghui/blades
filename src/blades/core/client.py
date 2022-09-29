@@ -156,6 +156,17 @@ class BladesClient(object):
             opt.step()
 
     def evaluate(self, round_number, test_set, batch_size, metrics):
+        """Model evaluation.
+
+        Args:
+            round_number: Current global round.
+            test_set: Data set for test.
+            batch_size: Test batch size.
+            metrics: Metrics.
+
+        Returns:
+        """
+
         dataloader = DataLoader(dataset=test_set, batch_size=batch_size)
         self.global_model.eval()
         r = {
@@ -190,8 +201,11 @@ class BladesClient(object):
         return r
 
     def get_update(self) -> torch.Tensor:
-        r"""Returns the saved update of local optimization, represented as a
-        vector."""
+        """Returns the saved update of local optimization, represented as a
+        vector.
+
+        Returns: a vector tensor of update parameters.
+        """
         return torch.nan_to_num(self._get_saved_update())
 
     def save_update(self, update: torch.Tensor) -> None:
@@ -247,7 +261,7 @@ class ByzantineClient(BladesClient):
         Byzantine client can override this method to access information from
         the server and other input.
 
-        :param simulator: The running simulator.
-        :type simulator: Simulator
+        Args:
+            simulator: The running simulator.
         """
         pass
