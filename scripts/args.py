@@ -59,6 +59,13 @@ def parse_arguments():
     options.dp_privacy_sensitivity = 2 * options.dp_clip_threshold / options.batch_size
     ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
 
+    if options.config_path:
+        options.aggregator_kws = {}
+        over_write_args_from_file(options, options.config_path)
+        options.agg = options.agg.lower()
+        options.attack = options.attack.lower()
+
+
     EXP_DIR = os.path.join(ROOT_DIR, f"outputs/{options.dataset}")
 
     attack_args = {
@@ -99,11 +106,6 @@ def parse_arguments():
             "agg": "trimmedmean",
         },
     }
-    if options.config_path:
-        options.aggregator_kws = {}
-        over_write_args_from_file(options, options.config_path)
-        options.agg = options.agg.lower()
-        options.attack = options.attack.lower()
 
     options.log_dir = (
         EXP_DIR
