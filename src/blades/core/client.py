@@ -1,4 +1,3 @@
-import copy
 import logging
 from collections import defaultdict
 from typing import Optional
@@ -74,28 +73,8 @@ class BladesClient(object):
         """
         self._is_trusted = trusted
 
-    def set_model(
-        self, model: nn.Module, opt: type(torch.optim.Optimizer), lr: float
-    ) -> None:
-        r"""Deep copy the given model to the client.
-
-        Args:
-            model: a Torch model for current client.
-            opt: client optimizer
-            lr:  local learning rate
-        """
-        self.model = copy.deepcopy(model)
-        self.optimizer = opt(self.model.parameters(), lr=lr)
-
-    def set_lr(self, lr: float) -> None:
-        r"""change the learning rate of the client optimizer.
-
-        Args:
-            lr (float): target learning rate.
-        """
-
-        for g in self.optimizer.param_groups:
-            g["lr"] = lr
+    def set_model_ref(self, model):
+        self.global_model = model
 
     def set_loss(self, loss_func="crossentropy"):
         if loss_func == "crossentropy":
@@ -103,14 +82,10 @@ class BladesClient(object):
         else:
             raise NotImplementedError
 
-    def set_para(self, model):
-        state_dict = model.state_dict()
-        self.model.load_state_dict(state_dict)
-
     def __str__(self) -> str:
         return "BladesClient"
 
-    def on_train_round_begin(self) -> None:
+    def on_train_round_begin(self, globel_model=None) -> None:
         """Called at the beginning of each local training round in
         `local_training` methods.
 
@@ -118,9 +93,7 @@ class BladesClient(object):
 
         :param logs: Dict. Aggregated metric results up until this batch.
         """
-        self._save_para()
-        self.model = self.model.to(self.device)
-        self.model.train()
+        self._save_para(globel_model)
 
     def on_train_round_end(
         self, dp=False, clip_threshold=None, noise_factor=None
@@ -146,13 +119,14 @@ class BladesClient(object):
 
         Subclasses should override for any actions to run.
 
-        :param data: input of the batch data.
-        :param target: target of the batch data.
-        :param logs: Dict. Aggregated metric results up until this batch.
+        Args:
+            data: input of the batch data.
+            target: target of the batch data.
+            logs: Dict. Aggregated metric results up until this batch.
         """
         return data, target
 
-    def local_training(self, data_batches: list) -> None:
+    def local_training(self, data_batches: list, opt) -> None:
         r"""Local optimizaiton of the ``client``. Byzantine input can override
         this method to perform adversarial attack.
 
@@ -163,18 +137,18 @@ class BladesClient(object):
         for data, target in data_batches:
             data, target = data.to(self.device), target.to(self.device)
             data, target = self.on_train_batch_begin(data=data, target=target)
-            self.optimizer.zero_grad()
+            opt.zero_grad()
 
-            output = self.model(data)
+            output = self.global_model(data)
             # Clamp loss value to avoid possible 'Nan' gradient with some
             # attack types.
             loss = torch.clamp(self.loss_func(output, target), 0, 1e6)
             loss.backward()
-            self.optimizer.step()
+            opt.step()
 
     def evaluate(self, round_number, test_set, batch_size, metrics):
         dataloader = DataLoader(dataset=test_set, batch_size=batch_size)
-        self.model.eval()
+        self.global_model.eval()
         r = {
             "_meta": {"type": "client_validation"},
             "E": round_number,
@@ -187,7 +161,7 @@ class BladesClient(object):
         with torch.no_grad():
             for _, (data, target) in enumerate(dataloader):
                 data, target = data.to(self.device), target.to(self.device)
-                output = self.model.to(self.device)(data)
+                output = self.global_model.to(self.device)(data)
                 r["Loss"] += self.loss_func(output, target).item() * len(target)
                 r["Length"] += len(target)
 
@@ -214,15 +188,16 @@ class BladesClient(object):
     def save_update(self, update: torch.Tensor) -> None:
         r"""Sets the update of the client,.
 
-        :param update: a vector of local update
+        Args:
+        update: a vector of local update
         """
         self._state["saved_update"] = torch.clone(update).detach()
 
     def _get_saved_update(self) -> torch.Tensor:
         return self._state["saved_update"]
 
-    def _save_para(self) -> None:
-        for name, param in self.model.named_parameters():
+    def _save_para(self, model) -> None:
+        for name, param in model.named_parameters():
             if not param.requires_grad:
                 continue
             self._state["saved_para"][name] = (
@@ -232,7 +207,7 @@ class BladesClient(object):
     def _get_para(self, current=True) -> torch.Tensor:
         layer_parameters = []
 
-        for name, param in self.model.named_parameters():
+        for name, param in self.global_model.named_parameters():
             if not param.requires_grad:
                 continue
             if current:

@@ -38,7 +38,7 @@ simulator = Simulator(**conf_params)
 
 # runtime parameters
 run_params = {
-    "model": CCTNet(),  # global model
+    "global_model": CCTNet(),  # global global_model
     "server_optimizer": "SGD",  # server optimizer
     "client_optimizer": "SGD",  # client optimizer
     "loss": "crossentropy",  # loss function

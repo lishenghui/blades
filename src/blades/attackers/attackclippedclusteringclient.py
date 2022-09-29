@@ -59,7 +59,8 @@ class AttackclippedclusteringAdversary:
         theta_cross = np.arccos(1 - dis_cross) - 0.1
 
         flag = 1 if np.sum(clustering.labels_) > num // 2 else 0
-        # values = torch.vstack(list(model for model, label in zip(updates,
+        # values = torch.vstack(list(global_model for global_model, label
+        # in zip(updates,
         # clustering.labels_) if label == flag)).mean( dim=0)
         larger_group = (
             torch.vstack(
@@ -139,7 +140,8 @@ class AttackclippedclusteringAdversary:
         clustering.fit(dis_max)
 
         flag = 1 if np.sum(clustering.labels_) > num // 2 else 0
-        # values = torch.vstack(list(model for model, label in zip(updates,
+        # values = torch.vstack(list(global_model for global_model, label
+        # in zip(updates,
         # clustering.labels_) if label == flag)).mean( dim=0)
         larger_group = torch.vstack(
             list(

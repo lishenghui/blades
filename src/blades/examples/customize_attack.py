@@ -16,7 +16,7 @@ customization of attack strategies, i.e.,
 - ``omniscient_callback``:
  This method is called after local optimization. By overriding it,
  the attacker can have full knowledge of the whole system (e.g., updates from
-  all input), so that it can adjust the model update accordingly. This method
+  all input), so that it can adjust the global_model update accordingly. This method
    is especially useful for adaptive attacks.
 """
 
@@ -29,7 +29,7 @@ from blades.datasets import MNIST
 from blades.models.mnist import MLP
 
 # built-in federated MNIST dataset
-mnist = MNIST(data_root='./data', train_bs=32, num_clients=10)
+mnist = MNIST(data_root="./data", train_bs=32, num_clients=10)
 
 
 # Subclass the ``ByzantineClient``
@@ -40,18 +40,18 @@ class MaliciousClient(ByzantineClient):
 
     # Attack by flipping the sign of gradient, which is equivalent
     # to stochastic gradient ascent.
-    def local_training(self, data_batches):
+    def local_training(self, data_batches, opt):
         for data, target in data_batches:
             data, target = data.to(self.device), target.to(self.device)
             data, target = self.on_train_batch_begin(data=data, target=target)
-            self.optimizer.zero_grad()
+            opt.zero_grad()
 
-            output = self.model(data)
+            output = self.global_model(data)
             loss = torch.clamp(self.loss_func(output, target), 0, 1e5)
             loss.backward()
-            for name, p in self.model.named_parameters():
+            for name, p in self.global_model.named_parameters():
                 p.grad.data = -p.grad.data
-            self.optimizer.step()
+            opt.step()
 
     # Attack by flipping the labels of training samples.
     def on_train_batch_begin(self, data, target, logs=None):
@@ -69,10 +69,10 @@ class MaliciousClient(ByzantineClient):
 
 # configuration parameters
 conf_params = {
-    'dataset': mnist,
-    'aggregator': 'clippedclustering',  # defense: robust aggregation
-    'num_actors': 4,  # number of training actors
-    'seed': 1,  # reproducibility
+    "dataset": mnist,
+    "aggregator": "clippedclustering",  # defense: robust aggregation
+    "num_actors": 4,  # number of training actors
+    "seed": 1,  # reproducibility
 }
 
 ray.init(num_gpus=0, local_mode=True)
@@ -89,12 +89,12 @@ simulator.register_attackers(attackers)
 # Configure run time parameters and run the experiment.
 
 run_params = {
-    'model': MLP(),  # global model
-    'server_optimizer': 'SGD',  # server optimizer
-    'client_optimizer': 'SGD',  # client optimizer
-    'loss': 'crossentropy',  # loss function
-    'global_rounds': 400,  # number of global rounds
-    'local_steps': 50,  # number of steps per round
-    'client_lr': 0.1,  # learning rate
+    "global_model": MLP(),  # global global_model
+    "server_optimizer": "SGD",  # server optimizer
+    "client_optimizer": "SGD",  # client optimizer
+    "loss": "crossentropy",  # loss function
+    "global_rounds": 400,  # number of global rounds
+    "local_steps": 50,  # number of steps per round
+    "client_lr": 0.1,  # learning rate
 }
 simulator.run(**run_params)

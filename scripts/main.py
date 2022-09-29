@@ -104,7 +104,7 @@ if options.algorithm == "fedsgd":
 
     # runtime parameters
     run_args = {
-        "model": model,  # global model
+        "global_model": model,  # global global_model
         "client_optimizer": "SGD",  # server_opt, server optimizer
         "server_optimizer": opt,  # client optimizer
         "loss": "crossentropy",  # loss funcstion
@@ -135,7 +135,7 @@ elif options.algorithm == "fedavg":
     server_opt = torch.optim.SGD(model.parameters(), lr=1.0)
     # runtime parameters
     run_args = {
-        "model": model,  # global model
+        "global_model": model,  # global global_model
         "server_optimizer": server_opt,  # server_opt, server optimizer
         "client_optimizer": opt,  # client optimizer
         "loss": "crossentropy",  # loss funcstion

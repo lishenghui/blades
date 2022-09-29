@@ -13,7 +13,7 @@ class Trimmedmean(_BaseAggregator):
 
     <https://proceedings.mlr.press/v80/yin18a>`_
 
-    It computes the coordinate-wise trimmed average of the model updates,
+    It computes the coordinate-wise trimmed average of the global_model updates,
     which can be expressed by:
 
     .. math::

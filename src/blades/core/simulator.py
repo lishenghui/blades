@@ -246,20 +246,34 @@ class Simulator(object):
         # global_model = self.server.get_model()
         global_model = ray.put(self.server.get_model())
         # ray.put(global_model)
+        # client_groups = np.array_split(self.get_clients(), len(self.ray_actors))
+        # all_results = self.actor_pool.map(
+        #     lambda actor, clients: actor.local_training.remote(
+        #         clients=clients,
+        #         global_model=global_model,
+        #         local_round=num_rounds,
+        #         lr=lr,
+        #         *args,
+        #         **kwargs,
+        #     ),
+        #     client_groups,
+        # )
         client_groups = np.array_split(self.get_clients(), len(self.ray_actors))
-        all_results = self.actor_pool.map(
-            lambda actor, clients: actor.local_training.remote(
+        all_results = []
+        for clients, actor in zip(client_groups, self.ray_actors):
+            ref_clients = actor.local_training.remote(
                 clients=clients,
                 model=global_model,
                 local_round=num_rounds,
                 lr=lr,
                 *args,
                 **kwargs,
-            ),
-            client_groups,
-        )
+            )
+            all_results.append(ref_clients)
 
-        clients = [update for returns in list(all_results) for update in returns]
+        clients = [
+            client for client_group in all_results for client in ray.get(client_group)
+        ]
 
         for client in clients:
             self._clients[client._id] = client
@@ -278,7 +292,7 @@ class Simulator(object):
         # self.log_variance(global_round, updates)
 
     def test_actor(self, global_round, batch_size):
-        """Evaluates the global model using test set.
+        """Evaluates the global global_model using test set.
 
         :param global_round: the current global round number
         :param batch_size: test batch size
@@ -390,7 +404,7 @@ class Simulator(object):
 
     def run(
         self,
-        model: torch.nn.Module,
+        global_model: torch.nn.Module,
         server_optimizer: Union[torch.optim.Optimizer, str] = "SGD",
         client_optimizer: Union[torch.optim.Optimizer, str] = "SGD",
         loss: Optional[str] = "crossentropy",
@@ -406,8 +420,8 @@ class Simulator(object):
     ):
         """Run the adversarial training.
 
-        :param model: The global model for training.
-        :type model: torch.nn.Module
+        :param global_model: The global global_model for training.
+        :type global_model: torch.nn.Module
         :param server_optimizer: The optimizer for server-side optimization.
                                 urrently, the `str` type only supports ``SGD``
         :type server_optimizer: torch.optim.Optimizer or str
@@ -422,7 +436,7 @@ class Simulator(object):
         :type global_rounds: int, optional
         :param local_steps: Number of local steps of each global round.
         :type local_steps: int, optional
-        :param validate_interval: Interval of evaluating the global model using
+        :param validate_interval: Interval of evaluating the global global_model using
         test set.
         :type validate_interval: int, optional
         :param test_batch_size: Batch size of evaluation
@@ -443,12 +457,12 @@ class Simulator(object):
             dp_kws = {}
 
         if self.device != torch.device("cpu"):
-            model = model.to("cuda")
+            global_model = global_model.to("cuda")
 
-        reset_model_weights(model)
+        reset_model_weights(global_model)
         if server_optimizer == "SGD":
             self.server_opt = torch.optim.SGD(
-                model.parameters(), lr=server_lr, **dp_kws
+                global_model.parameters(), lr=server_lr, **dp_kws
             )
         else:
             self.server_opt = server_optimizer
@@ -456,7 +470,7 @@ class Simulator(object):
         self.client_opt = client_optimizer
         self.server = BladesServer(
             optimizer=self.server_opt,
-            model=model,
+            model=global_model,
             aggregator=self.aggregator,
         )
 
@@ -464,10 +478,19 @@ class Simulator(object):
         global_start = time()
         ret = []
         global_model = self.server.get_model()
-        self.parallel_call(
-            self.get_clients(),
-            lambda client: client.set_model(global_model, torch.optim.SGD, client_lr),
-        )
+
+        for actor in self.ray_actors:
+            actor.set_global_model.remote(global_model, torch.optim.SGD, client_lr)
+
+        # self.actor_pool.map(
+        #     lambda actor: actor.set_global_model.remote(
+        #         global_model, torch.optim.SGD, client_lr
+        #     ),
+        # )
+        # self.parallel_call(
+        #     self.get_clients(),
+        #     lambda client: client.set_model(global_model, torch.optim.SGD, client_lr),
+        # )
 
         with trange(0, global_rounds + 1) as t:
             for global_rounds in t:

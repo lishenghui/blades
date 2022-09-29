@@ -36,7 +36,7 @@ simulator = Simulator(**conf_params)
 model = MLP()
 # runtime parameters
 run_params = {
-    "model": model,  # global model
+    "global_model": model,  # global global_model
     "server_optimizer": "SGD",  # ,server_opt  # server optimizer
     "client_optimizer": "SGD",  # client optimizer
     "loss": "crossentropy",  # loss function
