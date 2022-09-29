@@ -2,7 +2,7 @@ import importlib
 import logging
 from time import time
 from typing import Any, Callable, Dict, List, Optional, Union
-
+import ray
 import numpy as np
 import torch
 from ray.util import ActorPool
@@ -243,7 +243,9 @@ class Simulator(object):
         self.debug_logger.info(f"Train global round {global_round}")
 
         # Allocate input to actors:
-        global_model = self.server.get_model()
+        # global_model = self.server.get_model()
+        global_model = ray.put(self.server.get_model())
+        # ray.put(global_model)
         client_groups = np.array_split(self.get_clients(), len(self.ray_actors))
         all_results = self.actor_pool.map(
             lambda actor, clients: actor.local_training.remote(
