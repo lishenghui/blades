@@ -2,58 +2,63 @@
 Customization of attack strategy
 =================================
 
-To customize attack strategies, you only need to subclass ``ByzantineClient`` and override its methods.
-At present, there are three methods for the customization of attack strategies, i.e.,
+To customize attack strategies, you only need to subclass ``ByzantineClient``
+and override its methods. At present, there are three methods for the
+customization of attack strategies, i.e.,
 
 - ``local_training``:
-    You can customize the local training process and do whatever you want. For example, flipping the
+    You can customize the local training process and do whatever you want.
+    For example, flipping the
     sign of gradients at each step.
 - ``on_train_batch_begin``:
     This method is called right before each batch, making it possible to modify
     the batch data for updating.
 - ``omniscient_callback``:
-    This method is called after local optimization. By overriding it, the attacker can
-    have full knowledge of the whole system (e.g., updates from all input), so that it can adjust the model update
-    accordingly. This method is especially useful for adaptive attacks.
+ This method is called after local optimization. By overriding it,
+ the attacker can have full knowledge of the whole system (e.g., updates from
+  all input), so that it can adjust the global_model update accordingly. This method
+   is especially useful for adaptive attacks.
 """
-
 
 import ray
 import torch
 
-from blades.client import ByzantineClient
+from blades.core.client import ByzantineClient
+from blades.core.simulator import Simulator
 from blades.datasets import MNIST
 from blades.models.mnist import MLP
-from blades.simulator import Simulator
 
 # built-in federated MNIST dataset
 mnist = MNIST(data_root="./data", train_bs=32, num_clients=10)
+
 
 # Subclass the ``ByzantineClient``
 class MaliciousClient(ByzantineClient):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.num_classes = 10
-    
-    # Attack by flipping the sign of gradient, which is equivalent to stochastic gradient ascent.
-    def local_training(self, data_batches):
+
+    # Attack by flipping the sign of gradient, which is equivalent
+    # to stochastic gradient ascent.
+    def local_training(self, data_batches, opt):
         for data, target in data_batches:
             data, target = data.to(self.device), target.to(self.device)
             data, target = self.on_train_batch_begin(data=data, target=target)
-            self.optimizer.zero_grad()
-        
-            output = self.model(data)
+            opt.zero_grad()
+
+            output = self.global_model(data)
             loss = torch.clamp(self.loss_func(output, target), 0, 1e5)
             loss.backward()
-            for name, p in self.model.named_parameters():
+            for name, p in self.global_model.named_parameters():
                 p.grad.data = -p.grad.data
-            self.optimizer.step()
-            
+            opt.step()
+
     # Attack by flipping the labels of training samples.
     def on_train_batch_begin(self, data, target, logs=None):
         return data, self.num_classes - 1 - target
-    
-    # Access the updates from all honest clients and design malicious updates accordingly.
+
+    # Access the updates from all honest clients and design
+    # malicious updates accordingly.
     def omniscient_callback(self, simulator):
         updates = []
         for w in simulator.get_clients():
@@ -73,7 +78,6 @@ conf_params = {
 ray.init(num_gpus=0, local_mode=True)
 simulator = Simulator(**conf_params)
 
-
 # %%
 # Register attacks in the simulator.
 
@@ -85,9 +89,9 @@ simulator.register_attackers(attackers)
 # Configure run time parameters and run the experiment.
 
 run_params = {
-    "model": MLP(),  # global model
-    "server_optimizer": 'SGD',  # server optimizer
-    "client_optimizer": 'SGD',  # client optimizer
+    "global_model": MLP(),  # global global_model
+    "server_optimizer": "SGD",  # server optimizer
+    "client_optimizer": "SGD",  # client optimizer
     "loss": "crossentropy",  # loss function
     "global_rounds": 400,  # number of global rounds
     "local_steps": 50,  # number of steps per round
