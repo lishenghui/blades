@@ -11,15 +11,15 @@ from .signguard import Signguard
 from .trimmedmean import Trimmedmean
 
 __all__ = [
-    'Autogm',
-    'Clippedclustering',
-    'Clustering',
-    'Dnc',
-    'Geomed',
-    'Fltrust',
-    'Mean',
-    'Median',
-    'Multikrum',
-    'Trimmedmean',
-    'Signguard',
+    "Autogm",
+    "Clippedclustering",
+    "Clustering",
+    "Dnc",
+    "Geomed",
+    "Fltrust",
+    "Mean",
+    "Median",
+    "Multikrum",
+    "Trimmedmean",
+    "Signguard",
 ]

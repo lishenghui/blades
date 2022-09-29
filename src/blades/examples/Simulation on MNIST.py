@@ -36,7 +36,7 @@ conf_params = {
 }
 
 run_params = {
-    #     "model": model,  # global model
+    #     "global_model": global_model,  # global global_model
     "server_optimizer": "SGD",  # ,server_opt  # server optimizer
     "client_optimizer": "SGD",  # client optimizer
     "loss": "crossentropy",  # loss function
@@ -59,7 +59,7 @@ for agg in aggs:
     conf_params["log_path"] = f"./outputs/{agg}"
     #     conf_params['log_path'] = f"dbfs/outputs/{k}"
     model = MLP()
-    run_params["model"] = model
+    run_params["global_model"] = model
     simulator = Simulator(**conf_params)
     simulator.run(**run_params)
 

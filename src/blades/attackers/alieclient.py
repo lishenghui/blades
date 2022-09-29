@@ -34,7 +34,7 @@ class AlieClient(ByzantineClient):
     def omniscient_callback(self, simulator):
         pass
 
-    def local_training(self, data_batches):
+    def local_training(self, data_batches, opt):
         pass
 
 

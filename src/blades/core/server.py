@@ -13,7 +13,7 @@ class BladesServer(object):
     :param  optimizer: The global optimizer, which can be any optimizer
     from Pytorch.
     :type optimizer: torch.optim.Optimizer
-    :param model: The global model
+    :param model: The global global_model
     :type model: torch.nn.Module
     :param aggregator: a callable which takes a list of tensors and returns
             an aggregated tensor.
@@ -47,7 +47,7 @@ class BladesServer(object):
         self.optimizer.zero_grad(set_to_none=set_to_none)
 
     def get_model(self) -> torch.nn.Module:
-        r"""Returns the current global model."""
+        r"""Returns the current global global_model."""
         return self.model
 
     def apply_update(self, update: torch.Tensor) -> None:
