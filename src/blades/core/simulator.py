@@ -250,7 +250,7 @@ class Simulator(object):
         for clients, actor in zip(client_groups, self.ray_actors):
             ref_clients = actor.local_training.remote(
                 clients=clients,
-                model=global_model,
+                global_model=global_model,
                 local_round=num_rounds,
                 lr=lr,
                 *args,
@@ -293,7 +293,7 @@ class Simulator(object):
         all_results = self.actor_pool.map(
             lambda actor, clients: actor.evaluate.remote(
                 clients=clients,
-                model=global_model,
+                global_model=global_model,
                 round_number=global_round,
                 batch_size=batch_size,
                 metrics=self.metrics,
