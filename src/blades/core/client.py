@@ -74,6 +74,13 @@ class BladesClient(object):
         self._is_trusted = trusted
 
     def set_model_ref(self, model):
+        """Copy an existing model reference.
+
+        Args:
+            model: ``Torch`` model
+
+        Returns:
+        """
         self.global_model = model
 
     def set_loss(self, loss_func="crossentropy"):
@@ -112,6 +119,8 @@ class BladesClient(object):
             ).to(update.device)
             update += noise
         self.save_update(update)
+        self.global_model = None
+        self._state["saved_para"].clear()
 
     def on_train_batch_begin(self, data, target, logs=None):
         """Called at the beginning of a training batch in `local_training`
@@ -131,8 +140,8 @@ class BladesClient(object):
         this method to perform adversarial attack.
 
         Args:
-            num_rounds: Number of local optimization steps.
             data_batches: A list of training batches for local training.
+            opt: Optimizer.
         """
         for data, target in data_batches:
             data, target = data.to(self.device), target.to(self.device)
@@ -194,7 +203,7 @@ class BladesClient(object):
         self._state["saved_update"] = torch.clone(update).detach()
 
     def _get_saved_update(self) -> torch.Tensor:
-        return self._state["saved_update"]
+        return torch.Tensor(self._state["saved_update"])
 
     def _save_para(self, model) -> None:
         for name, param in model.named_parameters():

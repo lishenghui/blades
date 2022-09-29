@@ -63,23 +63,24 @@ class _RayActor(object):
             noise_factor = 0
         update = []
 
-        for i in range(len(clients)):
+        for client in clients:
             self.load_global_para(model)
             self.set_lr(lr)
 
             self.model.train()
-            clients[i].set_model_ref(self.model)
-            clients[i].on_train_round_begin(self.model)
-            data = self.dataset.get_train_data(clients[i].id(), local_round)
+            client.set_model_ref(self.model)
+            client.on_train_round_begin(self.model)
+            data = self.dataset.get_train_data(client.id(), local_round)
 
-            clients[i].local_training(data_batches=data, opt=self.optimizer)
+            client.local_training(data_batches=data, opt=self.optimizer)
 
-            clients[i].on_train_round_end(
+            client.on_train_round_end(
                 dp=dp,
                 clip_threshold=clip_threshold,
                 noise_factor=noise_factor,
             )
-            update.append(clients[i].get_update())
+            update.append(client.get_update())
+
         return clients
 
     def evaluate(self, clients, model, round_number, batch_size, metrics):
