@@ -22,7 +22,7 @@
       <!-- <a href="https://pypi.org/project/graphwar/">
         <img src="https://badge.fury.io/py/graphwar.png" alt="pypi">
       </a>        -->
-      <a href="https://github.com/bladesteam/blades/blob/master/LICENSE.md">
+      <a href="https://github.com/lishenghui/blades/blob/master/LICENSE">
         <img src="https://img.shields.io/github/license/bladesteam/blades?style=plastic" alt="license">
         <img src="https://img.shields.io/badge/Contributions-Welcome-278ea5" alt="Contrib"/>
       </a>
