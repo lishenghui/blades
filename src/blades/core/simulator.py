@@ -245,19 +245,6 @@ class Simulator(object):
         # Allocate input to actors:
         # global_model = self.server.get_model()
         global_model = ray.put(self.server.get_model())
-        # ray.put(global_model)
-        # client_groups = np.array_split(self.get_clients(), len(self.ray_actors))
-        # all_results = self.actor_pool.map(
-        #     lambda actor, clients: actor.local_training.remote(
-        #         clients=clients,
-        #         global_model=global_model,
-        #         local_round=num_rounds,
-        #         lr=lr,
-        #         *args,
-        #         **kwargs,
-        #     ),
-        #     client_groups,
-        # )
         client_groups = np.array_split(self.get_clients(), len(self.ray_actors))
         all_results = []
         for clients, actor in zip(client_groups, self.ray_actors):
@@ -294,8 +281,11 @@ class Simulator(object):
     def test_actor(self, global_round, batch_size):
         """Evaluates the global global_model using test set.
 
-        :param global_round: the current global round number
-        :param batch_size: test batch size
+        Args:
+            global_round: the current global round number
+            batch_size: test batch size
+
+        Returns:
         """
         global_model = self.server.get_model()
         client_groups = np.array_split(self.get_clients(), len(self.ray_actors))
@@ -482,16 +472,6 @@ class Simulator(object):
         for actor in self.ray_actors:
             actor.set_global_model.remote(global_model, torch.optim.SGD, client_lr)
 
-        # self.actor_pool.map(
-        #     lambda actor: actor.set_global_model.remote(
-        #         global_model, torch.optim.SGD, client_lr
-        #     ),
-        # )
-        # self.parallel_call(
-        #     self.get_clients(),
-        #     lambda client: client.set_model(global_model, torch.optim.SGD, client_lr),
-        # )
-
         with trange(0, global_rounds + 1) as t:
             for global_rounds in t:
                 round_start = time()
@@ -519,7 +499,7 @@ class Simulator(object):
                     f"{time() - global_start}"
                 )
 
-            loss, top1 = self.test_actor(
-                global_round=global_rounds, batch_size=test_batch_size
-            )
+            # loss, top1 = self.test_actor(
+            #     global_round=global_rounds, batch_size=test_batch_size
+            # )
             return ret

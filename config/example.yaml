@@ -18,7 +18,7 @@ agg: Mean
 algorithm: fedsgd
 
 local_round: 1
-global_round: 6000
+global_round: 100
 serv_momentum: 0.9
 batch_size: 64
 test_batch_size: 128
