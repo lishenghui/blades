@@ -1,12 +1,4 @@
-import inspect
-import os
-import sys
-
-currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
-parentdir = os.path.dirname(currentdir)
-sys.path.insert(0, parentdir)
-
-from blades.client import ByzantineClient
+from blades.core.client import ByzantineClient
 
 
 class LabelflippingClient(ByzantineClient):
@@ -18,9 +10,6 @@ class LabelflippingClient(ByzantineClient):
         """
         super().__init__(*args, **kwargs)
         self.num_classes = num_classes
-    
+
     def on_train_batch_begin(self, data, target, logs=None):
         return data, self.num_classes - 1 - target
-    
-    def __str__(self) -> str:
-        return "LableFlippingWorker"
