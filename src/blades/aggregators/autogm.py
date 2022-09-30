@@ -28,8 +28,8 @@ class Autogm(_BaseAggregator):
 
     def __init__(
         self,
-        lamb: Optional[float] = None,
-        maxiter: Optional[int] = 2.0,
+        lamb: Optional[float] = 2.0,
+        maxiter: Optional[int] = 100,
         eps: Optional[float] = 1e-6,
         ftol: Optional[float] = 1e-10,
     ):

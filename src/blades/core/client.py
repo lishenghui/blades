@@ -10,29 +10,31 @@ from blades.utils.torch_utils import clip_tensor_norm_
 
 
 class BladesClient(object):
-    _is_byzantine: bool = False
+
     r"""Base class for all clients.
 
-        .. note::
-            Your honest clients should also subclass this class.
-    Args:
-        id (str): a unique id of the client.
-        device (str): target device if specified, all parameters will be
-                        copied to that device.
+    .. note::     Your honest clients should also subclass this class.
     """
+
+    _is_byzantine: bool = False
 
     def __init__(
         self,
         id: Optional[str] = None,
         device: Optional[torch.device] = torch.device("cpu"),
     ):
+        """
+        Args:
+            id (str): a unique id of the client.
+            device (str): target device if specified, all parameters will be
+                        copied to that device.
+        """
         self._state = defaultdict(dict)
-        self.device = device
         self._is_trusted: bool = False
 
         self._json_logger = logging.getLogger("stats")
         self.debug_logger = logging.getLogger("debug")
-
+        self.device = device
         self.set_id(id)
 
     def set_id(self, id: str) -> None:
