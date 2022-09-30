@@ -71,7 +71,8 @@ class _RayActor(object):
         update = []
 
         for client in clients:
-            self.model.load_state_dict(global_model.state_dict())
+            global_state_dict = global_model.state_dict()
+            self.model.load_state_dict(global_state_dict)
             self.set_lr(lr)
 
             self.model.train()
