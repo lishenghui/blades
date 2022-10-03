@@ -18,6 +18,3 @@ Indices and tables
 
 
 .. include:: ../../README.rst
-
-
-

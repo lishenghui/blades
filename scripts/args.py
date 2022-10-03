@@ -65,7 +65,6 @@ def parse_arguments():
         options.agg = options.agg.lower()
         options.attack = options.attack.lower()
 
-
     EXP_DIR = os.path.join(ROOT_DIR, f"outputs/{options.dataset}")
 
     attack_args = {

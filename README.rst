@@ -94,7 +94,7 @@ Option II. Developer Mode
     python main.py --config_path ../config/example.yaml
 
 
-.. 
+..
     Get Started
     ==================================================
     How fast can we simulate attack and defense in federated learning?
