@@ -6,7 +6,6 @@ from numpy import inf
 from sklearn.cluster import AgglomerativeClustering
 
 from blades.core.client import BladesClient
-
 from .mean import _BaseAggregator
 
 

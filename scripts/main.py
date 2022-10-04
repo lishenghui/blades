@@ -3,8 +3,8 @@ import os
 
 import ray
 import torch
-from args import options
 
+from args import options
 from blades.core.simulator import Simulator
 from blades.datasets import CIFAR10, CIFAR100, MNIST
 from blades.models.cifar10 import CCTNet
@@ -28,6 +28,7 @@ cache_name = (
     + options.algorithm
     + ("_noniid" if not options.non_iid else "")
     + f"_{str(options.num_clients)}_{str(options.seed)}"
+    + ".obj"
 )
 if options.dataset == "cifar10":
     dataset = CIFAR10(

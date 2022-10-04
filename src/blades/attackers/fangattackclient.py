@@ -9,7 +9,7 @@ class FangattackClient(ByzantineClient):
     def omniscient_callback(self, simulator):
         pass
 
-    def local_training(self, data_batches, opt):
+    def train_global_model(self, data_batches, opt):
         pass
 
 
