@@ -3,14 +3,14 @@ dataset: cifar10
 non_iid: False
 alpha: 0.1
 num_clients: 50
-num_byzantine: 5
+num_byzantine: 0
 #trusted_id: 49
 
 
 attack: ALIE
-attack_kws: {"num_clients": 50, "num_byzantine": 5}
+attack_kws: {"num_clients": 50, "num_byzantine": 0}
 
-agg: Mean
+agg: Median
 #aggregator_kws: {num_excluded: 1, k: 5}
 #aggregator_kws: {"linkage": "average"}
 
@@ -33,6 +33,6 @@ dp_clip_threshold: 0.5
 #Ray related configurations.
 
 # If you try to debug the code, use `local_mode:True`
-local_mode: True
-num_actors: 4
-gpu_per_actor: 0.0
+local_mode: False
+num_actors: 20
+gpu_per_actor: 0.19

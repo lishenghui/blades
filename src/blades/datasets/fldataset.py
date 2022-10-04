@@ -8,7 +8,6 @@ from typing import Optional
 import numpy as np
 import torch
 from sklearn.utils import shuffle
-
 from blades.utils.utils import set_random_seed
 from .customdataset import CustomTensorDataset
 
@@ -16,9 +15,6 @@ logger = logging.getLogger(__name__)
 
 
 class FLDataset(ABC):
-    train_transform = None
-    test_transform = None
-
     def __init__(
         self,
         train_set=None,
@@ -32,12 +28,15 @@ class FLDataset(ABC):
         train_data=None,
         test_data=None,
         train_bs: Optional[int] = 32,
+        train_transform=None,
+        test_transform=None,
     ):
+        self.train_transform = train_transform
+        self.test_transform = test_transform
         if train_data:
             self.train_data = train_data
             self.test_data = test_data
             self.train_bs = train_bs
-
             self._preprocess()
             return
 
@@ -70,7 +69,6 @@ class FLDataset(ABC):
                     )
 
         if regenerate:
-            # returns = self.generate_datasets(data_root, iid, alpha, num_clients, seed)
             returns = self._generate_datasets(
                 train_set,
                 test_set,
@@ -101,6 +99,8 @@ class FLDataset(ABC):
                 train_data=self.train_data,
                 test_data=self.test_data,
                 train_bs=self.train_bs,
+                train_transform=self.train_transform,
+                test_transform=self.test_transform,
             ),
             (),
         )
@@ -209,16 +209,13 @@ class FLDataset(ABC):
         tensor_x = torch.Tensor(data)  # transform to torch tensor
         tensor_y = torch.LongTensor(labels)
         return CustomTensorDataset(
-            tensor_x, tensor_y, transform_list=self.train_transform
+            tensor_x, tensor_y, transform_list=self.test_transform
         )
 
     def _preprocess(self):
         self._train_dls = {}
         self._test_dls = {}
-        # self.train_dls = []
-        # self.test_dls = []
         for idx, u_id in enumerate(self.train_data.keys()):
-            # print("uid", u_id)
             self._train_dls[u_id] = self._preprocess_train_data(
                 data=np.array(self.train_data[u_id]["x"]),
                 labels=np.array(self.train_data[u_id]["y"]),
