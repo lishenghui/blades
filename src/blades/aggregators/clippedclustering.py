@@ -7,7 +7,6 @@ from sklearn.cluster import AgglomerativeClustering, KMeans
 
 from blades.core.client import BladesClient
 from blades.utils import torch_utils
-
 from .mean import Mean, _BaseAggregator
 from .median import Median
 

@@ -2,8 +2,9 @@ import importlib
 import logging
 from time import time
 from typing import Any, Callable, Dict, List, Optional, Union
-import ray
+
 import numpy as np
+import ray
 import torch
 from ray.util import ActorPool
 from tqdm import trange
@@ -11,7 +12,9 @@ from tqdm import trange
 from blades.core.actor import _RayActor
 from blades.core.client import BladesClient, ByzantineClient
 from blades.core.server import BladesServer
-from blades.datasets.dataset import FLDataset
+
+# from blades.datasets.dataset import FLDataset
+from blades.datasets.fldataset import FLDataset
 from blades.utils.utils import (
     initialize_logger,
     reset_model_weights,
@@ -49,6 +52,7 @@ class Simulator(object):
     def __init__(
         self,
         dataset: FLDataset,
+        *,
         num_byzantine: Optional[int] = 0,
         attack: Optional[str] = None,
         attack_kws: Optional[Dict[str, float]] = None,
@@ -98,10 +102,7 @@ class Simulator(object):
         ]
         self.actor_pool = ActorPool(self.ray_actors)
 
-        if type(dataset) != FLDataset:
-            traindls, testdls = dataset.get_dls()
-            self.dataset = FLDataset(traindls, testdls)
-
+        self.dataset = dataset
         if attack_kws is None:
             attack_kws = {}
         self._setup_clients(

@@ -6,8 +6,6 @@ import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
 
-from blades.utils.torch_utils import clip_tensor_norm_
-
 
 class BladesClient(object):
 
@@ -21,14 +19,21 @@ class BladesClient(object):
     def __init__(
         self,
         id: Optional[str] = None,
+        momentum: Optional[float] = 0.0,
         device: Optional[torch.device] = torch.device("cpu"),
     ):
         """
         Args:
             id (str): a unique id of the client.
+            momentum (float, optional): momentum factor (default: 0)
             device (str): target device if specified, all parameters will be
                         copied to that device.
         """
+
+        if momentum < 0.0:
+            raise ValueError("Invalid momentum value: {}".format(momentum))
+
+        self.momentum = momentum
         self._state = defaultdict(dict)
         self._is_trusted: bool = False
 
@@ -75,7 +80,7 @@ class BladesClient(object):
         """
         self._is_trusted = trusted
 
-    def set_model_ref(self, model):
+    def set_global_model_ref(self, model):
         """Copy an existing global_model reference.
 
         Args:
@@ -96,36 +101,19 @@ class BladesClient(object):
 
     def on_train_round_begin(self, globel_model=None) -> None:
         """Called at the beginning of each local training round in
-        `local_training` methods.
+        `train_global_model` methods.
 
         Subclasses should override for any actions to run.
 
-        :param logs: Dict. Aggregated metric results up until this batch.
+        Args:
+            globel_model: ``Torch`` global_model
+
+        Returns:
         """
         self._save_para(globel_model)
 
-    def on_train_round_end(
-        self, dp=False, clip_threshold=None, noise_factor=None
-    ) -> None:
-        """Called at the end of local optimization."""
-        update = self._get_para(current=True) - self._get_para(current=False)
-        if dp:
-            assert clip_threshold is not None
-            clip_tensor_norm_(update, max_norm=clip_threshold)
-
-            sigma = noise_factor
-            noise = torch.normal(
-                mean=0.0,
-                std=sigma,
-                size=update.shape,
-            ).to(update.device)
-            update += noise
-        self.save_update(update)
-        self.global_model = None
-        self._state["saved_para"].clear()
-
-    def on_train_batch_begin(self, data, target, logs=None):
-        """Called at the beginning of a training batch in `local_training`
+    def on_train_batch_begin(self, data, target):
+        """Called at the beginning of a training batch in `train_global_model`
         methods.
 
         Subclasses should override for any actions to run.
@@ -137,7 +125,21 @@ class BladesClient(object):
         """
         return data, target
 
-    def local_training(self, data_batches: list, opt) -> None:
+    def on_backward_end(self):
+        """A callback method called after backward and before parameter update.
+
+        It is typically used to modify gradients.
+        """
+        pass
+
+    def on_train_round_end(self):
+        """A callback method called after local training.
+
+        It is typically used to modify updates (i.e,. psudo-gradient).
+        """
+        pass
+
+    def train_global_model(self, data_batches: list, opt) -> None:
         r"""Local optimizaiton of the ``client``. Byzantine input can override
         this method to perform adversarial attack.
 
@@ -145,6 +147,7 @@ class BladesClient(object):
             data_batches: A list of training batches for local training.
             opt: Optimizer.
         """
+        self.global_model.train()
         for data, target in data_batches:
             data, target = data.to(self.device), target.to(self.device)
             data, target = self.on_train_batch_begin(data=data, target=target)
@@ -155,7 +158,26 @@ class BladesClient(object):
             # attack types.
             loss = torch.clamp(self.loss_func(output, target), 0, 1e6)
             loss.backward()
+
+            self.on_backward_end()
             opt.step()
+
+        update = self._get_para(current=True) - self._get_para(current=False)
+
+        self.save_update(update)
+        self.global_model = None
+        self._state["saved_para"].clear()
+        self.on_train_round_end()
+
+    def train_personal_model(self, data_batches: list, opt) -> None:
+        r"""Local optimizaiton of the ``client``. Byzantine input can override
+        this method to perform adversarial attack.
+
+        Args:
+            data_batches: A list of training batches for local training.
+            opt: Optimizer.
+        """
+        pass
 
     def evaluate(self, round_number, test_set, batch_size, metrics):
         """Model evaluation.
@@ -248,7 +270,7 @@ class ByzantineClient(BladesClient):
     r"""Base class for Byzantine input.
 
     .. note::     Your Byzantine input should also subclass this class, and
-    override ``local_training`` and ``omniscient_callback`` to     customize
+    override ``train_global_model`` and ``omniscient_callback`` to customize
     your attack.
     """
     _is_byzantine = True

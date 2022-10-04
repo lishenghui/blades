@@ -4,7 +4,6 @@ import numpy as np
 import torch
 
 from blades.core.client import BladesClient
-
 from .mean import _BaseAggregator
 
 

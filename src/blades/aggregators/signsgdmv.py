@@ -6,17 +6,15 @@ from blades.core.client import BladesClient
 from .mean import _BaseAggregator
 
 
-class Median(_BaseAggregator):
-    r"""A robust aggregator from paper `Byzantine-robust distributed learning:
-    Towards optimal statistical rates.
+class Signsgdmv(_BaseAggregator):
+    r"""A robust aggregator from paper `signSGD with Majority Vote is
+    Communication Efficient And Fault Tolerant.
 
-    <https://proceedings.mlr.press/v80/yin18a>`_
-
-    It computes the coordinate-wise median of the given set of clients
+    <https://arxiv.org/abs/1810.05291>`_
     """
 
     def __int__(self):
-        super(Median, self).__init__()
+        super(Signsgdmv, self).__init__()
 
     def __call__(
         self,

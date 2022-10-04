@@ -7,7 +7,7 @@ class SignflippingClient(ByzantineClient):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-    def local_training(self, data_batches, opt):
+    def train_global_model(self, data_batches, opt):
         for data, target in data_batches:
             data, target = data.to(self.device), target.to(self.device)
             data, target = self.on_train_batch_begin(data=data, target=target)

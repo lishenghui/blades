@@ -1,9 +1,8 @@
-import ray
+import copy
 
-from blades.datasets.dataset import FLDataset
+import ray
 import torch
 import torch.nn as nn
-import copy
 
 
 @ray.remote
@@ -21,8 +20,9 @@ class _RayActor(object):
             use_cuda (bool): Use cuda or not
             debug (bool):
         """
-        traindls, testdls = dataset.get_dls()
-        self.dataset = FLDataset(traindls, testdls)
+        # traindls, testdls = dataset.get_dls()
+        # self.dataset = FLDataset(traindls, testdls)
+        self.dataset = dataset
 
     def set_global_model(
         self, model: nn.Module, opt: type(torch.optim.Optimizer), lr: float
@@ -43,7 +43,6 @@ class _RayActor(object):
         Args:
             lr (float): target learning rate.
         """
-
         for g in self.optimizer.param_groups:
             g["lr"] = lr
 
@@ -59,35 +58,17 @@ class _RayActor(object):
 
         Returns: a list of ``clients``.
         """
-        if "dp" in kwargs and kwargs["dp"] is True:
-            assert "clip_threshold" in kwargs and "noise_factor" in kwargs
-            dp = True
-            clip_threshold = kwargs["clip_threshold"]
-            noise_factor = kwargs["noise_factor"]
-        else:
-            dp = False
-            clip_threshold = 0
-            noise_factor = 0
-        update = []
-
         for client in clients:
             global_state_dict = global_model.state_dict()
             self.model.load_state_dict(global_state_dict)
             self.set_lr(lr)
 
-            self.model.train()
-            client.set_model_ref(self.model)
+            client.set_global_model_ref(self.model)
             client.on_train_round_begin(self.model)
             data = self.dataset.get_train_data(client.id(), local_round)
 
-            client.local_training(data_batches=data, opt=self.optimizer)
-
-            client.on_train_round_end(
-                dp=dp,
-                clip_threshold=clip_threshold,
-                noise_factor=noise_factor,
-            )
-            update.append(client.get_update())
+            client.train_global_model(data_batches=data, opt=self.optimizer)
+            client.train_personal_model(data_batches=data, opt=self.optimizer)
 
         return clients
 
@@ -95,7 +76,7 @@ class _RayActor(object):
         update = []
         self.model.load_state_dict(global_model.state_dict())
         for i in range(len(clients)):
-            clients[i].set_model_ref(self.model)
+            clients[i].set_global_model_ref(self.model)
             data = self.dataset.get_all_test_data(clients[i].id())
             result = clients[i].evaluate(
                 round_number=round_number,
