@@ -1,5 +1,5 @@
 
-dataset: mnist
+dataset: cifar10
 non_iid: False
 alpha: 0.1
 num_clients: 50
