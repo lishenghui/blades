@@ -65,10 +65,11 @@ class _RayActor(object):
 
             client.set_global_model_ref(self.model)
             client.on_train_round_begin(self.model)
-            data = self.dataset.get_train_data(client.id(), local_round)
+            # data = self.dataset.get_train_data(client.id(), local_round)
+            data_loader = self.dataset.get_train_loader(client.id())
 
-            client.train_global_model(data_batches=data, opt=self.optimizer)
-            client.train_personal_model(data_batches=data, opt=self.optimizer)
+            client.train_global_model(data_batches=data_loader, opt=self.optimizer)
+            # client.train_personal_model(data_batches=data, opt=self.optimizer)
 
         return clients
 

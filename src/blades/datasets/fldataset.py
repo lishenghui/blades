@@ -232,6 +232,9 @@ class FLDataset(ABC):
     def get_clients(self):
         return self.train_data.keys()
 
+    def get_train_loader(self, u_id):
+        return self._train_dls[u_id]
+
     def get_train_data(self, u_id, num_batches):
         data = [next(self._train_dls[u_id]) for _ in range(num_batches)]
         return data
