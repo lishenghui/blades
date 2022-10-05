@@ -153,7 +153,9 @@ class BladesClient(object):
             opt: Optimizer.
         """
         self.global_model.train()
-        for data, target in data_batches:
+        for i in range(50):
+            # for data, target in data_batches:
+            (data, target) = next(data_batches)
             data, target = data.to(self.device), target.to(self.device)
             data, target = self.on_train_batch_begin(data=data, target=target)
             opt.zero_grad()
