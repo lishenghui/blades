@@ -12,8 +12,6 @@ from tqdm import trange
 from blades.core.actor import _RayActor
 from blades.core.client import BladesClient, ByzantineClient
 from blades.core.server import BladesServer
-
-# from blades.datasets.dataset import FLDataset
 from blades.datasets.fldataset import FLDataset
 from blades.utils.utils import (
     initialize_logger,

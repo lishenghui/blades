@@ -1,3 +1,5 @@
+from typing import Generator
+
 import numpy as np
 import torch
 
@@ -9,7 +11,8 @@ class FangattackClient(ByzantineClient):
     def omniscient_callback(self, simulator):
         pass
 
-    def train_global_model(self, data_batches, opt):
+    def train_global_model(self, train_set: Generator, num_batches: int, opt) -> None:
+        pass
         pass
 
 
