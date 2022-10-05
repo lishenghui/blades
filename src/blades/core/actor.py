@@ -22,8 +22,6 @@ class _RayActor(object):
             use_cuda (bool): Use cuda or not
             debug (bool):
         """
-        # traindls, testdls = dataset.get_dls()
-        # self.dataset = FLDataset(traindls, testdls)
         self.dataset = dataset
 
     def set_global_model(
@@ -60,8 +58,9 @@ class _RayActor(object):
 
         Returns: a list of ``clients``.
         """
+        global_state_dict = copy.deepcopy(global_model.state_dict())
         for client in clients:
-            global_state_dict = global_model.state_dict()
+            
             self.model.load_state_dict(global_state_dict)
             self.set_lr(lr)
 
