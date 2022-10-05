@@ -21,3 +21,5 @@ src/blades/examples/data/*
 *.pytest_cache/
 /src/tests/test_datasets/cifar-10-batches-py/
 /src/tests/test_datasets/MNIST/
+/src/tests/test_datasets/data/
+/src/tests/data/

@@ -43,10 +43,15 @@ class BladesClient(object):
         self.set_id(id)
 
     def set_id(self, id: str) -> None:
-        r"""Sets the unique id of the client."""
+        """Sets the unique id of the client.
 
-        # if not isinstance(id,str):
-        #     raise TypeError(f'Client _id must be str, but got {type(id)}')
+        Args:
+            id (str):a unique id of the client.
+        """
+        r""""""
+
+        if not isinstance(id, str):
+            raise TypeError(f"Client _id must be str, but got {type(id)}")
         self._id = id
 
     def id(self) -> str:

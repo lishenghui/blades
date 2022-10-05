@@ -73,6 +73,7 @@ class CIFAR100(FLDataset):
             data_root=data_root,
             cache_name=cache_name,
             iid=iid,
+            num_classes=100,
             alpha=alpha,
             num_clients=num_clients,
             seed=seed,
