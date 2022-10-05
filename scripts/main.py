@@ -7,8 +7,7 @@ import torch
 from args import options
 from blades.core.simulator import Simulator
 from blades.datasets import CIFAR10, CIFAR100, MNIST
-from blades.models.cifar10 import CCTNet
-from blades.models.mnist import MLP
+from blades.models import CCTNet10, CCTNet100, MLP
 
 args = options
 if not ray.is_initialized():
@@ -39,7 +38,7 @@ if options.dataset == "cifar10":
         iid=not options.non_iid,
         seed=0,
     )  # built-in federated cifar10 dataset
-    model = CCTNet()
+    model = CCTNet10()
 elif options.dataset == "mnist":
     dataset = MNIST(
         data_root=data_root,
@@ -59,7 +58,7 @@ elif options.dataset == "cifar100":
         iid=not options.non_iid,
         seed=0,
     )  # built-in federated cifar100 dataset
-    model = CCTNet()
+    model = CCTNet100()
 
 else:
     raise NotImplementedError

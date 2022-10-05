@@ -24,6 +24,7 @@ class FLDataset(ABC):
         iid: Optional[bool] = True,
         alpha: Optional[float] = 0.1,
         num_clients: Optional[int] = 20,
+        num_classes: Optional[int] = 10,
         seed=1,
         train_data=None,
         test_data=None,
@@ -40,9 +41,10 @@ class FLDataset(ABC):
             self._preprocess()
             return
 
+        self.num_classes = num_classes
         self.train_bs = train_bs
         if cache_name == "":
-            cache_name = self.__class__.__name__
+            cache_name = self.__class__.__name__ + ".obj"
         self._data_path = os.path.join(data_root, cache_name)
 
         # Meta parameters for data partitioning, for comparison with cache.
@@ -128,14 +130,14 @@ class FLDataset(ABC):
         else:
             print("generating non-iid data")
             min_size = 0
-            K = 10
+            # self.num_classes = 10
             N = y_train.shape[0]
             client_dataidx_map = {}
 
             while min_size < 10:
                 proportion_list = []
                 idx_batch = [[] for _ in range(num_clients)]
-                for k in range(K):
+                for k in range(self.num_classes):
                     idx_k = np.where(y_train == k)[0]
                     np.random.shuffle(idx_k)
                     proportions = np.random.dirichlet(np.repeat(alpha, num_clients))
