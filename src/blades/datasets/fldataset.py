@@ -3,7 +3,7 @@ import os
 import pickle
 from abc import ABC
 from functools import partial
-from typing import Optional
+from typing import Optional, Generator
 
 import numpy as np
 import torch
@@ -232,7 +232,14 @@ class FLDataset(ABC):
     def get_clients(self):
         return self.train_data.keys()
 
-    def get_train_loader(self, u_id):
+    def get_train_loader(self, u_id: str) -> Generator:
+        """
+        Get the local dataset of given user `id`.
+        Args:
+            u_id (str): user id.
+
+        Returns: the `generator` of dataset for the given `u_id`.
+        """
         return self._train_dls[u_id]
 
     def get_train_data(self, u_id, num_batches):

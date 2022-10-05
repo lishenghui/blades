@@ -1,6 +1,6 @@
 import logging
 from collections import defaultdict
-from typing import Optional
+from typing import Optional, Generator
 
 import torch
 import torch.nn as nn
@@ -144,18 +144,18 @@ class BladesClient(object):
         """
         pass
 
-    def train_global_model(self, data_batches: list, opt) -> None:
+    def train_global_model(self, train_set: Generator, num_batches: int, opt) -> None:
         r"""Local optimizaiton of the ``client``. Byzantine input can override
         this method to perform adversarial attack.
 
         Args:
-            data_batches: A list of training batches for local training.
+            train_set: A list of training batches for local training.
+            num_batches: Number of batches of local update.
             opt: Optimizer.
         """
         self.global_model.train()
-        for i in range(50):
-            # for data, target in data_batches:
-            (data, target) = next(data_batches)
+        for i in range(num_batches):
+            data, target = next(train_set)
             data, target = data.to(self.device), target.to(self.device)
             data, target = self.on_train_batch_begin(data=data, target=target)
             opt.zero_grad()
