@@ -13,7 +13,14 @@ scripts/data
 *.whl
 *.egg
 *test_batch*
-src/blades/examples/data/*s
+src/blades/examples/data/*
 */build/
 /docs/source/examples/
 /docs/source/_static/
+/src/dist/
+*.pytest_cache/
+/src/tests/test_datasets/cifar-10-batches-py/
+/src/tests/test_datasets/MNIST/
+/src/tests/test_datasets/data/
+/src/tests/data/
+/config/example_cpu.yaml

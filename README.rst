@@ -62,7 +62,7 @@ Option I. User Mode
 
 
 Option II (Recommended). Developer Mode
----------------------------
+-------------------------------------------
 
 You can also develop your own attack/defense and evaluate it by cloning Blades:
 
@@ -94,7 +94,7 @@ Option II. Developer Mode
     python main.py --config_path ../config/example.yaml
 
 
-.. 
+..
     Get Started
     ==================================================
     How fast can we simulate attack and defense in federated learning?
@@ -106,7 +106,7 @@ Option II. Developer Mode
    :code: python
 
 
-Build-in Implementations
+Built-in Implementations
 ==================================================
 In detail, the following strategies are currently implemented:
 
