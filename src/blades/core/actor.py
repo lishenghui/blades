@@ -3,13 +3,14 @@ import copy
 import ray
 import torch
 import torch.nn as nn
+from blades.datasets.fldataset import FLDataset
 
 
 @ray.remote
 class _RayActor(object):
     """Ray Actor."""
 
-    def __init__(self, dataset: object, *args, **kwargs):
+    def __init__(self, dataset: FLDataset, *args, **kwargs):
         """
         Args:
             aggregator (callable): A callable which takes a list of tensors and
@@ -65,10 +66,11 @@ class _RayActor(object):
 
             client.set_global_model_ref(self.model)
             client.on_train_round_begin(self.model)
-            # data = self.dataset.get_train_data(client.id(), local_round)
-            data_loader = self.dataset.get_train_loader(client.id())
+            local_dataset = self.dataset.get_train_loader(client.id())
 
-            client.train_global_model(data_batches=data_loader, opt=self.optimizer)
+            client.train_global_model(
+                train_set=local_dataset, num_batches=local_round, opt=self.optimizer
+            )
             # client.train_personal_model(data_batches=data, opt=self.optimizer)
 
         return clients
