@@ -24,3 +24,4 @@ src/blades/examples/data/*
 /src/tests/test_datasets/data/
 /src/tests/data/
 /config/example_cpu.yaml
+/data

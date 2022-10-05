@@ -3,6 +3,7 @@ import copy
 import ray
 import torch
 import torch.nn as nn
+
 from blades.datasets.fldataset import FLDataset
 
 
@@ -65,7 +66,6 @@ class _RayActor(object):
             self.set_lr(lr)
 
             client.set_global_model_ref(self.model)
-            client.on_train_round_begin(self.model)
             local_dataset = self.dataset.get_train_loader(client.id())
 
             client.train_global_model(

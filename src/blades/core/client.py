@@ -50,8 +50,8 @@ class BladesClient(object):
         """
         r""""""
 
-        if not isinstance(id, str):
-            raise TypeError(f"Client _id must be str, but got {type(id)}")
+        if not isinstance(id, (str, type(None))):
+            raise TypeError(f"Client _id must be str or None, but got {type(id)}")
         self._id = id
 
     def id(self) -> str:
@@ -104,18 +104,14 @@ class BladesClient(object):
     def __str__(self) -> str:
         return "BladesClient"
 
-    def on_train_round_begin(self, globel_model=None) -> None:
+    def on_train_round_begin(self) -> None:
         """Called at the beginning of each local training round in
         `train_global_model` methods.
 
         Subclasses should override for any actions to run.
 
-        Args:
-            globel_model: ``Torch`` global_model
-
         Returns:
         """
-        self._save_para(globel_model)
 
     def on_train_batch_begin(self, data, target):
         """Called at the beginning of a training batch in `train_global_model`
@@ -144,7 +140,9 @@ class BladesClient(object):
         """
         pass
 
-    def train_global_model(self, train_set: Generator, num_batches: int, opt) -> None:
+    def train_global_model(
+        self, train_set: Generator, num_batches: int, opt: torch.optim.Optimizer
+    ) -> None:
         r"""Local optimizaiton of the ``client``. Byzantine input can override
         this method to perform adversarial attack.
 
@@ -153,6 +151,7 @@ class BladesClient(object):
             num_batches: Number of batches of local update.
             opt: Optimizer.
         """
+        self._save_para(self.global_model)
         self.global_model.train()
         for i in range(num_batches):
             data, target = next(train_set)
