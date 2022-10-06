@@ -91,7 +91,7 @@ class _AsyncMean(_BaseAsyncAggregator):
 
 
 class _DecentralizedAggregator(_BaseAggregator):
-    """This aggregators is applied to all nodes.
+    """This aggregator is applied to all nodes.
 
     It has access to the node information and a row of mixing matrix.
     """
