@@ -8,7 +8,6 @@ from torch.utils.data import DataLoader
 
 
 class BladesClient(object):
-
     r"""Base class for all clients.
 
     .. note::     Your honest clients should also subclass this class.
@@ -20,6 +19,7 @@ class BladesClient(object):
         self,
         id: Optional[str] = None,
         momentum: Optional[float] = 0.0,
+        dampening: Optional[float] = 0.0,
         device: Optional[torch.device] = torch.device("cpu"),
     ):
         """
@@ -34,9 +34,10 @@ class BladesClient(object):
             raise ValueError("Invalid momentum value: {}".format(momentum))
 
         self.momentum = momentum
+        self.momentum_buff = None
+        self.dampening = dampening
         self._state = defaultdict(dict)
         self._is_trusted: bool = False
-
         self._json_logger = logging.getLogger("stats")
         self.debug_logger = logging.getLogger("debug")
         self.device = device
@@ -95,8 +96,8 @@ class BladesClient(object):
         """
         self.global_model = model
 
-    def set_loss(self, loss_func="crossentropy"):
-        if loss_func == "crossentropy":
+    def set_loss(self, loss_func="cross_entropy"):
+        if loss_func == "cross_entropy":
             self.loss_func = nn.modules.loss.CrossEntropyLoss()
         else:
             raise NotImplementedError
@@ -122,7 +123,6 @@ class BladesClient(object):
         Args:
             data: input of the batch data.
             target: target of the batch data.
-            logs: Dict. Aggregated metric results up until this batch.
         """
         return data, target
 
@@ -136,14 +136,14 @@ class BladesClient(object):
     def on_train_round_end(self):
         """A callback method called after local training.
 
-        It is typically used to modify updates (i.e,. psudo-gradient).
+        It is typically used to modify updates (i.e,. pseudo-gradient).
         """
         pass
 
     def train_global_model(
         self, train_set: Generator, num_batches: int, opt: torch.optim.Optimizer
     ) -> None:
-        r"""Local optimizaiton of the ``client``. Byzantine input can override
+        r"""Local optimization of the ``client``. Byzantine input can override
         this method to perform adversarial attack.
 
         Args:
@@ -170,7 +170,17 @@ class BladesClient(object):
 
         update = self._get_para(current=True) - self._get_para(current=False)
 
-        self.save_update(update)
+        self.update_buffer = torch.clone(update).detach()
+        if self.momentum > 0.0:
+            if self.momentum_buff is None:
+                self.momentum_buff = torch.zeros_like(
+                    self.update_buffer, device=self.update_buffer.device
+                )
+            self.momentum_buff.mul_(self.momentum).add_(
+                self.update_buffer, alpha=1 - self.dampening
+            )
+            self.update_buffer = self.momentum_buff
+
         self.global_model = None
         self._state["saved_para"].clear()
         self.on_train_round_end()
@@ -178,12 +188,11 @@ class BladesClient(object):
     def train_personal_model(
         self, train_set: Generator, num_batches: int, global_state: Dict
     ) -> None:
-        r"""Local optimizaiton of the ``client``. Byzantine input can override
+        r"""Local optimization of the ``client``. Byzantine input can override
         this method to perform adversarial attack.
 
         Args:
-            data_batches: A list of training batches for local training.
-            opt: Optimizer.
+            train_set: A generator of training set for local training.
         """
         pass
 
@@ -237,18 +246,15 @@ class BladesClient(object):
 
         Returns: a vector tensor of update parameters.
         """
-        return torch.nan_to_num(self._get_saved_update())
+        return torch.nan_to_num(self.update_buffer)
 
     def save_update(self, update: torch.Tensor) -> None:
-        r"""Sets the update of the client,.
+        r"""Sets the update of the client.
 
         Args:
         update: a vector of local update
         """
-        self._state["saved_update"] = torch.clone(update).detach()
-
-    def _get_saved_update(self) -> torch.Tensor:
-        return torch.Tensor(self._state["saved_update"])
+        self.update_buffer = torch.clone(update).detach()
 
     def _save_para(self, model) -> None:
         for name, param in model.named_parameters():
