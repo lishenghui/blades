@@ -26,26 +26,25 @@ jobs:
 
       - name: Install PyTorch ${{ matrix.torch-version }}+cpu
         run: |
-          pip install numpy typing-extensions dataclasses 
+          pip install numpy typing-extensions dataclasses
           pip install torch==${{ matrix.torch-version}}+cpu -f https://download.pytorch.org/whl/torch_stable.html
           pip install torchvision
-          
+
 
       - name: Test torch imports
         run: |
           python -c "import torch"
-      
+
       - name: Install Spreadnet
         run: |
           cd src
           pip install -e .
-      
+
       - name: Test imports
         run: |
           python -c "import blades"
-      
+
       - name: Run tests
         run: |
           pip install pytest
           pytest
-      
