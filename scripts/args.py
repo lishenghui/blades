@@ -19,6 +19,7 @@ def parse_arguments():
     parser.add_argument("--validate_interval", type=int, default=100)
     parser.add_argument("--trusted_id", type=int, default=None)
     parser.add_argument("--client", type=str, default=None)
+    parser.add_argument("--server", type=str, default=None)
     parser.add_argument(
         "--attack", type=str, default="signflipping", help="Select attack types."
     )

@@ -110,7 +110,7 @@ if options.algorithm == "fedsgd":
     run_args = {
         "client_optimizer": "SGD",  # server_opt, server optimizer
         "server_optimizer": opt,  # client optimizer
-        "loss": "crossentropy",  # loss funcstion
+        "loss": "cross_entropy",  # loss funcstion
         "global_rounds": options.global_round,  # number of global rounds
         "local_steps": options.local_round,
         "client_lr": 1.0,
