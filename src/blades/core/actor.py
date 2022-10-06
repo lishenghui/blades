@@ -60,7 +60,6 @@ class _RayActor(object):
         """
         global_state_dict = copy.deepcopy(global_model.state_dict())
         for client in clients:
-            
             self.model.load_state_dict(global_state_dict)
             self.set_lr(lr)
 
@@ -70,7 +69,11 @@ class _RayActor(object):
             client.train_global_model(
                 train_set=local_dataset, num_batches=local_round, opt=self.optimizer
             )
-            # client.train_personal_model(data_batches=data, opt=self.optimizer)
+            client.train_personal_model(
+                train_set=local_dataset,
+                num_batches=local_round,
+                global_state=global_state_dict,
+            )
 
         return clients
 

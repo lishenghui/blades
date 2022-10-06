@@ -1,6 +1,6 @@
 import logging
 from collections import defaultdict
-from typing import Optional, Generator
+from typing import Optional, Generator, Dict
 
 import torch
 import torch.nn as nn
@@ -59,7 +59,7 @@ class BladesClient(object):
 
         :Example:
 
-        >>> from blades.core.client import BladesClient
+        >>> from blades.clients import BladesClient
         >>> client = BladesClient(id='1')
         >>> client.id()
         '1'
@@ -175,7 +175,9 @@ class BladesClient(object):
         self._state["saved_para"].clear()
         self.on_train_round_end()
 
-    def train_personal_model(self, data_batches: list, opt) -> None:
+    def train_personal_model(
+        self, train_set: Generator, num_batches: int, global_state: Dict
+    ) -> None:
         r"""Local optimizaiton of the ``client``. Byzantine input can override
         this method to perform adversarial attack.
 
