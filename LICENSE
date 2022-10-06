@@ -199,8 +199,8 @@
    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
    See the License for the specific language governing permissions and
    limitations under the License.
-   
-   
+
+
 ---------------------------------------------------------------------------------------------------------------------------
 Code in src/blades/models/cifar10/cctnets is adapted from https://github.com/SHI-Labs/Compact-Transformers
 
