@@ -5,7 +5,7 @@ from scipy import spatial
 from sklearn.cluster import AgglomerativeClustering
 
 from blades.aggregators.clippedclustering import Clippedclustering
-from blades.core.client import ByzantineClient
+from blades.clients.client import ByzantineClient
 
 
 class AttackclippedclusteringClient(ByzantineClient):

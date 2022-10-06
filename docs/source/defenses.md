@@ -2,7 +2,7 @@
 
 The following defense strategies are currently implemented in `Blades`:
 
-## Build-in Attacks
+## Built-in Attacks
 
 ### Robust Aggregation
 

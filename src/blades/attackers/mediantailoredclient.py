@@ -1,6 +1,6 @@
 import torch
 
-from blades.core.client import ByzantineClient
+from blades.clients.client import ByzantineClient
 
 
 class MediantailoredClient(ByzantineClient):

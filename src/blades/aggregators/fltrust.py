@@ -2,7 +2,7 @@ from typing import List
 
 import torch
 
-from blades.core.client import BladesClient
+from blades.clients.client import BladesClient
 
 
 class Fltrust(object):

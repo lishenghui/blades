@@ -3,8 +3,7 @@ from typing import List, Optional, Union
 import numpy as np
 import torch
 
-from blades.core.client import BladesClient
-
+from blades.clients.client import BladesClient
 from .geomed import Geomed
 from .mean import _BaseAggregator
 
@@ -28,8 +27,8 @@ class Autogm(_BaseAggregator):
 
     def __init__(
         self,
-        lamb: Optional[float] = None,
-        maxiter: Optional[int] = 2.0,
+        lamb: Optional[float] = 2.0,
+        maxiter: Optional[int] = 100,
         eps: Optional[float] = 1e-6,
         ftol: Optional[float] = 1e-10,
     ):

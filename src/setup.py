@@ -12,6 +12,7 @@ requirements = [
     "requests>=2.27.1",
     "setuptools~=58.0.4",
     "ruamel.yaml",
+    "tqdm",
 ]
 setup(
     name="blades",

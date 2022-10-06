@@ -1,8 +1,10 @@
+from typing import Generator
+
 import numpy as np
 import torch
 from scipy.stats import norm
 
-from blades.core.client import ByzantineClient
+from blades.clients.client import ByzantineClient
 
 
 class AlieClient(ByzantineClient):
@@ -31,10 +33,7 @@ class AlieClient(ByzantineClient):
             self.z_max = norm.ppf(cdf_value)
         self.n_good = num_clients - num_byzantine
 
-    def omniscient_callback(self, simulator):
-        pass
-
-    def local_training(self, data_batches, opt):
+    def train_global_model(self, train_set: Generator, num_batches: int, opt) -> None:
         pass
 
 
