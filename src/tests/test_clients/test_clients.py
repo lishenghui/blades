@@ -3,8 +3,7 @@ import copy
 import torch
 import torch.nn as nn
 
-from blades.clients import RSAClient
-from blades.core import BladesClient
+from blades.clients import RSAClient, BladesClient
 
 
 def test_rsaclient():

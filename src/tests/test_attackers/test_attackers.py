@@ -4,7 +4,7 @@ import torch
 from torch import nn
 
 from blades.attackers import SignflippingClient, LabelflippingClient
-from blades.core import BladesClient
+from blades.clients import BladesClient
 from blades.utils.utils import set_random_seed
 
 
