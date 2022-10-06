@@ -74,6 +74,7 @@ privacy_factor = (
 
 # configuration parameters
 conf_args = {
+    "global_model": model,  # global global_model
     "dataset": dataset,
     "aggregator": options.agg,  # defense: robust aggregation
     "aggregator_kws": options.aggregator_kws,
@@ -88,6 +89,7 @@ conf_args = {
     "gpu_per_actor": options.gpu_per_actor,
     "log_path": options.log_dir,
     "seed": options.seed,  # reproducibility
+    "configs": options,
 }
 
 simulator = Simulator(**conf_args)
@@ -96,7 +98,9 @@ if options.trusted_id:
     simulator.set_trusted_clients([options.trusted_id])
 
 if options.algorithm == "fedsgd":
-    opt = torch.optim.SGD(model.parameters(), lr=0.1, momentum=options.serv_momentum)
+    opt = torch.optim.SGD(
+        model.parameters(), lr=options.server_lr, momentum=options.serv_momentum
+    )
     lr_scheduler = torch.optim.lr_scheduler.MultiStepLR(
         opt, milestones=[2000, 3000, 5000], gamma=0.5
     )
@@ -104,7 +108,6 @@ if options.algorithm == "fedsgd":
 
     # runtime parameters
     run_args = {
-        "global_model": model,  # global global_model
         "client_optimizer": "SGD",  # server_opt, server optimizer
         "server_optimizer": opt,  # client optimizer
         "loss": "crossentropy",  # loss funcstion

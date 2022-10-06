@@ -1,5 +1,6 @@
-from typing import Callable
+from typing import Callable, List
 
+from blades.clients import BladesClient
 import torch
 
 
@@ -25,8 +26,6 @@ class BladesServer(object):
         optimizer: torch.optim.Optimizer,
         model: torch.nn.Module,
         aggregator: Callable[[list], torch.Tensor],
-        *args,
-        **kwargs,
     ):
         self.optimizer = optimizer
         self.model = model
@@ -50,7 +49,7 @@ class BladesServer(object):
         r"""Returns the current global global_model."""
         return self.model
 
-    def apply_update(self, update: torch.Tensor) -> None:
+    def global_update(self, clients: List[BladesClient]) -> None:
         r"""Apply a step of global optimization.
 
             .. note::
@@ -60,6 +59,7 @@ class BladesServer(object):
         Args:
             update: The aggregated update.
         """
+        update = self.aggregator(clients)
         self.zero_grad()
         beg = 0
         for group in self.optimizer.param_groups:

@@ -1,4 +1,4 @@
-from blades.core.client import BladesClient
+from blades.clients.client import BladesClient
 
 
 def test_base_client():

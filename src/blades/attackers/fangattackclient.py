@@ -4,7 +4,7 @@ import numpy as np
 import torch
 
 from blades.aggregators.multikrum import Multikrum
-from blades.core.client import ByzantineClient
+from blades.clients.client import ByzantineClient
 
 
 class FangattackClient(ByzantineClient):

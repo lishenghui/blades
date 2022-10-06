@@ -23,7 +23,7 @@ customization of attack strategies, i.e.,
 import ray
 import torch
 
-from blades.core.client import ByzantineClient
+from blades.clients.client import ByzantineClient
 from blades.core.simulator import Simulator
 from blades.datasets import MNIST
 from blades.models.mnist import MLP
