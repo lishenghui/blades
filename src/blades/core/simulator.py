@@ -1,17 +1,20 @@
+import copy
 import importlib
 import logging
 from time import time
 from typing import Any, Callable, Dict, List, Optional, Union
-import ray
+
 import numpy as np
+import ray
 import torch
 from ray.util import ActorPool
 from tqdm import trange
 
+from blades.clients import RSAClient
+from blades.clients.client import BladesClient, ByzantineClient
 from blades.core.actor import _RayActor
-from blades.core.client import BladesClient, ByzantineClient
-from blades.core.server import BladesServer
-from blades.datasets.dataset import FLDataset
+from blades.datasets.fldataset import FLDataset
+from blades.servers import BladesServer, RSAServer
 from blades.utils.utils import (
     initialize_logger,
     reset_model_weights,
@@ -49,6 +52,9 @@ class Simulator(object):
     def __init__(
         self,
         dataset: FLDataset,
+        global_model: torch.nn.Module,
+        *,
+        configs=None,
         num_byzantine: Optional[int] = 0,
         attack: Optional[str] = None,
         attack_kws: Optional[Dict[str, float]] = None,
@@ -64,7 +70,11 @@ class Simulator(object):
         **kwargs,
     ):
 
-        if not adversary_kws:
+        if configs is None:
+            configs = {}
+        self.configs = configs
+
+        if adversary_kws is None:
             adversary_kws = {}
         if use_cuda or ("gpu_per_actor" in kwargs and kwargs["gpu_per_actor"] > 0.0):
             self.device = torch.device("cuda")
@@ -77,6 +87,7 @@ class Simulator(object):
 
         # Setup logger
         initialize_logger(log_path)
+        self.global_model = global_model
         self.metrics = {"top1": top1_accuracy} if metrics is None else metrics
         self.json_logger = logging.getLogger("stats")
         self.debug_logger = logging.getLogger("debug")
@@ -98,10 +109,7 @@ class Simulator(object):
         ]
         self.actor_pool = ActorPool(self.ray_actors)
 
-        if type(dataset) != FLDataset:
-            traindls, testdls = dataset.get_dls()
-            self.dataset = FLDataset(traindls, testdls)
-
+        self.dataset = dataset
         if attack_kws is None:
             attack_kws = {}
         self._setup_clients(
@@ -136,7 +144,7 @@ class Simulator(object):
         users = self.dataset.get_clients()
         self._clients = {}
         for i, u in enumerate(users):
-            # u = str(u)
+            u = str(u)
             if i < num_byzantine:
                 module_path = importlib.import_module(
                     "blades.attackers.%sclient" % attack
@@ -145,7 +153,18 @@ class Simulator(object):
                 client = attack_scheme(id=u, device=self.device, **attack_kws)
                 self._register_omniscient_callback(client.omniscient_callback)
             else:
-                client = BladesClient(id=u, device=self.device)
+                if self.configs.client == "RSA":
+                    per_model = copy.deepcopy(self.global_model)
+                    per_opt = torch.optim.SGD(per_model.parameters(), lr=1.0)
+                    client = RSAClient(
+                        per_model,
+                        per_opt,
+                        lambda_=0.1,
+                        id=u,
+                        device=self.device,
+                    )
+                else:
+                    client = BladesClient(id=u, device=self.device)
             self._clients[u] = client
 
     def _register_omniscient_callback(self, callback):
@@ -272,9 +291,7 @@ class Simulator(object):
         for omniscient_attacker_callback in self.omniscient_callbacks:
             omniscient_attacker_callback(self)
 
-        # updates = self.parallel_get(clients, lambda w: w.get_update())
-        aggregated = self.server.aggregator(clients)
-        self.server.apply_update(aggregated)
+        self.server.global_update(clients)
         # self.log_variance(global_round, updates)
 
     def test_actor(self, global_round, batch_size):
@@ -393,7 +410,6 @@ class Simulator(object):
 
     def run(
         self,
-        global_model: torch.nn.Module,
         server_optimizer: Union[torch.optim.Optimizer, str] = "SGD",
         client_optimizer: Union[torch.optim.Optimizer, str] = "SGD",
         loss: Optional[str] = "crossentropy",
@@ -445,6 +461,7 @@ class Simulator(object):
         else:
             dp_kws = {}
 
+        global_model = self.global_model
         if self.device != torch.device("cpu"):
             global_model = global_model.to("cuda")
 
@@ -457,11 +474,19 @@ class Simulator(object):
             self.server_opt = server_optimizer
 
         self.client_opt = client_optimizer
-        self.server = BladesServer(
-            optimizer=self.server_opt,
-            model=global_model,
-            aggregator=self.aggregator,
-        )
+
+        if self.configs.server == "RSA":
+            self.server = RSAServer(
+                optimizer=self.server_opt,
+                model=global_model,
+                aggregator=self.aggregator,
+            )
+        else:
+            self.server = BladesServer(
+                optimizer=self.server_opt,
+                model=global_model,
+                aggregator=self.aggregator,
+            )
 
         self.parallel_call(self.get_clients(), lambda client: client.set_loss(loss))
         global_start = time()

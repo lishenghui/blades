@@ -3,12 +3,11 @@ import os
 
 import ray
 import torch
-from args import options
 
+from args import options
 from blades.core.simulator import Simulator
 from blades.datasets import CIFAR10, CIFAR100, MNIST
-from blades.models.cifar10 import CCTNet
-from blades.models.mnist import MLP
+from blades.models import CCTNet10, CCTNet100, MLP
 
 args = options
 if not ray.is_initialized():
@@ -28,6 +27,7 @@ cache_name = (
     + options.algorithm
     + ("_noniid" if not options.non_iid else "")
     + f"_{str(options.num_clients)}_{str(options.seed)}"
+    + ".obj"
 )
 if options.dataset == "cifar10":
     dataset = CIFAR10(
@@ -38,7 +38,7 @@ if options.dataset == "cifar10":
         iid=not options.non_iid,
         seed=0,
     )  # built-in federated cifar10 dataset
-    model = CCTNet()
+    model = CCTNet10()
 elif options.dataset == "mnist":
     dataset = MNIST(
         data_root=data_root,
@@ -58,7 +58,7 @@ elif options.dataset == "cifar100":
         iid=not options.non_iid,
         seed=0,
     )  # built-in federated cifar100 dataset
-    model = CCTNet()
+    model = CCTNet100()
 
 else:
     raise NotImplementedError
@@ -74,6 +74,7 @@ privacy_factor = (
 
 # configuration parameters
 conf_args = {
+    "global_model": model,  # global global_model
     "dataset": dataset,
     "aggregator": options.agg,  # defense: robust aggregation
     "aggregator_kws": options.aggregator_kws,
@@ -88,6 +89,7 @@ conf_args = {
     "gpu_per_actor": options.gpu_per_actor,
     "log_path": options.log_dir,
     "seed": options.seed,  # reproducibility
+    "configs": options,
 }
 
 simulator = Simulator(**conf_args)
@@ -96,7 +98,9 @@ if options.trusted_id:
     simulator.set_trusted_clients([options.trusted_id])
 
 if options.algorithm == "fedsgd":
-    opt = torch.optim.SGD(model.parameters(), lr=0.1, momentum=options.serv_momentum)
+    opt = torch.optim.SGD(
+        model.parameters(), lr=options.server_lr, momentum=options.serv_momentum
+    )
     lr_scheduler = torch.optim.lr_scheduler.MultiStepLR(
         opt, milestones=[2000, 3000, 5000], gamma=0.5
     )
@@ -104,7 +108,6 @@ if options.algorithm == "fedsgd":
 
     # runtime parameters
     run_args = {
-        "global_model": model,  # global global_model
         "client_optimizer": "SGD",  # server_opt, server optimizer
         "server_optimizer": opt,  # client optimizer
         "loss": "crossentropy",  # loss funcstion

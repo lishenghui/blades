@@ -18,6 +18,7 @@ def parse_arguments():
     parser.add_argument("--test_batch_size", type=int, default=128)
     parser.add_argument("--validate_interval", type=int, default=100)
     parser.add_argument("--trusted_id", type=int, default=None)
+    parser.add_argument("--client", type=str, default=None)
     parser.add_argument(
         "--attack", type=str, default="signflipping", help="Select attack types."
     )
@@ -38,6 +39,7 @@ def parse_arguments():
 
     parser.add_argument("--num_actors", type=int, default=5)
     parser.add_argument("--gpu_per_actor", type=float, default=0.2)
+    parser.add_argument("--server_lr", type=float, default=0.1)
 
     parser.add_argument("--dp", action="store_true", default=False)
 
@@ -64,7 +66,6 @@ def parse_arguments():
         over_write_args_from_file(options, options.config_path)
         options.agg = options.agg.lower()
         options.attack = options.attack.lower()
-
 
     EXP_DIR = os.path.join(ROOT_DIR, f"outputs/{options.dataset}")
 

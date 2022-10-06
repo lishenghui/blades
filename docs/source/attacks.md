@@ -25,7 +25,7 @@ The following example shows how to customize attack strategy.
 
 ```python
 import ray
-from blades.core.client import ByzantineClient
+from blades.clients.client import ByzantineClient
 from blades.datasets import CIFAR10
 from blades.models.cifar10 import CCTNet
 from blades.core.simulator import Simulator

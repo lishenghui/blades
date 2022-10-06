@@ -1,11 +1,6 @@
-# import pytest
 import torch
 
 from blades.aggregators import Mean, Median, Trimmedmean
-
-# from blades.aggregators import (Autogm, Clippedclustering, Clustering, Dnc,
-#                                 Fltrust, Geomed, Mean, Median, Multikrum,
-#                                 Signguard, Trimmedmean)
 
 test_data = torch.Tensor(
     [

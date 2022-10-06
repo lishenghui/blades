@@ -6,7 +6,7 @@ To customize attack strategies, you only need to subclass ``ByzantineClient``
 and override its methods. At present, there are three methods for the
 customization of attack strategies, i.e.,
 
-- ``local_training``:
+- ``train_global_model``:
     You can customize the local training process and do whatever you want.
     For example, flipping the
     sign of gradients at each step.
@@ -23,7 +23,7 @@ customization of attack strategies, i.e.,
 import ray
 import torch
 
-from blades.core.client import ByzantineClient
+from blades.clients.client import ByzantineClient
 from blades.core.simulator import Simulator
 from blades.datasets import MNIST
 from blades.models.mnist import MLP
@@ -40,7 +40,7 @@ class MaliciousClient(ByzantineClient):
 
     # Attack by flipping the sign of gradient, which is equivalent
     # to stochastic gradient ascent.
-    def local_training(self, data_batches, opt):
+    def train_global_model(self, data_batches, opt):
         for data, target in data_batches:
             data, target = data.to(self.device), target.to(self.device)
             data, target = self.on_train_batch_begin(data=data, target=target)
