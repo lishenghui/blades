@@ -92,12 +92,10 @@ def _pairwise_euclidean_distances(vectors):
 
 
 class Multikrum(_BaseAggregator):
-    r"""A robust aggregator from paper `"Machine Learning with Adversaries:
-    Byzantine Tolerant Gradient Descent".
+    r"""A robust aggregator from paper `Machine Learning with Adversaries:
+    Byzantine Tolerant Gradient Descent.
 
-    <https://proceedings.neurips.cc/paper/2017/hash.
-
-    /f4b9ec30ad9f68f89b29639786cb62ef-Abstract.html>`_
+    <https://dl.acm.org/doi/abs/10.5555/3294771.3294783>`_.
 
     Given a collection of vectors, ``Krum`` strives to find one of the vector that is
     closest to another :math:`K-M-2` ones with respect to squared Euclidean distance,

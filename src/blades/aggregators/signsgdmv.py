@@ -8,9 +8,9 @@ from .mean import _BaseAggregator
 
 class Signsgdmv(_BaseAggregator):
     r"""A robust aggregator from paper `signSGD with Majority Vote is
-    Communication Efficient And Fault Tolerant.
+    Communication Efficient And Fault Tolerant`__.
 
-    <https://arxiv.org/abs/1810.05291>`_
+    __ <https://arxiv.org/abs/1810.05291
     """
 
     def __int__(self):
