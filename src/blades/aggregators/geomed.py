@@ -33,8 +33,8 @@ def smoothed_weiszfeld(weights, alphas, z, eps=1e-6, T=5):
 
 
 class Geomed(_BaseAggregator):
-    r"""A robust aggregator from paper `"Distributed Statistical Machine
-    Learning in Adversarial Settings: Byzantine Gradient Descent".
+    r"""A robust aggregator from paper `Distributed Statistical Machine Learning
+    in Adversarial Settings: Byzantine Gradient Descent.
 
     <https://arxiv.org/abs/1705.05491>`_
 

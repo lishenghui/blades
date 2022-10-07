@@ -12,17 +12,18 @@ from .median import Median
 
 
 class Clippedclustering(_BaseAggregator):
-    r"""A robust aggregator from paper `"An Experimental Study of Byzantine-
-    Robust sAggregation Schemes in Federated Learning" <https://www.techrxiv.or
-    g/articles/preprint/An_Experimental_Study_of_Byzantine.
+    r"""A robust aggregator from paper `An Experimental Study of Byzantine-
+    Robust Aggregation Schemes in Federated L earning.
 
-         -Robust_Aggregation_Schemes_in_Federated_Learning/19560325>`_ # noqa: E501
-
-         it separates the client population into two groups based on the cosine similarities
+    <https://doi.org/10.36227/techrxiv.19560325.v1>`_. It separates the client
+    population into two groups based on the cosine similarities.
 
     Args:
         tau (float): threshold of clipping norm.
-                    If it is not given, updates are clipped according the median of historical norm.
+                    If it is not \given, updates are clipped according the median of
+                    historical norm.
+
+    __
     """
 
     def __init__(

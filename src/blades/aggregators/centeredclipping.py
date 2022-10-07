@@ -13,13 +13,12 @@ class Centeredclipping(_BaseAggregator):
     r"""A robust aggregator from paper `Learning from History for Byzantine
     Robust Optimization.
 
-    <http://proceedings.mlr.press/v139/karimireddy21a.html>`_
+    <http://proceedings.mlr.press/v139/karimireddy21a.html>`_. It iteratively
+    clips the updates around the center while updating the center accordingly.
 
-    It iteratively clips the updates around the center while updating the center
-    accordingly.
-
-    :param tau: The threshold of clipping. Default 10.0
-    :param n_iter: The number of clipping iterations. Default 5
+    Args:
+        tau (float): The threshold of clipping. Default 10.0
+        n_iter (int): The number of clipping iterations. Default 5
     """
 
     def __init__(self, tau: Optional[float] = 10.0, n_iter: Optional[int] = 5):

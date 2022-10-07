@@ -11,10 +11,11 @@ from .median import Median
 
 
 class Signguard(_BaseAggregator):
-    r"""A robust aggregator from paper `Xu et al. SignGuard: Byzantine-robust
-    Federated Learning through Collaborative Malicious Gradient Filtering.
+    r"""A robust aggregator from paper `Xu et al.
 
-    <https://arxiv.org/abs/2109.05872>`_
+    SignGuard: Byzantine-robust Federated
+    Learning through Collaborative Malicious Gradient
+    Filtering <https://arxiv.org/abs/2109.05872>`_.
     """
 
     def __init__(self, agg="mean", max_tau=1e5, linkage="average") -> None:

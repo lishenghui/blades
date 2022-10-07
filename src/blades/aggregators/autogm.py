@@ -13,10 +13,10 @@ def _compute_euclidean_distance(v1, v2):
 
 
 class Autogm(_BaseAggregator):
-    r"""A robust aggregator from paper `"Byzantine-Robust Aggregation in
-    Federated Learning Empowered Industrial IoT".
+    r"""A robust aggregator from paper `Byzantine-Robust Aggregation in
+    Federated Learning Empowered Industrial IoT.
 
-    <https://ieeexplore.ieee.org/abstract/document/9614992>`_
+    <https://ieeexplore.ieee.org/abstract/document/9614992>`_.
 
     Args:
         maxiter: Maximum number of Weiszfeld iterations, default 2.0.
