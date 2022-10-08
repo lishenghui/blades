@@ -33,3 +33,25 @@ def test_rsaclient():
         rsa_client._per_model.named_parameters(), net.named_parameters()
     ):
         assert torch.allclose(p_rsa, p_base)
+
+
+def test_client_momentum():
+    lr = 0.1
+    net = nn.Sequential(nn.Linear(2, 2))
+    opt = torch.optim.SGD(net.parameters(), lr=lr)
+
+    data = torch.rand(2, 2)
+    target = torch.randint(0, 1, (2,))
+
+    dataset_gen = (i for i in [(data, target)])
+    client = BladesClient(momentum=0.9, dampening=0.1)
+    client.set_loss()
+    client.set_global_model_ref(net)
+
+    client.train_global_model(dataset_gen, 1, opt)
+    dataset_gen = (i for i in [(data, target)])
+
+    client.set_global_model_ref(net)
+    client.train_global_model(dataset_gen, 1, opt)
+
+    print("OK")
