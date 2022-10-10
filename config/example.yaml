@@ -14,7 +14,7 @@ agg: Median
 #aggregator_kws: {num_excluded: 1, k: 5}
 #aggregator_kws: {"linkage": "average"}
 
-
+gpu_server: 0.2
 algorithm: fedsgd
 
 local_round: 1
@@ -34,5 +34,5 @@ dp_clip_threshold: 0.5
 
 # If you try to debug the code, use `local_mode:True`
 local_mode: False
-num_actors: 20
+num_actors: 4
 gpu_per_actor: 0.19
