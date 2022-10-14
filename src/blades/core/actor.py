@@ -11,7 +11,7 @@ from blades.datasets.fldataset import FLDataset
 class _RayActor(object):
     """Ray Actor."""
 
-    def __init__(self, dataset: FLDataset, *args, **kwargs):
+    def __init__(self, dataset: FLDataset, id: int, mem_meta_info):
         """
         Args:
             aggregator (callable): A callable which takes a list of tensors and
@@ -22,11 +22,16 @@ class _RayActor(object):
             use_cuda (bool): Use cuda or not
             debug (bool):
         """
+        self.id = id
         self.dataset = dataset
+        self.shared_memory = mem_meta_info[0](*mem_meta_info[1])
+
+    def update(self):
+        self.shared_memory += 10
 
     def set_global_model(
         self, model: nn.Module, opt: type(torch.optim.Optimizer), lr: float
-    ) -> None:
+    ) -> bool:
         r"""Deep copy the given global_model to the client.
 
         Args:
@@ -34,8 +39,9 @@ class _RayActor(object):
             opt: client optimizer
             lr:  local learning rate
         """
-        self.model = copy.deepcopy(model)
+        self.model = model
         self.optimizer = opt(self.model.parameters(), lr=lr)
+        return True
 
     def set_lr(self, lr: float) -> None:
         r"""change the learning rate of the client optimizer.

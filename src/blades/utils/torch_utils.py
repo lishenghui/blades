@@ -133,3 +133,12 @@ def clip_tensor_norm_(
     for p in parameters:
         if p.dtype != torch.int64:
             return p.detach().mul_(clip_coef_clamped.to(p.device))
+
+
+def get_num_params(model):
+    n = 0
+    for name, param in model.named_parameters():
+        if not param.requires_grad:
+            continue
+        n += param.data.view(-1).size()[0]
+    return n
