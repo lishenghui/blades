@@ -52,7 +52,7 @@ class _RayActor(object):
         for g in self.optimizer.param_groups:
             g["lr"] = lr
 
-    def local_training(self, clients, global_model, local_round, lr, **kwargs):
+    def local_training(self, clients, global_model, local_round, lr):
         """A proxy method that provides local training for a set of clients.
 
         Args:

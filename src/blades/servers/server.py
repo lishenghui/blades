@@ -2,8 +2,14 @@ from typing import Callable, List
 
 from blades.clients import BladesClient
 import torch
+import torch.distributed as dist
+from blades.utils.torch_utils import get_num_params
+from blades.utils.torch_utils import parameters_to_vector
+from blades.utils.collective import setup_dist
+import ray
 
 
+@ray.remote
 class BladesServer(object):
     r"""Simulating the server of the federated learning system.
 
@@ -26,10 +32,18 @@ class BladesServer(object):
         optimizer: torch.optim.Optimizer,
         model: torch.nn.Module,
         aggregator: Callable[[list], torch.Tensor],
+        world_size: int = 0,
     ):
         self.optimizer = optimizer
         self.model = model
         self.aggregator = aggregator
+
+        # Enable `torch.distributed` if GPU is available
+        if self.__ray_metadata__.num_gpus > 0:
+            num_params = get_num_params(model)
+            self.group = setup_dist(world_size, world_size)
+            self.gather_list = [torch.zeros(num_params)] * world_size
+            self.broad_cast_buffer = torch.zeros(num_params)
 
     def get_opt(self) -> torch.optim.Optimizer:
         r"""Returns the global optimizer."""
@@ -59,6 +73,11 @@ class BladesServer(object):
         Args:
             update: The aggregated update.
         """
+        server_rank = 0
+        if hasattr(self, "group"):
+            h = dist.gather(tensor=self.broad_cast_buffer, gather_list=self.gather_list)
+            h.wait()
+
         update = self.aggregator(clients)
         self.zero_grad()
         beg = 0
@@ -71,3 +90,8 @@ class BladesServer(object):
                 p.grad = -x.clone().detach().to(p.device)
                 beg = end
         self.optimizer.step()
+
+        if hasattr(self, "group"):
+            self.broad_cast_buffer = parameters_to_vector(self.model.parameters())
+            h = dist.broadcast(tensor=self.broad_cast_buffer, src=server_rank)
+            h.wait()
