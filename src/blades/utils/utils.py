@@ -73,8 +73,6 @@ def initialize_logger(log_root):
         shutil.rmtree(log_root)
         os.makedirs(log_root)
 
-    print(f"Logging files to {log_root}")
-
     # Only to file; One dict per line; Easy to process
     json_logger = logging.getLogger("stats")
     json_logger.setLevel(logging.INFO)

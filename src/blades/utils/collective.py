@@ -13,8 +13,8 @@ def setup_dist(
     """Initialize the distributed environment."""
     os.environ["MASTER_ADDR"] = addr
     os.environ["MASTER_PORT"] = port
-
     group = dist.init_process_group(
         backend, group_name=group_name, rank=rank, world_size=world_size
     )
+
     return group

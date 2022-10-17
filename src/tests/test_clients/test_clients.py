@@ -53,5 +53,3 @@ def test_client_momentum():
 
     client.set_global_model_ref(net)
     client.train_global_model(dataset_gen, 1, opt)
-
-    print("OK")

@@ -20,12 +20,7 @@ class FangattackAdversary:
     r""""""
 
     def __init__(
-        self,
-        num_byzantine: int,
-        agg: str,
-        dev_type="std",
-        *args,
-        **kwargs,
+        self, num_byzantine: int, agg: str, dev_type="std", *args, **kwargs,
     ):
         super().__init__(*args, **kwargs)
         self.dev_type = dev_type
@@ -116,10 +111,7 @@ class FangattackAdversary:
 
             distances[distances == 0] = 10000
             distances = torch.sort(distances, dim=1)[0]
-            scores = torch.sum(
-                distances[:, : n_benign - 2 - n_attackers],
-                dim=1,
-            )
+            scores = torch.sum(distances[:, : n_benign - 2 - n_attackers], dim=1,)
             min_score = torch.min(scores)
             term_1 = min_score / (
                 (n_benign - n_attackers - 1) * torch.sqrt(torch.Tensor([d]))[0]

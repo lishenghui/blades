@@ -16,11 +16,7 @@ class Embedder(nn.Module):
         self.embeddings = (
             nn.Embedding.from_pretrained(pretrained_weight, freeze=embed_freeze)
             if pretrained_weight is not None
-            else nn.Embedding(
-                vocab_size,
-                word_embedding_dim,
-                padding_idx=padding_idx,
-            )
+            else nn.Embedding(vocab_size, word_embedding_dim, padding_idx=padding_idx,)
         )
         self.embeddings.weight.requires_grad = not embed_freeze
 

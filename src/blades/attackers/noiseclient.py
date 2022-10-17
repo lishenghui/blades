@@ -15,11 +15,7 @@ class NoiseClient(ByzantineClient):
     """
 
     def __init__(
-        self,
-        mean: Optional[float] = 0.1,
-        std: Optional[float] = 0.1,
-        *args,
-        **kwargs,
+        self, mean: Optional[float] = 0.1, std: Optional[float] = 0.1, *args, **kwargs,
     ):
         super().__init__(*args, **kwargs)
         self._noise_mean = mean

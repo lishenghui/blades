@@ -1,4 +1,5 @@
-from typing import Callable, List
+from bdb import Breakpoint
+from typing import Callable, List, Dict, TypeVar
 
 from blades.clients import BladesClient
 import torch
@@ -6,47 +7,67 @@ import torch.distributed as dist
 from blades.utils.torch_utils import get_num_params
 from blades.utils.torch_utils import parameters_to_vector
 from blades.utils.collective import setup_dist
+from torch.optim import Optimizer
 import ray
+
+
+T = TypeVar("T", bound="Optimizer")
 
 
 @ray.remote
 class BladesServer(object):
-    r"""Simulating the server of the federated learning system.
+    """_summary_
 
-    :ivar aggregator: a callable which takes a list of tensors and returns
-            an aggregated tensor.
-    :vartype aggregator: callable
-
-    :param  optimizer: The global optimizer, which can be any optimizer
-    from Pytorch.
-    :type optimizer: torch.optim.Optimizer
-    :param model: The global global_model
-    :type model: torch.nn.Module
-    :param aggregator: a callable which takes a list of tensors and returns
-            an aggregated tensor.
-    :type aggregator: callable
+    Args:
+        object (_type_): _description_
     """
 
     def __init__(
         self,
-        optimizer: torch.optim.Optimizer,
         model: torch.nn.Module,
-        aggregator: Callable[[list], torch.Tensor],
+        opt_cls: T = torch.optim.SGD,
+        opt_kws: Dict = None,
+        aggregator: Callable[[list], torch.Tensor] = None,
         world_size: int = 0,
+        device: str = "cpu",
+        mem_meta_info: torch.Tensor = None,
     ):
-        self.optimizer = optimizer
-        self.model = model
-        self.aggregator = aggregator
+        """_summary_
 
+        Args:
+            model (torch.nn.Module): _description_
+            opt_cls (T): _description_
+            opt_kws (Dict): _description_
+            aggregator (Callable[[list], torch.Tensor]): _description_
+            world_size (int, optional): _description_. Defaults to 0.
+            device (str, optional): _description_. Defaults to
+             "cpu".
+            mem_meta_info (torch.Tensor, optional): _description_. Defaults to None.
+        """
+        assert (mem_meta_info is not None) ^ (
+            world_size != 0
+        ), f"You have world size: {world_size} "
+
+        if mem_meta_info:
+            self.shared_memory = mem_meta_info[0](*mem_meta_info[1])
+
+        self.model = model
+        self.optimizer = opt_cls(self.model.parameters(), **opt_kws)
+        self.aggregator = aggregator
+        self.device = device
         # Enable `torch.distributed` if GPU is available
-        if self.__ray_metadata__.num_gpus > 0:
+        if world_size > 0:
             num_params = get_num_params(model)
-            self.group = setup_dist(world_size, world_size)
-            self.gather_list = [torch.zeros(num_params)] * world_size
-            self.broad_cast_buffer = torch.zeros(num_params)
+            self.group = setup_dist(world_size, 0)
+            self.gather_list = [torch.zeros(num_params).to(self.device)] * world_size
+            self.broad_cast_buffer = torch.zeros(num_params).to(self.device)
 
     def get_opt(self) -> torch.optim.Optimizer:
-        r"""Returns the global optimizer."""
+        """Returns the global optimizer.
+
+        Returns:
+            torch.optim.Optimizer: _description_
+        """
         return self.optimizer
 
     def zero_grad(self, set_to_none: bool = False):
@@ -63,7 +84,7 @@ class BladesServer(object):
         r"""Returns the current global global_model."""
         return self.model
 
-    def global_update(self, clients: List[BladesClient]) -> None:
+    def global_update(self, clients: List[BladesClient] = None) -> None:
         r"""Apply a step of global optimization.
 
             .. note::
@@ -75,10 +96,12 @@ class BladesServer(object):
         """
         server_rank = 0
         if hasattr(self, "group"):
-            h = dist.gather(tensor=self.broad_cast_buffer, gather_list=self.gather_list)
-            h.wait()
+            dist.gather(tensor=self.broad_cast_buffer, gather_list=self.gather_list)
+        else:
+            self.gather_list = self.shared_memory
 
-        update = self.aggregator(clients)
+        update = self.aggregator(self.gather_list)
+        # print(update)
         self.zero_grad()
         beg = 0
         for group in self.optimizer.param_groups:
@@ -90,8 +113,11 @@ class BladesServer(object):
                 p.grad = -x.clone().detach().to(p.device)
                 beg = end
         self.optimizer.step()
-
+        model_vec = parameters_to_vector(self.model.parameters())
+        self.shared_memory[
+            0,
+        ] = model_vec
         if hasattr(self, "group"):
             self.broad_cast_buffer = parameters_to_vector(self.model.parameters())
-            h = dist.broadcast(tensor=self.broad_cast_buffer, src=server_rank)
-            h.wait()
+            dist.broadcast(tensor=self.broad_cast_buffer, src=server_rank)
+        return True

@@ -12,9 +12,9 @@ from tqdm import trange
 
 from blades.clients import RSAClient
 from blades.clients.client import BladesClient, ByzantineClient
-from blades.core.actor import _RayActor
+from blades.core.actor import Actor
 from blades.datasets.fldataset import FLDataset
-from blades.servers import BladesServer, RSAServer
+from blades.servers import BladesServer
 from blades.utils.utils import (
     initialize_logger,
     reset_model_weights,
@@ -104,7 +104,7 @@ class Simulator(object):
             raise RuntimeError(f"Unknown keyword argument(s): {unknown}")
 
         self.ray_actors = [
-            _RayActor.options(num_gpus=gpu_per_actor).remote(dataset)
+            Actor.options(num_gpus=gpu_per_actor).remote(dataset)
             for _ in range(num_actors)
         ]
         self.actor_pool = ActorPool(self.ray_actors)

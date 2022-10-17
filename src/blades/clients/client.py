@@ -20,7 +20,7 @@ class BladesClient(object):
         id: Optional[str] = None,
         momentum: Optional[float] = 0.0,
         dampening: Optional[float] = 0.0,
-        device: Optional[torch.device] = torch.device("cpu"),
+        device: Optional[torch.device] = torch.device("cuda"),
     ):
         """
         Args:
@@ -35,12 +35,14 @@ class BladesClient(object):
 
         self.momentum = momentum
         self.momentum_buff = None
+        self.param_buff = None
         self.dampening = dampening
         self._state = defaultdict(dict)
         self._is_trusted: bool = False
         self._json_logger = logging.getLogger("stats")
         self.debug_logger = logging.getLogger("debug")
         self.device = device
+        self.set_loss()
         self.set_id(id)
 
     def set_id(self, id: str) -> None:
@@ -167,7 +169,7 @@ class BladesClient(object):
 
             self.on_backward_end()
             opt.step()
-
+        # print(loss.item())
         update = self._get_para(current=True) - self._get_para(current=False)
 
         self.update_buffer = torch.clone(update).detach()
@@ -212,6 +214,7 @@ class BladesClient(object):
         self.global_model.eval()
         r = {
             "_meta": {"type": "client_validation"},
+            "Client": self.id(),
             "E": round_number,
             "Length": 0,
             "Loss": 0,

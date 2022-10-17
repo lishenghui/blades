@@ -39,9 +39,7 @@ class CIFAR10(FLDataset):
             train=True, download=True, root=data_root
         )
         test_set = torchvision.datasets.CIFAR10(
-            train=False,
-            download=True,
-            root=data_root,
+            train=False, download=True, root=data_root,
         )
         stats = {
             "mean": (0.4914, 0.4822, 0.4465),
@@ -54,9 +52,7 @@ class CIFAR10(FLDataset):
         x_test = np.transpose(x_test, (0, 3, 1, 2))
 
         test_transform = transforms.Compose(
-            [
-                transforms.Normalize(mean=stats["mean"], std=stats["std"]),
-            ]
+            [transforms.Normalize(mean=stats["mean"], std=stats["std"]),]
         )
         train_transform = transforms.Compose(
             [
