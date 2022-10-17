@@ -28,7 +28,9 @@ conf_params = {
     "num_byzantine": 8,  # number of Byzantine input
     "attack": "ipm",  # attack strategy
     # "log_path": "dbfs/outputs",
-    "attack_kws": {"epsilon": 100,},
+    "attack_kws": {
+        "epsilon": 100,
+    },
     "num_actors": 1,  # number of training actors
     "seed": 1,  # reproducibility
 }
@@ -93,4 +95,10 @@ for agg in aggs:
     df += list(map(lambda x: transform(x, agg=agg), validation_entries))
 df = pd.DataFrame(df)
 
-g = sns.lineplot(data=df, x="Round Number", y="Accuracy (%)", hue="AGG", ci=None,)
+g = sns.lineplot(
+    data=df,
+    x="Round Number",
+    y="Accuracy (%)",
+    hue="AGG",
+    ci=None,
+)

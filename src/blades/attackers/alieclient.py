@@ -14,7 +14,12 @@ class AlieClient(ByzantineClient):
     """
 
     def __init__(
-        self, num_clients: int, num_byzantine: int, z=None, *args, **kwargs,
+        self,
+        num_clients: int,
+        num_byzantine: int,
+        z=None,
+        *args,
+        **kwargs,
     ):
         super().__init__(*args, **kwargs)
         # Number of supporters

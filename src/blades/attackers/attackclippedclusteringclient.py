@@ -133,7 +133,9 @@ class AttackclippedclusteringAdversary:
         dis_max[dis_max == inf] = 2
         dis_max[np.isnan(dis_max)] = 2
         clustering = AgglomerativeClustering(
-            affinity="precomputed", linkage="average", n_clusters=2,
+            affinity="precomputed",
+            linkage="average",
+            n_clusters=2,
         )
         clustering.fit(dis_max)
 

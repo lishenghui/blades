@@ -19,7 +19,12 @@ class Median(_BaseAggregator):
         super(Median, self).__init__()
 
     def __call__(
-        self, inputs: Union[List[BladesClient], List[torch.Tensor], torch.Tensor,],
+        self,
+        inputs: Union[
+            List[BladesClient],
+            List[torch.Tensor],
+            torch.Tensor,
+        ],
     ):
         updates = self._get_updates(inputs)
         values_upper, _ = updates.median(dim=0)

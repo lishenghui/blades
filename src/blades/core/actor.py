@@ -1,11 +1,11 @@
-from typing import Dict, Type, List, TypeVar
+from typing import Dict, List, TypeVar
 
 import ray
 import torch
 import torch.nn as nn
 from blades.clients.client import BladesClient
 from blades.datasets.fldataset import FLDataset
-from blades.utils.torch_utils import vector_to_parameters, parameters_to_vector
+from blades.utils.torch_utils import vector_to_parameters
 from torch.optim import Optimizer
 import copy
 
@@ -76,7 +76,7 @@ class Actor(object):
                 self.model.load_state_dict(global_model.state_dict())
             else:
                 vector_to_parameters(copy.deepcopy(model_vec), self.model.parameters())
-            cur_model_vec = parameters_to_vector(self.model.parameters())
+            # cur_model_vec = parameters_to_vector(self.model.parameters())
             client.set_global_model_ref(self.model)
             local_dataset = self.dataset.get_train_loader(client.id())
             client.train_global_model(

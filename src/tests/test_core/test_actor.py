@@ -1,7 +1,5 @@
-from turtle import update
 from blades.core import ActorManager, Actor
 import torch
-import torch.nn as nn
 from blades.datasets import MNIST, CIFAR10
 import ray
 from blades.servers import BladesServer
@@ -12,11 +10,10 @@ import logging
 import sys
 from tqdm import trange
 import numpy as np
-from tqdm import tqdm
 from blades.utils.utils import (
-    initialize_logger,
-    reset_model_weights,
-    set_random_seed,
+    # initialize_logger,
+    # reset_model_weights,
+    # set_random_seed,
     top1_accuracy,
 )
 
@@ -41,8 +38,8 @@ def test_actor():
     )
 
     clients = ray.get(actor.local_train.remote(clients=[client] * 2, global_model=net))
-    udpates = [client.get_update() for client in list(clients)]
-    assert torch.allclose(udpates[0], udpates[1])
+    updates = [client.get_update() for client in list(clients)]
+    assert torch.allclose(updates[0], updates[1])
 
 
 def log_validate(metrics):
@@ -54,21 +51,20 @@ def log_validate(metrics):
         [metric["Loss"] for metric in metrics],
         weights=[metric["Length"] for metric in metrics],
     )
-    r = {
-        "_meta": {"type": "test"},
-        "Round": metrics[0]["E"],
-        "top1": top1,
-        "Length": np.sum([metric["Length"] for metric in metrics]),
-        "Loss": loss,
-    }
+    # r = {
+    #     "_meta": {"type": "test"},
+    #     "Round": metrics[0]["E"],
+    #     "top1": top1,
+    #     "Length": np.sum([metric["Length"] for metric in metrics]),
+    #     "Loss": loss,
+    # }
     return loss, top1
 
 
 def test_actormanager():
-
     logger.info("starting ...")
 
-    lr = 0.1
+    # lr = 0.1
     device = "cuda"
     net = CCTNet10().to(device)
     opt_cls = torch.optim.SGD

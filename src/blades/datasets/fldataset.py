@@ -204,7 +204,11 @@ class FLDataset(ABC):
                     X = self.train_transform(X)
                 yield X, torch.LongTensor(y)
 
-    def _preprocess_test_data(self, data, labels,) -> CustomTensorDataset:
+    def _preprocess_test_data(
+        self,
+        data,
+        labels,
+    ) -> CustomTensorDataset:
         tensor_x = torch.Tensor(data)  # transform to torch tensor
         tensor_y = torch.LongTensor(labels)
         return CustomTensorDataset(

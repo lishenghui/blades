@@ -15,7 +15,6 @@ from blades.utils.torch_utils import parameters_to_vector
 from torch.optim import Optimizer
 import logging
 import numpy as np
-import math
 
 T = TypeVar("T", bound="Optimizer")
 T_SER = TypeVar("T_SER", bound="BladesServer")

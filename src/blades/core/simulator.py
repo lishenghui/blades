@@ -476,11 +476,12 @@ class Simulator(object):
         self.client_opt = client_optimizer
 
         if self.configs.server == "RSA":
-            self.server = RSAServer(
-                optimizer=self.server_opt,
-                model=global_model,
-                aggregator=self.aggregator,
-            )
+            raise NotImplementedError
+            # self.server = RSAServer(
+            #     optimizer=self.server_opt,
+            #     model=global_model,
+            #     aggregator=self.aggregator,
+            # )
         else:
             self.server = BladesServer(
                 optimizer=self.server_opt,

@@ -99,7 +99,8 @@ class Geomed(_BaseAggregator):
             )
             weights = weights / weights.sum()
             median = torch.sum(
-                torch.vstack([w * beta for w, beta in zip(updates, weights)]), dim=0,
+                torch.vstack([w * beta for w, beta in zip(updates, weights)]),
+                dim=0,
             )
             num_oracle_calls += 1
             obj_val = self._geometric_median_objective(median, updates, weights)
