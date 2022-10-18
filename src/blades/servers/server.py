@@ -13,7 +13,7 @@ import ray
 T = TypeVar("T", bound="Optimizer")
 
 
-@ray.remote
+# @ray.remote
 class BladesServer(object):
     """_summary_
 
@@ -30,6 +30,7 @@ class BladesServer(object):
         world_size: int = 0,
         device: str = "cpu",
         mem_meta_info: torch.Tensor = None,
+        shared_memory: torch.Tensor = None,
     ):
         """_summary_
 
@@ -43,13 +44,10 @@ class BladesServer(object):
              "cpu".
             mem_meta_info (torch.Tensor, optional): _description_. Defaults to None.
         """
-        assert (mem_meta_info is not None) ^ (
-            world_size != 0
-        ), f"You have world size: {world_size} "
-
         if mem_meta_info:
             self.shared_memory = mem_meta_info[0](*mem_meta_info[1])
-
+        else:
+            self.shared_memory = shared_memory
         self.model = model
         self.optimizer = opt_cls(self.model.parameters(), **opt_kws)
         self.aggregator = aggregator
@@ -83,7 +81,9 @@ class BladesServer(object):
         r"""Returns the current global global_model."""
         return self.model
 
-    def global_update(self, clients: List[BladesClient] = None) -> None:
+    def global_update(
+        self, clients: List[BladesClient] = None, update_list=None
+    ) -> None:
         r"""Apply a step of global optimization.
 
             .. note::
@@ -93,9 +93,8 @@ class BladesServer(object):
         Args:
             update: The aggregated update.
         """
-        server_rank = 0
-        if hasattr(self, "group"):
-            dist.gather(tensor=self.broad_cast_buffer, gather_list=self.gather_list)
+        if update_list:
+            self.gather_list = update_list
         else:
             self.gather_list = self.shared_memory
 
@@ -116,7 +115,4 @@ class BladesServer(object):
         self.shared_memory[
             0,
         ] = model_vec
-        if hasattr(self, "group"):
-            self.broad_cast_buffer = parameters_to_vector(self.model.parameters())
-            dist.broadcast(tensor=self.broad_cast_buffer, src=server_rank)
         return True

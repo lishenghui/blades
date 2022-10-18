@@ -42,6 +42,9 @@ class Actor(object):
         if mem_meta_info:
             self.shared_memory = mem_meta_info[0](*mem_meta_info[1])
 
+    def init(self):
+        return True
+        
     def set_lr(self, lr: float) -> None:
         r"""change the learning rate of the client optimizer.
 

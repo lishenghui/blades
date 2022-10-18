@@ -15,6 +15,7 @@ from blades.utils.torch_utils import parameters_to_vector
 from torch.optim import Optimizer
 import logging
 import numpy as np
+import os
 
 T = TypeVar("T", bound="Optimizer")
 T_SER = TypeVar("T_SER", bound="BladesServer")
@@ -37,8 +38,9 @@ class ActorManager:
         rank: int = None,
         server_cls: T_SER = None,
         server_kws: Dict = None,
-        gpu_server: float = None,
+        num_selected_clients: int = None,
         device: str = "cpu",
+        visible_gpu: str = "0",
     ):
         """_summary_
 
@@ -54,16 +56,13 @@ class ActorManager:
             server (BladesServer, optional): _description_. Defaults to None.
         """
 
-        assert rank is None or rank > 0
-
+        self.rank = rank
         self.device = device
-        # Enable `torch.distributed` if GPU is available
-        if rank and rank > 0:
-            self.group = setup_dist(world_size, rank)
-
-        num_params = get_num_params(global_model)
+        self.world_size = world_size
+        self.num_selected_clients = num_selected_clients
+        self.num_params = get_num_params(global_model)
         block_groups = np.array_split(range(num_buffers), num_actors)
-        self.shared_memory = torch.zeros((num_buffers, num_params)).to(self.device)
+        self.shared_memory = torch.zeros((num_buffers, self.num_params)).to(self.device)
         self.shared_memory[
             0,
         ] = parameters_to_vector(global_model.parameters()).detach()
@@ -71,10 +70,11 @@ class ActorManager:
 
         if server_cls:
             server_kws |= {
-                "mem_meta_info": self.mem_meta_info,
+                "shared_memory": self.shared_memory,
+                # "mem_meta_info": self.mem_meta_info,
                 "device": self.device,
             }
-            self.server = server_cls.options(num_gpus=gpu_server).remote(**server_kws)
+            self.server = server_cls(**server_kws)
 
         self.ray_actors = [
             Actor.options(num_gpus=gpu_per_actor).remote(
@@ -83,11 +83,24 @@ class ActorManager:
                 opt_cls,
                 opt_kws,
                 self.mem_meta_info,
-                block_groups[i],
+                list(block_groups[i]),
             )
             for i in range(num_actors)
         ]
+        # breakpoint()
+        ray.get([actor.init.remote() for actor in self.ray_actors])
         self.actor_pool = ActorPool(self.ray_actors)
+
+    def init(self):
+        return True
+
+    def init_dist(self):
+        world_size = self.world_size
+        rank = self.rank
+        if world_size > 0:
+            self.group = setup_dist(world_size, rank)
+            if self.rank == 0:
+                self.gather_list = [self.shared_memory] * world_size
 
     def get_mem_meta_info(self):
         return self.mem_meta_info
@@ -113,9 +126,15 @@ class ActorManager:
         Returns:
             _type_: _description_
         """
-        server_rank = 0
-        if hasattr(self, "group"):
-            dist.broadcast(tensor=self.shared_memory, src=server_rank)
+        dst = 0
+        if self.world_size > 0:
+            if self.rank == 0:
+                self.broadcast_buffer = parameters_to_vector(
+                    self.server.model.parameters()
+                )
+                dist.broadcast(tensor=self.broadcast_buffer, src=self.rank)
+            else:
+                dist.broadcast(tensor=self.shared_memory[0], src=dst)
 
         client_groups = np.array_split(clients, len(self.ray_actors))
         result_ids = []
@@ -129,15 +148,20 @@ class ActorManager:
         while len(result_ids):
             _, result_ids = ray.wait(result_ids)
 
-        if hasattr(self, "server"):
-            ray.get(self.server.global_update.remote())
+        if self.world_size <= 1:
+            self.server.global_update()
 
-        elif hasattr(self, "group"):
-            h = dist.gather(tensor=self.shared_memory, dst=server_rank)
-            h.wait()
-            h = dist.broadcast(tensor=self.shared_memory, src=server_rank)
-            h.wait()
-            return True
+        else:
+            if self.rank == 0:
+                dist.gather(tensor=self.shared_memory, gather_list=self.gather_list)
+                self.server.global_update(self.gather_list)
+                self.broadcast_buffer = parameters_to_vector(
+                    self.server.model.parameters()
+                )
+            else:
+                dist.gather(tensor=self.shared_memory, dst=dst)
+
+        return True
 
     def evaluate(
         self,
@@ -160,9 +184,15 @@ class ActorManager:
         Returns:
             _type_: _description_
         """
-        server_rank = 0
-        if hasattr(self, "group"):
-            dist.broadcast(tensor=self.shared_memory, src=server_rank)
+        dst = 0
+        if self.world_size > 0:
+            if self.rank == 0:
+                self.broadcast_buffer = parameters_to_vector(
+                    self.server.model.parameters()
+                )
+                dist.broadcast(tensor=self.broadcast_buffer, src=self.rank)
+            else:
+                dist.broadcast(tensor=self.shared_memory[0], src=dst)
 
         client_groups = np.array_split(clients, len(self.ray_actors))
         results = []
