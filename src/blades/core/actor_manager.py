@@ -17,7 +17,7 @@ import logging
 import numpy as np
 
 # import os
-import copy
+# import copy
 
 T = TypeVar("T", bound="Optimizer")
 T_SER = TypeVar("T_SER", bound="BladesServer")
@@ -213,7 +213,6 @@ class ActorManager:
             updates = torch.cat(self.gather_list)
             # breakpoint()
             self.server.global_update(updates)
-            # self.broadcast_buffer = parameters_to_vector(self.server.model.parameters())
         else:
             # pass
             dist.gather(tensor=self.shared_memory, dst=dst)

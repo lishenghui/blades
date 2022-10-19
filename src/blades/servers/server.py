@@ -2,12 +2,10 @@ from typing import Callable, List, Dict, TypeVar
 
 from blades.clients import BladesClient
 import torch
-import torch.distributed as dist
 from blades.utils.torch_utils import get_num_params
 from blades.utils.torch_utils import parameters_to_vector
 from blades.utils.collective import setup_dist
 from torch.optim import Optimizer
-import ray
 
 
 T = TypeVar("T", bound="Optimizer")
