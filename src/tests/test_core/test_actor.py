@@ -8,9 +8,12 @@ from blades.models import MLP, CCTNet10
 from blades.clients import BladesClient
 import logging
 import sys
+
+# import time
 from tqdm import trange
 import numpy as np
-import os
+
+# import os
 from blades.utils.utils import (
     # initialize_logger,
     # reset_model_weights,
@@ -59,11 +62,13 @@ def test_actormanager():
     logger.info("starting ...")
 
     device = "cuda"
-    net = CCTNet10().to(device)
+    net = MLP().to(device)
+    # net = CCTNet10().to(device)
     opt_cls = torch.optim.SGD
     opt_kws = {"lr": 1.0, "momentum": 0, "dampening": 0}
-    clients = [BladesClient(id=str(id)) for id in range(50)]
-    dataset = CIFAR10(num_clients=50)
+    clients = [BladesClient(id=str(id)) for id in range(20)]
+    dataset = MNIST(num_clients=20)
+    # dataset = CIFAR10(num_clients=20)
     agg = Mean()
     world_size = 0
 
@@ -112,8 +117,8 @@ def test_actormanager_cross_GPU():
     net = CCTNet10().to(device)
     opt_cls = torch.optim.SGD
     opt_kws = {"lr": 1.0, "momentum": 0, "dampening": 0}
-    clients = [BladesClient(id=str(id)) for id in range(50)]
-    dataset = CIFAR10(num_clients=50)
+    clients = [BladesClient(id=str(id)) for id in range(40)]
+    dataset = CIFAR10(num_clients=40)
     agg = Mean()
 
     server_kws = {
@@ -124,7 +129,8 @@ def test_actormanager_cross_GPU():
     }
 
     act_mgrs = []
-    num_gpus = 3
+    num_gpus = 4
+    client_groups = np.array_split(clients, num_gpus)
     for i in range(num_gpus):
         if i == 0:
             server_cls = BladesServer
@@ -138,10 +144,10 @@ def test_actormanager_cross_GPU():
             opt_cls,
             opt_kws,
             rank=i,
-            num_actors=2,
-            num_buffers=len(clients),
+            num_actors=6,
+            num_buffers=len(client_groups[i]),
             num_selected_clients=len(clients),
-            gpu_per_actor=0.39,
+            gpu_per_actor=0.13,
             world_size=num_gpus,
             server_cls=server_cls,
             server_kws=server_kws,
@@ -152,18 +158,20 @@ def test_actormanager_cross_GPU():
         act_mgrs.append(actor_mgr)
 
     ray.get([mgr.init_dist.remote() for mgr in act_mgrs])
-    global_rounds = 40
-    validate_interval = 10
+    global_rounds = 4000
+    validate_interval = 100
     with trange(0, global_rounds + 1) as t:
         for global_rounds in t:
             client_groups = np.array_split(clients, num_gpus)
+            # ray.get([mgr.broadcast.remote() for mgr in act_mgrs])
             ret_ids = [
                 actor_mgr.train.remote(clients=client_group)
                 for (actor_mgr, client_group) in zip(act_mgrs, client_groups)
             ]
             ray.get(ret_ids)
-
+            ray.get([mgr.gather.remote() for mgr in act_mgrs])
             if global_rounds % validate_interval == 0 and global_rounds > 0:
+                ray.get([mgr.broadcast.remote() for mgr in act_mgrs])
                 ret_actor_mgr = actor_mgr.evaluate.remote(
                     clients=clients,
                     round_number=global_rounds,

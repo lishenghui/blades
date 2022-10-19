@@ -15,7 +15,9 @@ from blades.utils.torch_utils import parameters_to_vector
 from torch.optim import Optimizer
 import logging
 import numpy as np
-import os
+
+# import os
+import copy
 
 T = TypeVar("T", bound="Optimizer")
 T_SER = TypeVar("T_SER", bound="BladesServer")
@@ -87,7 +89,6 @@ class ActorManager:
             )
             for i in range(num_actors)
         ]
-        # breakpoint()
         ray.get([actor.init.remote() for actor in self.ray_actors])
         self.actor_pool = ActorPool(self.ray_actors)
 
@@ -126,16 +127,17 @@ class ActorManager:
         Returns:
             _type_: _description_
         """
-        dst = 0
-        if self.world_size > 0:
-            if self.rank == 0:
-                self.broadcast_buffer = parameters_to_vector(
-                    self.server.model.parameters()
-                )
-                dist.broadcast(tensor=self.broadcast_buffer, src=self.rank)
-            else:
-                dist.broadcast(tensor=self.shared_memory[0], src=dst)
+        self.broadcast()
+        # if self.world_size > 0:
+        #     if self.rank == 0:
+        #         self.broadcast_buffer = parameters_to_vector(
+        #             self.server.model.parameters()
+        #         )
+        #         dist.broadcast(tensor=self.broadcast_buffer, src=self.rank)
+        #     else:
+        #         dist.broadcast(tensor=self.shared_memory[0], src=dst)
 
+        # breakpoint()
         client_groups = np.array_split(clients, len(self.ray_actors))
         result_ids = []
         for clients, actor in zip(client_groups, self.ray_actors):
@@ -148,19 +150,13 @@ class ActorManager:
         while len(result_ids):
             _, result_ids = ray.wait(result_ids)
 
+        # breakpoint()
         if self.world_size <= 1:
             self.server.global_update()
 
         else:
-            if self.rank == 0:
-                dist.gather(tensor=self.shared_memory, gather_list=self.gather_list)
-                self.server.global_update(self.gather_list)
-                self.broadcast_buffer = parameters_to_vector(
-                    self.server.model.parameters()
-                )
-            else:
-                dist.gather(tensor=self.shared_memory, dst=dst)
-
+            # pass
+            self.gather()
         return True
 
     def evaluate(
@@ -184,15 +180,15 @@ class ActorManager:
         Returns:
             _type_: _description_
         """
-        dst = 0
-        if self.world_size > 0:
-            if self.rank == 0:
-                self.broadcast_buffer = parameters_to_vector(
-                    self.server.model.parameters()
-                )
-                dist.broadcast(tensor=self.broadcast_buffer, src=self.rank)
-            else:
-                dist.broadcast(tensor=self.shared_memory[0], src=dst)
+        # dst = 0
+        # if self.world_size > 0:
+        #     if self.rank == 0:
+        #         self.broadcast_buffer = parameters_to_vector(
+        #             self.server.model.parameters()
+        #         )
+        #         dist.broadcast(tensor=self.broadcast_buffer, src=self.rank)
+        #     else:
+        #         dist.broadcast(tensor=self.shared_memory[0], src=dst)
 
         client_groups = np.array_split(clients, len(self.ray_actors))
         results = []
@@ -203,3 +199,31 @@ class ActorManager:
             ret = ray.get(ret_id)
             results.extend(ret)
         return results
+
+    def broadcast(self):
+        dst = 0
+        if self.world_size > 0:
+            if self.rank == 0:
+                self.broadcast_buffer = parameters_to_vector(
+                    self.server.model.parameters()
+                )
+                dist.broadcast(tensor=self.broadcast_buffer, src=self.rank)
+            else:
+                buffer = torch.zeros_like(self.shared_memory[0])
+                dist.broadcast(tensor=buffer, src=dst)
+
+    def gather(self):
+        dst = 0
+        if self.rank == 0:
+            gather_memory = copy.deepcopy(self.shared_memory.detach())
+            # breakpoint()
+            dist.gather(tensor=gather_memory, gather_list=self.gather_list)
+            # dist.gather(tensor=self.shared_memory, gather_list=self.gather_list)
+            # breakpoint()
+            updates = torch.cat(self.gather_list)
+            # breakpoint()
+            self.server.global_update(updates)
+            self.broadcast_buffer = parameters_to_vector(self.server.model.parameters())
+        else:
+            # pass
+            dist.gather(tensor=copy.deepcopy(self.shared_memory), dst=dst)

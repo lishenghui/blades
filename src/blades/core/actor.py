@@ -44,7 +44,7 @@ class Actor(object):
 
     def init(self):
         return True
-        
+
     def set_lr(self, lr: float) -> None:
         r"""change the learning rate of the client optimizer.
 

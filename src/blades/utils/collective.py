@@ -6,7 +6,7 @@ def setup_dist(
     world_size,
     rank,
     addr="127.0.0.1",
-    port="29505",
+    port="7777",
     group_name="default",
     backend="nccl",
 ):
