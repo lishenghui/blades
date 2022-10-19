@@ -171,16 +171,6 @@ class ActorManager:
         Returns:
             _type_: _description_
         """
-        # dst = 0
-        # if self.world_size > 0:
-        #     if self.rank == 0:
-        #         self.broadcast_buffer = parameters_to_vector(
-        #             self.server.model.parameters()
-        #         )
-        #         dist.broadcast(tensor=self.broadcast_buffer, src=self.rank)
-        #     else:
-        #         dist.broadcast(tensor=self.shared_memory[0], src=dst)
-
         client_groups = np.array_split(clients, len(self.ray_actors))
         results = []
         for clients, actor in zip(client_groups, self.ray_actors):
@@ -201,6 +191,8 @@ class ActorManager:
                 dist.broadcast(tensor=self.shared_memory[0], src=self.rank)
             else:
                 dist.broadcast(tensor=self.shared_memory[0], src=dst)
+            # breakpoint()
+            # print("ddd")
 
     def gather(self):
         dst = 0
@@ -214,5 +206,4 @@ class ActorManager:
             # breakpoint()
             self.server.global_update(updates)
         else:
-            # pass
             dist.gather(tensor=self.shared_memory, dst=dst)

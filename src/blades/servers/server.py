@@ -96,6 +96,7 @@ class BladesServer(object):
         else:
             self.gather_list = self.shared_memory
 
+        # breakpoint()
         update = self.aggregator(self.gather_list)
         # print(update)
         self.zero_grad()

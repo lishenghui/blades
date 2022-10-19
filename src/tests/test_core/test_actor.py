@@ -62,13 +62,13 @@ def test_actormanager():
     logger.info("starting ...")
 
     device = "cuda"
-    net = MLP().to(device)
-    # net = CCTNet10().to(device)
+    # net = MLP().to(device)
+    net = CCTNet10().to(device)
     opt_cls = torch.optim.SGD
     opt_kws = {"lr": 1.0, "momentum": 0, "dampening": 0}
-    clients = [BladesClient(id=str(id)) for id in range(20)]
-    dataset = MNIST(num_clients=20)
-    # dataset = CIFAR10(num_clients=20)
+    clients = [BladesClient(id=str(id)) for id in range(40)]
+    # dataset = MNIST(num_clients=20)
+    dataset = CIFAR10(num_clients=40)
     agg = Mean()
     world_size = 0
 
@@ -83,9 +83,9 @@ def test_actormanager():
         net,
         opt_cls,
         opt_kws,
-        num_actors=8,
+        num_actors=1,
         num_buffers=len(clients),
-        gpu_per_actor=0.07,
+        gpu_per_actor=0.7,
         world_size=world_size,
         server_cls=BladesServer,
         server_kws=server_kws,
@@ -93,7 +93,7 @@ def test_actormanager():
     )
 
     global_rounds = 1000
-    validate_interval = 100
+    validate_interval = 50
     with trange(0, global_rounds + 1) as t:
         for global_rounds in t:
             ret_actor_mgr = actor_mgr.train.remote(clients=clients)
@@ -111,8 +111,6 @@ def test_actormanager():
 
 
 def test_actormanager_cross_GPU():
-    logger.info("starting ...")
-
     device = "cuda"
     net = CCTNet10().to(device)
     opt_cls = torch.optim.SGD
@@ -158,12 +156,11 @@ def test_actormanager_cross_GPU():
         act_mgrs.append(actor_mgr)
 
     ray.get([mgr.init_dist.remote() for mgr in act_mgrs])
-    global_rounds = 4000
-    validate_interval = 100
+    global_rounds = 1000
+    validate_interval = 50
     with trange(0, global_rounds + 1) as t:
         for global_rounds in t:
             client_groups = np.array_split(clients, num_gpus)
-            # ray.get([mgr.broadcast.remote() for mgr in act_mgrs])
             ret_ids = [
                 actor_mgr.train.remote(clients=client_group)
                 for (actor_mgr, client_group) in zip(act_mgrs, client_groups)
@@ -181,5 +178,5 @@ def test_actormanager_cross_GPU():
                 t.set_postfix(loss=test_results[0], top1=test_results[1])
 
 
-test_actormanager_cross_GPU()
-# test_actormanager()
+# test_actormanager_cross_GPU()
+test_actormanager()
