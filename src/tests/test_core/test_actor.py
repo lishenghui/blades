@@ -169,7 +169,6 @@ def test_actormanager_cross_GPU():
                 for (actor_mgr, client_group) in zip(act_mgrs, client_groups)
             ]
             ray.get(ret_ids)
-            ray.get([mgr.gather.remote() for mgr in act_mgrs])
             if global_rounds % validate_interval == 0 and global_rounds > 0:
                 ray.get([mgr.broadcast.remote() for mgr in act_mgrs])
                 ret_actor_mgr = actor_mgr.evaluate.remote(

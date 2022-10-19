@@ -128,16 +128,7 @@ class ActorManager:
             _type_: _description_
         """
         self.broadcast()
-        # if self.world_size > 0:
-        #     if self.rank == 0:
-        #         self.broadcast_buffer = parameters_to_vector(
-        #             self.server.model.parameters()
-        #         )
-        #         dist.broadcast(tensor=self.broadcast_buffer, src=self.rank)
-        #     else:
-        #         dist.broadcast(tensor=self.shared_memory[0], src=dst)
 
-        # breakpoint()
         client_groups = np.array_split(clients, len(self.ray_actors))
         result_ids = []
         for clients, actor in zip(client_groups, self.ray_actors):
@@ -204,26 +195,25 @@ class ActorManager:
         dst = 0
         if self.world_size > 0:
             if self.rank == 0:
-                self.broadcast_buffer = parameters_to_vector(
+                self.shared_memory[0] = parameters_to_vector(
                     self.server.model.parameters()
                 )
-                dist.broadcast(tensor=self.broadcast_buffer, src=self.rank)
+                dist.broadcast(tensor=self.shared_memory[0], src=self.rank)
             else:
-                buffer = torch.zeros_like(self.shared_memory[0])
-                dist.broadcast(tensor=buffer, src=dst)
+                dist.broadcast(tensor=self.shared_memory[0], src=dst)
 
     def gather(self):
         dst = 0
         if self.rank == 0:
-            gather_memory = copy.deepcopy(self.shared_memory.detach())
+            # gather_memory = copy.deepcopy(self.shared_memory.detach())
             # breakpoint()
-            dist.gather(tensor=gather_memory, gather_list=self.gather_list)
+            dist.gather(tensor=self.shared_memory, gather_list=self.gather_list)
             # dist.gather(tensor=self.shared_memory, gather_list=self.gather_list)
             # breakpoint()
             updates = torch.cat(self.gather_list)
             # breakpoint()
             self.server.global_update(updates)
-            self.broadcast_buffer = parameters_to_vector(self.server.model.parameters())
+            # self.broadcast_buffer = parameters_to_vector(self.server.model.parameters())
         else:
             # pass
-            dist.gather(tensor=copy.deepcopy(self.shared_memory), dst=dst)
+            dist.gather(tensor=self.shared_memory, dst=dst)
