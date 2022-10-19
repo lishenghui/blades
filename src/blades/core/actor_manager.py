@@ -42,7 +42,6 @@ class ActorManager:
         server_kws: Dict = None,
         num_selected_clients: int = None,
         device: str = "cpu",
-        visible_gpu: str = "0",
     ):
         """_summary_
 

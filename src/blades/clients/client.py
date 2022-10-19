@@ -5,6 +5,9 @@ from typing import Optional, Generator, Dict
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
+import numpy as np
+from blades.utils.utils import set_random_seed
+import random
 
 
 class BladesClient(object):
@@ -21,6 +24,7 @@ class BladesClient(object):
         momentum: Optional[float] = 0.0,
         dampening: Optional[float] = 0.0,
         device: Optional[torch.device] = torch.device("cuda"),
+        seed: Optional[int] = 0,
     ):
         """
         Args:
@@ -44,6 +48,8 @@ class BladesClient(object):
         self.device = device
         self.set_loss()
         self.set_id(id)
+        set_random_seed(seed)
+        self.random_states = {}
 
     def set_id(self, id: str) -> None:
         """Sets the unique id of the client.
@@ -68,6 +74,22 @@ class BladesClient(object):
         '1'
         """
         return self._id
+
+    def cache_random_state(self) -> None:
+        # This function should be used for reproducibility
+        if self.device != torch.device("cpu"):
+            self.random_states["torch_cuda"] = torch.cuda.get_rng_state()
+        self.random_states["torch"] = torch.get_rng_state()
+        self.random_states["numpy"] = np.random.get_state()
+        self.random_states["python"] = random.getstate()
+
+    def restore_random_state(self) -> None:
+        # This function should be used for reproducibility
+        if self.device != torch.device("cpu"):
+            torch.cuda.set_rng_state(self.random_states["torch_cuda"])
+        torch.set_rng_state(self.random_states["torch"])
+        np.random.set_state(self.random_states["numpy"])
+        random.setstate(self.random_states["python"])
 
     def getattr(self, attr):
         return getattr(self, attr)
@@ -153,6 +175,7 @@ class BladesClient(object):
             num_batches: Number of batches of local update.
             opt: Optimizer.
         """
+        self.restore_random_state()
         self._save_para(self.global_model)
         self.global_model.train()
         for i in range(num_batches):
@@ -186,6 +209,7 @@ class BladesClient(object):
         self.global_model = None
         self._state["saved_para"].clear()
         self.on_train_round_end()
+        self.cache_random_state()
 
     def train_personal_model(
         self, train_set: Generator, num_batches: int, global_state: Dict
