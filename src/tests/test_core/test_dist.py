@@ -8,6 +8,7 @@ from blades.models import MLP, CCTNet10
 from blades.clients import BladesClient
 import logging
 import sys
+from blades.utils.utils import set_random_seed
 
 # import time
 from tqdm import trange
@@ -60,7 +61,7 @@ def log_validate(metrics):
 
 def test_actormanager():
     logger.info("starting ...")
-
+    set_random_seed()
     device = "cuda"
     # net = MLP().to(device)
     net = CCTNet10().to(device)
@@ -83,17 +84,17 @@ def test_actormanager():
         net,
         opt_cls,
         opt_kws,
-        num_actors=1,
+        num_actors=5,
         num_buffers=len(clients),
-        gpu_per_actor=0.7,
+        gpu_per_actor=0.15,
         world_size=world_size,
         server_cls=BladesServer,
         server_kws=server_kws,
         device=device,
     )
 
-    global_rounds = 1000
-    validate_interval = 50
+    global_rounds = 4000
+    validate_interval = 100
     with trange(0, global_rounds + 1) as t:
         for global_rounds in t:
             ret_actor_mgr = actor_mgr.train.remote(clients=clients)
@@ -112,6 +113,7 @@ def test_actormanager():
 
 def test_actormanager_cross_GPU():
     device = "cuda"
+    set_random_seed()
     net = CCTNet10().to(device)
     opt_cls = torch.optim.SGD
     opt_kws = {"lr": 1.0, "momentum": 0, "dampening": 0}
@@ -142,22 +144,21 @@ def test_actormanager_cross_GPU():
             opt_cls,
             opt_kws,
             rank=i,
-            num_actors=6,
+            num_actors=2,
             num_buffers=len(client_groups[i]),
             num_selected_clients=len(clients),
-            gpu_per_actor=0.13,
+            gpu_per_actor=0.35,
             world_size=num_gpus,
             server_cls=server_cls,
             server_kws=server_kws,
             device=device,
-            visible_gpu=str(i),
         )
         ray.get(actor_mgr.init.remote())
         act_mgrs.append(actor_mgr)
 
     ray.get([mgr.init_dist.remote() for mgr in act_mgrs])
-    global_rounds = 1000
-    validate_interval = 50
+    global_rounds = 4000
+    validate_interval = 100
     with trange(0, global_rounds + 1) as t:
         for global_rounds in t:
             client_groups = np.array_split(clients, num_gpus)

@@ -175,7 +175,6 @@ class BladesClient(object):
             num_batches: Number of batches of local update.
             opt: Optimizer.
         """
-        # self.restore_random_state()
         self._save_para(self.global_model)
         self.global_model.train()
         for i in range(num_batches):
@@ -209,7 +208,6 @@ class BladesClient(object):
         self.global_model = None
         self._state["saved_para"].clear()
         self.on_train_round_end()
-        # self.cache_random_state()
 
     def train_personal_model(
         self, train_set: Generator, num_batches: int, global_state: Dict

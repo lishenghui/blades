@@ -172,6 +172,7 @@ class ActorManager:
         """
         client_groups = np.array_split(clients, len(self.ray_actors))
         results = []
+        # breakpoint()
         for clients, actor in zip(client_groups, self.ray_actors):
             ret_id = actor.evaluate.remote(
                 clients=clients, round_number=round_number, metrics=metrics

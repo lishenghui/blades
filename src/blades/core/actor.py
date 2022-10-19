@@ -1,4 +1,4 @@
-from typing import Dict, List, TypeVar
+from typing import Dict, List, TypeVar, Optional
 
 import ray
 import torch
@@ -8,6 +8,9 @@ from blades.datasets.fldataset import FLDataset
 from blades.utils.torch_utils import vector_to_parameters
 from torch.optim import Optimizer
 import copy
+from blades.utils.utils import set_random_seed
+import random
+import numpy as np
 
 T = TypeVar("T", bound="Optimizer")
 
@@ -24,6 +27,7 @@ class Actor(object):
         opt_kws: Dict,
         mem_meta_info: tuple = None,
         buffer_blocks: List[int] = None,
+        seed: Optional[int] = 0,
     ):
         """_summary_
 
@@ -35,12 +39,30 @@ class Actor(object):
             opt (torch.optim.Optimizer): _description_
             lr (float): _description_
         """
+        set_random_seed(seed)
         self.dataset = dataset
         self.model = model
         self.buffer_blocks = buffer_blocks
         self.optimizer = opt_cls(self.model.parameters(), **opt_kws)
         if mem_meta_info:
             self.shared_memory = mem_meta_info[0](*mem_meta_info[1])
+        self.random_states = {}
+
+    def cache_random_state(self) -> None:
+        # This function should be used for reproducibility
+        if ray.get_gpu_ids() != []:
+            self.random_states["torch_cuda"] = torch.cuda.get_rng_state()
+        self.random_states["torch"] = torch.get_rng_state()
+        self.random_states["numpy"] = np.random.get_state()
+        self.random_states["python"] = random.getstate()
+
+    def restore_random_state(self) -> None:
+        # This function should be used for reproducibility
+        if ray.get_gpu_ids() != []:
+            torch.cuda.set_rng_state(self.random_states["torch_cuda"])
+        torch.set_rng_state(self.random_states["torch"])
+        np.random.set_state(self.random_states["numpy"])
+        random.setstate(self.random_states["python"])
 
     def init(self):
         return True
@@ -72,6 +94,9 @@ class Actor(object):
         Returns:
             List: a list of the given clients.
         """
+        # breakpoint()
+        self.cache_random_state()
+        # breakpoint()
         if not global_model:
             model_vec = copy.deepcopy(self.shared_memory[0])
         for client in clients:
@@ -95,6 +120,7 @@ class Actor(object):
         self.shared_memory[
             self.buffer_blocks,
         ] = update
+        self.restore_random_state()
         return clients
 
     def evaluate(
@@ -112,7 +138,7 @@ class Actor(object):
         self.model.eval()
         for client in clients:
             client.set_global_model_ref(self.model)
-            data = self.dataset.get_all_test_data(client.id())
+            data = self.dataset.get_all_train_data(client.id())
             result = client.evaluate(
                 round_number=round_number,
                 test_set=data,

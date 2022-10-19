@@ -84,16 +84,16 @@ def test_actormanager():
         net,
         opt_cls,
         opt_kws,
-        num_actors=1,
+        num_actors=5,
         num_buffers=len(clients),
-        gpu_per_actor=0.7,
+        gpu_per_actor=0.15,
         world_size=world_size,
         server_cls=BladesServer,
         server_kws=server_kws,
         device=device,
     )
 
-    global_rounds = 1000
+    global_rounds = 100
     validate_interval = 50
     with trange(0, global_rounds + 1) as t:
         for global_rounds in t:
@@ -179,5 +179,5 @@ def test_actormanager_cross_GPU():
                 t.set_postfix(loss=test_results[0], top1=test_results[1])
 
 
-test_actormanager_cross_GPU()
-# test_actormanager()
+# test_actormanager_cross_GPU()
+test_actormanager()
