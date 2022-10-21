@@ -100,7 +100,9 @@ class ActorManager:
         if world_size > 0:
             self.group = setup_dist(world_size, rank)
             if self.rank == 0:
-                self.gather_list = [self.shared_memory] * world_size
+                self.gather_list = [
+                    torch.zeros_like(self.shared_memory) for _ in range(world_size)
+                ]
 
     def get_mem_meta_info(self):
         return self.mem_meta_info
@@ -127,7 +129,6 @@ class ActorManager:
             _type_: _description_
         """
         self.broadcast()
-
         client_groups = np.array_split(clients, len(self.ray_actors))
         result_ids = []
         for clients, actor in zip(client_groups, self.ray_actors):
@@ -140,7 +141,6 @@ class ActorManager:
         while len(result_ids):
             _, result_ids = ray.wait(result_ids)
 
-        # breakpoint()
         if self.world_size <= 1:
             self.server.global_update()
 
@@ -172,7 +172,6 @@ class ActorManager:
         """
         client_groups = np.array_split(clients, len(self.ray_actors))
         results = []
-        # breakpoint()
         for clients, actor in zip(client_groups, self.ray_actors):
             ret_id = actor.evaluate.remote(
                 clients=clients, round_number=round_number, metrics=metrics
@@ -191,19 +190,12 @@ class ActorManager:
                 dist.broadcast(tensor=self.shared_memory[0], src=self.rank)
             else:
                 dist.broadcast(tensor=self.shared_memory[0], src=dst)
-            # breakpoint()
-            # print("ddd")
 
     def gather(self):
         dst = 0
         if self.rank == 0:
-            # gather_memory = copy.deepcopy(self.shared_memory.detach())
-            # breakpoint()
             dist.gather(tensor=self.shared_memory, gather_list=self.gather_list)
-            # dist.gather(tensor=self.shared_memory, gather_list=self.gather_list)
-            # breakpoint()
             updates = torch.cat(self.gather_list)
-            # breakpoint()
-            self.server.global_update(updates)
+            self.server.global_update(update_list=updates)
         else:
             dist.gather(tensor=self.shared_memory, dst=dst)

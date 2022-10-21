@@ -10,17 +10,17 @@ import logging
 import sys
 from blades.utils.utils import set_random_seed
 
+# from blades.utils.torch_utils import parameters_to_vector
+
 # import time
 from tqdm import trange
 import numpy as np
 
 # import os
 from blades.utils.utils import (
-    # initialize_logger,
-    # reset_model_weights,
-    # set_random_seed,
     top1_accuracy,
 )
+
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -62,14 +62,15 @@ def log_validate(metrics):
 def test_actormanager():
     logger.info("starting ...")
     set_random_seed()
+    num_clients = 40
     device = "cuda"
     # net = MLP().to(device)
     net = CCTNet10().to(device)
     opt_cls = torch.optim.SGD
     opt_kws = {"lr": 1.0, "momentum": 0, "dampening": 0}
-    clients = [BladesClient(id=str(id)) for id in range(40)]
+    clients = [BladesClient(id=str(id)) for id in range(num_clients)]
     # dataset = MNIST(num_clients=20)
-    dataset = CIFAR10(num_clients=40)
+    dataset = CIFAR10(train_bs=64, num_clients=num_clients, seed=0)
     agg = Mean()
     world_size = 0
 
@@ -84,9 +85,9 @@ def test_actormanager():
         net,
         opt_cls,
         opt_kws,
-        num_actors=5,
+        num_actors=8,
         num_buffers=len(clients),
-        gpu_per_actor=0.15,
+        gpu_per_actor=0.09,
         world_size=world_size,
         server_cls=BladesServer,
         server_kws=server_kws,
@@ -94,13 +95,13 @@ def test_actormanager():
     )
 
     global_rounds = 4000
-    validate_interval = 100
+    validate_interval = 200
     with trange(0, global_rounds + 1) as t:
         for global_rounds in t:
             ret_actor_mgr = actor_mgr.train.remote(clients=clients)
             ray.get([ret_actor_mgr])
 
-            if global_rounds % validate_interval == 0 and global_rounds > 0:
+            if global_rounds % validate_interval == 0:
                 ret_actor_mgr = actor_mgr.evaluate.remote(
                     clients=clients,
                     round_number=global_rounds,
@@ -113,12 +114,13 @@ def test_actormanager():
 
 def test_actormanager_cross_GPU():
     device = "cuda"
+    num_clients = 40
     set_random_seed()
     net = CCTNet10().to(device)
     opt_cls = torch.optim.SGD
     opt_kws = {"lr": 1.0, "momentum": 0, "dampening": 0}
-    clients = [BladesClient(id=str(id)) for id in range(40)]
-    dataset = CIFAR10(num_clients=40)
+    clients = [BladesClient(id=str(id)) for id in range(num_clients)]
+    dataset = CIFAR10(train_bs=64, num_clients=num_clients, seed=0)
     agg = Mean()
 
     server_kws = {
@@ -144,10 +146,10 @@ def test_actormanager_cross_GPU():
             opt_cls,
             opt_kws,
             rank=i,
-            num_actors=2,
+            num_actors=5,
             num_buffers=len(client_groups[i]),
             num_selected_clients=len(clients),
-            gpu_per_actor=0.35,
+            gpu_per_actor=0.15,
             world_size=num_gpus,
             server_cls=server_cls,
             server_kws=server_kws,
@@ -155,7 +157,9 @@ def test_actormanager_cross_GPU():
         )
         ray.get(actor_mgr.init.remote())
         act_mgrs.append(actor_mgr)
+        print("hold on")
 
+    breakpoint()
     ray.get([mgr.init_dist.remote() for mgr in act_mgrs])
     global_rounds = 4000
     validate_interval = 100
@@ -179,5 +183,5 @@ def test_actormanager_cross_GPU():
                 t.set_postfix(loss=test_results[0], top1=test_results[1])
 
 
-# test_actormanager_cross_GPU()
-test_actormanager()
+test_actormanager_cross_GPU()
+# test_actormanager()

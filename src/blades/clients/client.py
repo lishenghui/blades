@@ -191,7 +191,6 @@ class BladesClient(object):
 
             self.on_backward_end()
             opt.step()
-        # print(loss.item())
         update = self._get_para(current=True) - self._get_para(current=False)
 
         self.update_buffer = torch.clone(update).detach()

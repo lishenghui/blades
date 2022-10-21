@@ -91,14 +91,12 @@ class BladesServer(object):
         Args:
             update: The aggregated update.
         """
-        if update_list:
+        if update_list is not None:
             self.gather_list = update_list
         else:
             self.gather_list = self.shared_memory
 
-        # breakpoint()
         update = self.aggregator(self.gather_list)
-        # print(update)
         self.zero_grad()
         beg = 0
         for group in self.optimizer.param_groups:

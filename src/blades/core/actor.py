@@ -6,6 +6,8 @@ import torch.nn as nn
 from blades.clients.client import BladesClient
 from blades.datasets.fldataset import FLDataset
 from blades.utils.torch_utils import vector_to_parameters
+
+# from blades.utils.torch_utils import parameters_to_vector, vector_to_parameters
 from torch.optim import Optimizer
 import copy
 from blades.utils.utils import set_random_seed
@@ -38,6 +40,7 @@ class Actor(object):
             model (nn.Module): _description_
             opt (torch.optim.Optimizer): _description_
             lr (float): _description_
+        #
         """
         set_random_seed(seed)
         self.dataset = dataset
@@ -94,17 +97,14 @@ class Actor(object):
         Returns:
             List: a list of the given clients.
         """
-        # breakpoint()
         self.cache_random_state()
-        # breakpoint()
         if not global_model:
             model_vec = copy.deepcopy(self.shared_memory[0])
         for client in clients:
             if global_model:
-                self.model.load_state_dict(global_model.state_dict())
+                self.model.load_state_dict(copy.deepcopy(global_model.state_dict()))
             else:
                 vector_to_parameters(copy.deepcopy(model_vec), self.model.parameters())
-            # cur_model_vec = parameters_to_vector(self.model.parameters())
             client.set_global_model_ref(self.model)
             local_dataset = self.dataset.get_train_loader(client.id())
             client.train_global_model(
@@ -138,7 +138,7 @@ class Actor(object):
         self.model.eval()
         for client in clients:
             client.set_global_model_ref(self.model)
-            data = self.dataset.get_all_train_data(client.id())
+            data = self.dataset.get_all_test_data(client.id())
             result = client.evaluate(
                 round_number=round_number,
                 test_set=data,
