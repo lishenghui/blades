@@ -154,7 +154,11 @@ class BladesClient(object):
         self._save_para(self.global_model)
         self.global_model.train()
         for i in range(num_batches):
+            if self._id == "0":
+                breakpoint()
             data, target = next(train_set)
+            if self._id == "0":
+                breakpoint()
             data, target = data.to(self.device), target.to(self.device)
             data, target = self.on_train_batch_begin(data=data, target=target)
             opt.zero_grad()
@@ -167,7 +171,7 @@ class BladesClient(object):
 
             self.on_backward_end()
             opt.step()
-
+            # breakpoint()
         update = self._get_para(current=True) - self._get_para(current=False)
 
         self.update_buffer = torch.clone(update).detach()

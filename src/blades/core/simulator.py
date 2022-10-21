@@ -10,6 +10,7 @@ import torch
 from ray.util import ActorPool
 from tqdm import trange
 
+# from blades.utils.torch_utils import parameters_to_vector
 from blades.clients import RSAClient
 from blades.clients.client import BladesClient, ByzantineClient
 from blades.core.actor import _RayActor
@@ -17,8 +18,8 @@ from blades.datasets.fldataset import FLDataset
 from blades.servers import BladesServer, RSAServer
 from blades.utils.utils import (
     initialize_logger,
-    reset_model_weights,
-    set_random_seed,
+    # reset_model_weights,
+    # set_random_seed,
     top1_accuracy,
 )
 
@@ -119,7 +120,7 @@ class Simulator(object):
         )
         self._setup_adversary(attack, adversary_kws=adversary_kws)
 
-        set_random_seed(seed)
+        # set_random_seed(seed)
 
     def _init_aggregator(self, aggregator, aggregator_kws):
         if type(aggregator) == str:
@@ -465,7 +466,7 @@ class Simulator(object):
         if self.device != torch.device("cpu"):
             global_model = global_model.to("cuda")
 
-        reset_model_weights(global_model)
+        # reset_model_weights(global_model)
         if server_optimizer == "SGD":
             self.server_opt = torch.optim.SGD(
                 global_model.parameters(), lr=server_lr, **dp_kws
@@ -487,7 +488,6 @@ class Simulator(object):
                 model=global_model,
                 aggregator=self.aggregator,
             )
-
         self.parallel_call(self.get_clients(), lambda client: client.set_loss(loss))
         global_start = time()
         ret = []
@@ -499,11 +499,6 @@ class Simulator(object):
         with trange(0, global_rounds + 1) as t:
             for global_rounds in t:
                 round_start = time()
-                if global_rounds % validate_interval == 0:
-                    loss, top1 = self.test_actor(
-                        global_round=global_rounds, batch_size=test_batch_size
-                    )
-                    t.set_postfix(loss=loss, top1=top1)
 
                 self.train_actor(
                     global_rounds, local_steps, self.get_clients(), client_lr, **dp_kws
@@ -517,6 +512,11 @@ class Simulator(object):
 
                 ret.append(time() - round_start)
                 server_lr = self.server.get_opt().param_groups[0]["lr"]
+                if global_rounds % validate_interval == 0:
+                    loss, top1 = self.test_actor(
+                        global_round=global_rounds, batch_size=test_batch_size
+                    )
+                    t.set_postfix(loss=loss, top1=top1)
                 self.debug_logger.info(
                     f"E={global_rounds}; Server learning rate = {server_lr:}; "
                     f"Client learning rate = {client_lr:}; Time cost = "
