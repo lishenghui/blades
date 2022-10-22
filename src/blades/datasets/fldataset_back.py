@@ -215,8 +215,12 @@ class FLDataset(ABC):
         tensor_x = torch.Tensor(data)  # transform to torch tensor
         tensor_y = torch.LongTensor(labels)
         dataset = CustomTensorDataset(tensor_x, tensor_y, transform_list=transform_list)
-        sampler = RandomSampler(dataset, replacement=True, num_samples=int(1e10))
-        return iter(DataLoader(dataset=dataset, sampler=sampler, batch_size=batch_size))
+        sampler = RandomSampler(dataset, replacement=True, num_samples=int(1e5))
+        return iter(
+            DataLoader(
+                dataset=dataset, sampler=sampler, num_workers=1, batch_size=batch_size
+            )
+        )
 
     def _preprocess_test_data(
         self,

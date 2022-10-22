@@ -97,7 +97,7 @@ class Actor(object):
         Returns:
             List: a list of the given clients.
         """
-        self.cache_random_state()
+        # self.cache_random_state()
         if not global_model:
             model_vec = copy.deepcopy(self.shared_memory[0])
         for client in clients:
@@ -120,7 +120,7 @@ class Actor(object):
         self.shared_memory[
             self.buffer_blocks,
         ] = update
-        self.restore_random_state()
+        # self.restore_random_state()
         return clients
 
     def evaluate(

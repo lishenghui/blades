@@ -159,7 +159,6 @@ def test_actormanager_cross_GPU():
         act_mgrs.append(actor_mgr)
         print("hold on")
 
-    breakpoint()
     ray.get([mgr.init_dist.remote() for mgr in act_mgrs])
     global_rounds = 4000
     validate_interval = 100
@@ -183,5 +182,5 @@ def test_actormanager_cross_GPU():
                 t.set_postfix(loss=test_results[0], top1=test_results[1])
 
 
-test_actormanager_cross_GPU()
-# test_actormanager()
+# test_actormanager_cross_GPU()
+test_actormanager()
