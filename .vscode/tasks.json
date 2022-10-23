@@ -1,0 +1,30 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "type": "shell",
+            "label": "autoflake.removeUnusedImports",
+            "command": "${command:python.interpreterPath}",
+            // in Git Bash, "'${command:python.interpreterPath}'",
+            "args": [
+                "-m",
+                "autoflake",
+                "--in-place",
+                "--remove-all-unused-imports",
+                "${file}",
+                // in Git Bash, "'${file}'",
+                // to run on all files in the working directory, replace "${file}", with "--recursive", "."
+            ],
+            "presentation": {
+                "echo": true,
+                "reveal": "silent",
+                "focus": false,
+                "panel": "dedicated",
+                "showReuseMessage": false,
+                "clear": false,
+                "close": true
+            },
+            "problemMatcher": []
+        },
+    ]
+}

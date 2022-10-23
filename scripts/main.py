@@ -116,12 +116,6 @@ if options.algorithm == "fedsgd":
         "client_lr": 1.0,
         "validate_interval": options.validate_interval,
         "server_lr_scheduler": lr_scheduler,
-        "dp_kws": {
-            "clip_threshold": options.dp_clip_threshold,
-            "noise_factor": privacy_factor,
-        }
-        if options.dp
-        else {},
     }
 
 elif options.algorithm == "fedavg":
