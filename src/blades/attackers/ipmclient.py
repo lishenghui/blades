@@ -6,10 +6,10 @@ class IpmClient(ByzantineClient):
         super().__init__(*args, **kwargs)
         self.epsilon = epsilon
 
-    def omniscient_callback(self, simulator):
+    def omniscient_callback(self, server):
         # Loop over good workers and accumulate their updates
         updates = []
-        for w in simulator.get_clients():
+        for w in server.get_clients():
             if not w.is_byzantine():
                 updates.append(w.get_update())
 

@@ -1,4 +1,4 @@
-from typing import Callable, List, Dict, TypeVar
+from typing import Callable, Dict, TypeVar
 
 from blades.clients import BladesClient
 import torch
@@ -22,6 +22,7 @@ class BladesServer(object):
     def __init__(
         self,
         model: torch.nn.Module,
+        clients: BladesClient,
         opt_cls: T = torch.optim.SGD,
         opt_kws: Dict = None,
         aggregator: Callable[[list], torch.Tensor] = None,
@@ -46,6 +47,7 @@ class BladesServer(object):
             self.shared_memory = mem_meta_info[0](*mem_meta_info[1])
         else:
             self.shared_memory = shared_memory
+        self.clients = clients
         self.model = model
         self.optimizer = opt_cls(self.model.parameters(), **opt_kws)
         self.aggregator = aggregator
@@ -56,6 +58,9 @@ class BladesServer(object):
             self.group = setup_dist(world_size, 0)
             self.gather_list = [torch.zeros(num_params).to(self.device)] * world_size
             self.broad_cast_buffer = torch.zeros(num_params).to(self.device)
+
+    def get_clients(self):
+        return self.clients
 
     def get_opt(self) -> torch.optim.Optimizer:
         """Returns the global optimizer.
@@ -79,9 +84,7 @@ class BladesServer(object):
         r"""Returns the current global global_model."""
         return self.model
 
-    def global_update(
-        self, clients: List[BladesClient] = None, update_list=None
-    ) -> None:
+    def global_update(self, update_list=None) -> None:
         r"""Apply a step of global optimization.
 
             .. note::
@@ -94,7 +97,8 @@ class BladesServer(object):
         if update_list is not None:
             self.gather_list = update_list
         else:
-            self.gather_list = self.shared_memory
+            self.gather_list = self.clients
+            # self.gather_list = self.shared_memory
 
         update = self.aggregator(self.gather_list)
         self.zero_grad()

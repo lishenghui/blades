@@ -196,6 +196,12 @@ class ActorManager:
         if self.rank == 0:
             dist.gather(tensor=self.shared_memory, gather_list=self.gather_list)
             updates = torch.cat(self.gather_list)
-            self.server.global_update(update_list=updates)
+            for idx, client in enumerate(self.server.get_clients()):
+                client.save_update(updates[idx])
+            for idx, client in enumerate(self.server.get_clients()):
+                if client.is_byzantine():
+                    client.omniscient_callback(self.server)
+            # self.server.global_update(update_list=updates)
+            self.server.global_update()
         else:
             dist.gather(tensor=self.shared_memory, dst=dst)

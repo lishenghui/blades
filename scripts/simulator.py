@@ -43,6 +43,7 @@ class Simulator(object):
         device: str = "cuda",
         log_path: str = "./outputs",
     ) -> None:
+
         self.act_mgrs = []
         self.num_gpus = num_gpus
         self.clients = clients
@@ -53,6 +54,7 @@ class Simulator(object):
             if i == 0:
                 server_cls = server_cls
                 server_kws = server_kws
+                server_kws["clients"] = clients
                 num_gpus_mgr = 0.2
             else:
                 server_cls = None

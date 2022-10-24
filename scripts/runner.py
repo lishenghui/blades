@@ -12,6 +12,10 @@ from blades.models import CCTNet10
 from blades.clients import BladesClient
 from blades.servers import BladesServer
 
+from blades.attackers.alieclient import AlieClient
+
+# from blades.attackers.ipmclient import IpmClient
+
 args = options
 if not ray.is_initialized():
     ray.init()
@@ -50,13 +54,18 @@ if options.gpu_per_actor > 0.0:
     model = model.to("cuda")
 
 num_clients = 40
+num_byzantine = 5
 device = "cuda"
 net = CCTNet10().to(device)
 local_opt_cls = torch.optim.SGD
 local_opt_kws = {"lr": 1.0, "momentum": 0, "dampening": 0}
-clients = [BladesClient(id=str(id)) for id in range(num_clients)]
 dataset = CIFAR10(train_bs=64, num_clients=num_clients, seed=0)
+
 clients = [BladesClient(id=str(id)) for id in range(num_clients)]
+
+for i in range(num_byzantine):
+    # clients[0] = IpmClient(epsilon=100, id=str(i))
+    clients[i] = AlieClient(num_clients, num_byzantine, id=str(i))
 agg = init_aggregator(options.agg, options.aggregator_kws)
 world_size = 0
 
@@ -69,7 +78,7 @@ server_kws = {
 runner = Simulator(
     dataset=dataset,
     clients=clients,
-    num_gpus=1,
+    num_gpus=2,
     num_gpus_mgr=0.2,
     num_actors_mgr=5,
     num_gpus_actor=0.15,
