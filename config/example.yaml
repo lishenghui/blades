@@ -2,8 +2,8 @@
 dataset: cifar10
 non_iid: False
 alpha: 0.1
-num_clients: 50
-num_byzantine: 0
+num_clients: 40
+num_byzantine: 20
 #trusted_id: 49
 
 

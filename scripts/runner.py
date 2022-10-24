@@ -3,18 +3,14 @@ import os
 import ray
 import torch
 
-# from blades.aggregators import Mean
 from blades.aggregators import init_aggregator
+from blades.attackers import init_attacker
 from args import options
 from simulator import Simulator
 from blades.datasets import CIFAR10
 from blades.models import CCTNet10
 from blades.clients import BladesClient
 from blades.servers import BladesServer
-
-from blades.attackers.alieclient import AlieClient
-
-# from blades.attackers.ipmclient import IpmClient
 
 args = options
 if not ray.is_initialized():
@@ -27,7 +23,6 @@ if not os.path.exists(options.log_dir):
 
 # Use absolute path name, as Ray might have trouble in fetching relative path
 data_root = os.path.abspath("./data")
-
 cache_name = (
     options.dataset
     + "_"
@@ -53,8 +48,8 @@ else:
 if options.gpu_per_actor > 0.0:
     model = model.to("cuda")
 
-num_clients = 40
-num_byzantine = 5
+num_clients = options.num_clients
+num_byzantine = options.num_byzantine
 device = "cuda"
 net = CCTNet10().to(device)
 local_opt_cls = torch.optim.SGD
@@ -64,8 +59,8 @@ dataset = CIFAR10(train_bs=64, num_clients=num_clients, seed=0)
 clients = [BladesClient(id=str(id)) for id in range(num_clients)]
 
 for i in range(num_byzantine):
-    # clients[0] = IpmClient(epsilon=100, id=str(i))
-    clients[i] = AlieClient(num_clients, num_byzantine, id=str(i))
+
+    clients[i] = init_attacker(options.attack, {"id": str(i)} | options.attack_kws)
 agg = init_aggregator(options.agg, options.aggregator_kws)
 world_size = 0
 

@@ -7,4 +7,6 @@ class SignflippingClient(ByzantineClient):
 
     def on_backward_end(self):
         for name, p in self.global_model.named_parameters():
+            if not p.requires_grad:
+                continue
             p.grad.data = -p.grad.data

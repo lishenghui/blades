@@ -62,24 +62,3 @@ class AlieClient(ByzantineClient):
                 if update is None:
                     update = mu - std * client.z_max
                 client.save_update(update)
-
-
-class AlieAdversary:
-    def __init__(self):
-        pass
-
-    def omniscient_callback(self, simulator):
-        updates = []
-        for client in simulator._clients.values():
-            if not client.is_byzantine():
-                updates.append(client.get_update())
-
-        stacked_updates = torch.stack(updates, 1)
-        mu = torch.mean(stacked_updates, 1)
-        std = torch.std(stacked_updates, 1)
-        update = None
-        for client in simulator._clients.values():
-            if client.is_byzantine():
-                if update is None:
-                    update = mu - std * client.z_max
-                client.save_update(update)
