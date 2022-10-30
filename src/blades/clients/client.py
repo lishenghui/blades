@@ -9,6 +9,8 @@ from torch.utils.data import DataLoader
 import numpy as np
 import random
 
+# from blades.utils.torch_utils import parameters_to_vector
+
 
 class BladesClient(object):
     r"""Base class for all clients.
@@ -179,6 +181,9 @@ class BladesClient(object):
         self.global_model.train()
         for i in range(num_batches):
             data, target = next(train_set)
+            # if self._id == "0":
+            # vec = parameters_to_vector(self.global_model.parameters())
+            # print(f"{self._id} vec:", vec)
             data, target = data.to(self.device), target.to(self.device)
             data, target = self.on_train_batch_begin(data=data, target=target)
             opt.zero_grad()

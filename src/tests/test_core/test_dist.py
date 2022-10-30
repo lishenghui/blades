@@ -157,7 +157,6 @@ def test_actormanager_cross_GPU():
         )
         ray.get(actor_mgr.init.remote())
         act_mgrs.append(actor_mgr)
-        print("hold on")
 
     ray.get([mgr.init_dist.remote() for mgr in act_mgrs])
     global_rounds = 4000

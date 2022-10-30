@@ -11,6 +11,10 @@ from sklearn.utils import shuffle
 
 from blades.utils.utils import set_random_seed
 from .customdataset import CustomTensorDataset
+import ray
+import random
+
+# import numpy as np
 
 logger = logging.getLogger(__name__)
 
@@ -35,6 +39,7 @@ class FLDataset(ABC):
     ):
         self.train_transform = train_transform
         self.test_transform = test_transform
+        self.random_states = {}
         if train_data:
             self.train_data = train_data
             self.test_data = test_data
@@ -178,6 +183,22 @@ class FLDataset(ABC):
 
         return train_user_ids, train_dataset, train_user_ids, test_dataset
 
+    def cache_random_state(self) -> None:
+        # This function should be used for reproducibility
+        if ray.get_gpu_ids() != []:
+            self.random_states["torch_cuda"] = torch.cuda.get_rng_state()
+        self.random_states["torch"] = torch.get_rng_state()
+        self.random_states["numpy"] = np.random.get_state()
+        self.random_states["python"] = random.getstate()
+
+    def restore_random_state(self) -> None:
+        # This function should be used for reproducibility
+        if ray.get_gpu_ids() != []:
+            torch.cuda.set_rng_state(self.random_states["torch_cuda"])
+        torch.set_rng_state(self.random_states["torch"])
+        np.random.set_state(self.random_states["numpy"])
+        random.setstate(self.random_states["python"])
+
     def _preprocess_train_data(self, data, labels, batch_size, seed=0):
         i = 0
         # The following line is needed for reproducing the randomness of transforms.
@@ -200,7 +221,9 @@ class FLDataset(ABC):
                 X = torch.Tensor(X)
                 if self.train_transform:
                     X = self.train_transform(X)
+                self.cache_random_state()
                 yield X, torch.LongTensor(y)
+                self.restore_random_state()
 
     def _preprocess_test_data(
         self,

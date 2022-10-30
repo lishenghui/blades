@@ -3,12 +3,12 @@ dataset: cifar10
 non_iid: False
 alpha: 0.1
 num_clients: 40
-num_byzantine: 20
+num_byzantine: 0
 #trusted_id: 49
 
 
 attack: ALIE
-attack_kws: {"num_clients": 50, "num_byzantine": 0}
+attack_kws: {"num_clients": 10, "num_byzantine": 0}
 
 agg: Median
 #aggregator_kws: {num_excluded: 1, k: 5}
@@ -18,11 +18,11 @@ gpu_server: 0.2
 algorithm: fedsgd
 
 local_round: 1
-global_round: 6000
+global_round: 100
 serv_momentum: 0.9
 batch_size: 64
 test_batch_size: 128
-validate_interval: 50
+validate_interval: 5
 
 
 #Ray related configurations.

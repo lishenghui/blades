@@ -55,10 +55,10 @@ class Simulator(object):
                 server_cls = server_cls
                 server_kws = server_kws
                 server_kws["clients"] = clients
-                num_gpus_mgr = 0.2
+                num_gpus_mgr = num_gpus_mgr
             else:
                 server_cls = None
-                num_gpus_mgr = 0.2
+                num_gpus_mgr = num_gpus_mgr
 
             actor_mgr = ActorManager.options(num_gpus=num_gpus_mgr).remote(
                 dataset,

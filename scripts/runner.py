@@ -11,7 +11,11 @@ from blades.datasets import CIFAR10
 from blades.models import CCTNet10
 from blades.clients import BladesClient
 from blades.servers import BladesServer
+from blades.utils.utils import set_random_seed
 
+# from blades.utils.torch_utils import parameters_to_vector
+
+set_random_seed(0, use_cuda=True)
 args = options
 if not ray.is_initialized():
     ray.init()
@@ -59,7 +63,6 @@ dataset = CIFAR10(train_bs=64, num_clients=num_clients, seed=0)
 clients = [BladesClient(id=str(id)) for id in range(num_clients)]
 
 for i in range(num_byzantine):
-
     clients[i] = init_attacker(options.attack, {"id": str(i)} | options.attack_kws)
 agg = init_aggregator(options.agg, options.aggregator_kws)
 world_size = 0
@@ -73,10 +76,10 @@ server_kws = {
 runner = Simulator(
     dataset=dataset,
     clients=clients,
-    num_gpus=2,
+    num_gpus=1,
     num_gpus_mgr=0.2,
-    num_actors_mgr=5,
-    num_gpus_actor=0.15,
+    num_actors_mgr=4,
+    num_gpus_actor=0.18,
     local_opt_cls=local_opt_cls,
     local_opt_kws=local_opt_kws,
     global_model=net,
@@ -85,4 +88,6 @@ runner = Simulator(
     log_path=options.log_dir,
 )
 
-runner.run()
+runner.run(
+    validate_interval=options.validate_interval, global_rounds=options.global_round
+)

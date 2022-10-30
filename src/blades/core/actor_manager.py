@@ -142,11 +142,20 @@ class ActorManager:
             _, result_ids = ray.wait(result_ids)
 
         if self.world_size <= 1:
-            self.server.global_update()
+            updates = self.shared_memory
 
         else:
-            # pass
-            self.gather()
+            updates = self.gather()
+
+        if hasattr(self, "server"):
+            for idx, client in enumerate(self.server.get_clients()):
+                client.save_update(updates[idx])
+            for idx, client in enumerate(self.server.get_clients()):
+                if client.is_byzantine():
+                    client.omniscient_callback(self.server)
+
+            self.server.global_update()
+
         return True
 
     def evaluate(
@@ -196,12 +205,6 @@ class ActorManager:
         if self.rank == 0:
             dist.gather(tensor=self.shared_memory, gather_list=self.gather_list)
             updates = torch.cat(self.gather_list)
-            for idx, client in enumerate(self.server.get_clients()):
-                client.save_update(updates[idx])
-            for idx, client in enumerate(self.server.get_clients()):
-                if client.is_byzantine():
-                    client.omniscient_callback(self.server)
-            # self.server.global_update(update_list=updates)
-            self.server.global_update()
+            return updates
         else:
             dist.gather(tensor=self.shared_memory, dst=dst)
