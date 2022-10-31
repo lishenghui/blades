@@ -112,7 +112,7 @@ if options.algorithm == "fedsgd":
     run_args = {
         "client_optimizer": "SGD",  # server_opt, server optimizer
         "server_optimizer": opt,  # client optimizer
-        "loss": "cross_entropy",  # loss funcstion
+        "loss": "cross_entropy",  # loss function
         "global_rounds": options.global_round,  # number of global rounds
         "local_steps": options.local_round,
         "client_lr": 1.0,
@@ -143,7 +143,7 @@ elif options.algorithm == "fedavg":
         "global_model": model,  # global global_model
         "server_optimizer": server_opt,  # server_opt, server optimizer
         "client_optimizer": opt,  # client optimizer
-        "loss": "crossentropy",  # loss funcstion
+        "loss": "crossentropy",  # loss function
         "global_rounds": options.global_round,  # number of global rounds
         "local_steps": options.local_round,  # number of seps
         "client_lr": 0.1,  # learning rateteps per round
