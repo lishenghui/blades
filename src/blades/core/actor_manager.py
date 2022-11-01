@@ -16,9 +16,6 @@ from torch.optim import Optimizer
 import logging
 import numpy as np
 
-# import os
-# import copy
-
 T = TypeVar("T", bound="Optimizer")
 T_SER = TypeVar("T_SER", bound="BladesServer")
 
