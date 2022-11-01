@@ -116,6 +116,4 @@ class BladesServer(object):
         self.shared_memory[
             0,
         ] = model_vec
-        # print(model_vec)
-        # breakpoint()
         return True

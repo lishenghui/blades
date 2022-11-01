@@ -58,7 +58,6 @@ class CIFAR10(FLDataset):
                 transforms.Normalize(mean=stats["mean"], std=stats["std"]),
             ]
         )
-        # train_transform = None
         train_transform = transforms.Compose(
             [
                 transforms.RandomResizedCrop(32, scale=(0.75, 1.0), ratio=(1.0, 1.0)),

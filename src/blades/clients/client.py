@@ -177,13 +177,11 @@ class BladesClient(object):
             num_batches: Number of batches of local update.
             opt: Optimizer.
         """
+        torch.use_deterministic_algorithms(True)
         self._save_para(self.global_model)
         self.global_model.train()
         for i in range(num_batches):
             data, target = next(train_set)
-            # if self._id == "0":
-            # vec = parameters_to_vector(self.global_model.parameters())
-            # print(f"{self._id} vec:", vec)
             data, target = data.to(self.device), target.to(self.device)
             data, target = self.on_train_batch_begin(data=data, target=target)
             opt.zero_grad()

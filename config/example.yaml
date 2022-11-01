@@ -7,10 +7,10 @@ num_byzantine: 0
 #trusted_id: 49
 
 
-attack: ALIE
-attack_kws: {"num_clients": 10, "num_byzantine": 0}
+# attack: ALIE
+# attack_kws: {"num_clients": 10, "num_byzantine": 0}
 
-agg: Median
+agg: Mean
 #aggregator_kws: {num_excluded: 1, k: 5}
 #aggregator_kws: {"linkage": "average"}
 
@@ -22,7 +22,7 @@ global_round: 100
 serv_momentum: 0.9
 batch_size: 64
 test_batch_size: 128
-validate_interval: 5
+validate_interval: 50
 
 
 #Ray related configurations.
