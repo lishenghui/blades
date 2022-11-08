@@ -44,7 +44,7 @@ class Actor(object):
         """
         set_random_seed(seed)
         self.dataset = dataset
-        self.model = model
+        self.model = model().to("cuda")
         self.buffer_blocks = buffer_blocks
         self.optimizer = opt_cls(self.model.parameters(), **opt_kws)
         if mem_meta_info:

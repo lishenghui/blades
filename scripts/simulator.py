@@ -8,6 +8,7 @@ import sys
 from blades.datasets.fldataset import FLDataset
 from typing import Dict, List, TypeVar
 from torch.optim import Optimizer
+import wandb
 
 # from blades.utils.torch_utils import parameters_to_vector
 from tqdm import trange
@@ -107,6 +108,7 @@ class Simulator(object):
                     results = ray.get(ret_ids)
                     results = [item for sublist in results for item in sublist]
                     test_results = self.log_validate(results)
+
                     t.set_postfix(loss=test_results[0], top1=test_results[1])
 
     def log_validate(self, metrics):
@@ -125,5 +127,6 @@ class Simulator(object):
             "Length": np.sum([metric["Length"] for metric in metrics]),
             "Loss": loss,
         }
+        wandb.log(r)
         self.json_logger.info(r)
         return loss, top1

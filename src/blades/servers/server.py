@@ -48,7 +48,7 @@ class BladesServer(object):
         else:
             self.shared_memory = shared_memory
         self.clients = clients
-        self.model = model
+        self.model = model().to("cuda")
         self.optimizer = opt_cls(self.model.parameters(), **opt_kws)
         self.aggregator = aggregator
         self.device = device
