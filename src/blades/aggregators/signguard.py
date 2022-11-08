@@ -58,7 +58,6 @@ class Signguard(_BaseAggregator):
             features.append([feature0, feature1, feature2])
 
         kmeans = KMeans(n_clusters=2, random_state=0).fit(features)
-        # print(kmeans)
 
         flag = 1 if np.sum(kmeans.labels_) > num // 2 else 0
         S2_idxs = list(

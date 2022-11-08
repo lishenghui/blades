@@ -37,8 +37,6 @@ class Clustering(_BaseAggregator):
         dis_max[dis_max == -inf] = -1
         dis_max[dis_max == inf] = 1
         dis_max[np.isnan(dis_max)] = -1
-        # with open('../notebooks/updates_fedsgd_ipm.npy', 'wb') as f:
-        #     np.save(f, dis_max)
         clustering = AgglomerativeClustering(
             affinity="precomputed", linkage="complete", n_clusters=2
         )
