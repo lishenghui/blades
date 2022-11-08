@@ -25,4 +25,5 @@ src/blades/examples/data/*
 /src/tests/data/
 /config/example_cpu.yaml
 /data
+/scripts/wandb
 /src/tests/test_core/data/

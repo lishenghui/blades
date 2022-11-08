@@ -14,6 +14,9 @@ from blades.servers import BladesServer
 from blades.utils.utils import set_random_seed
 
 # from blades.utils.torch_utils import parameters_to_vector
+import wandb
+
+wandb.init(project="blades", entity="lishenghui")
 
 set_random_seed(0, use_cuda=True)
 args = options
@@ -44,18 +47,19 @@ if options.dataset == "cifar10":
         iid=not options.non_iid,
         seed=0,
     )  # built-in federated cifar10 dataset
-    model = CCTNet10()
+    model = CCTNet10
 
 else:
     raise NotImplementedError
 
-if options.gpu_per_actor > 0.0:
-    model = model.to("cuda")
+# if options.gpu_per_actor > 0.0:
+#     model = model.to("cuda")
 
 num_clients = options.num_clients
 num_byzantine = options.num_byzantine
 device = "cuda"
-net = CCTNet10().to(device)
+net = CCTNet10
+# net = CCTNet10().to(device)
 local_opt_cls = torch.optim.SGD
 local_opt_kws = {"lr": 1.0, "momentum": 0, "dampening": 0}
 dataset = CIFAR10(train_bs=64, num_clients=num_clients, seed=0)

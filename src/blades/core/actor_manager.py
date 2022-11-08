@@ -15,6 +15,7 @@ from blades.utils.torch_utils import parameters_to_vector
 from torch.optim import Optimizer
 import logging
 import numpy as np
+from blades.utils.utils import set_random_seed
 
 T = TypeVar("T", bound="Optimizer")
 T_SER = TypeVar("T_SER", bound="BladesServer")
@@ -58,12 +59,15 @@ class ActorManager:
         self.device = device
         self.world_size = world_size
         self.num_selected_clients = num_selected_clients
-        self.num_params = get_num_params(global_model)
+
+        set_random_seed()
+        model_tmp = global_model().to("cuda")
+        self.num_params = get_num_params(model_tmp)
         block_groups = np.array_split(range(num_buffers), num_actors)
         self.shared_memory = torch.zeros((num_buffers, self.num_params)).to(self.device)
         self.shared_memory[
             0,
-        ] = parameters_to_vector(global_model.parameters()).detach()
+        ] = parameters_to_vector(model_tmp.parameters()).detach()
         self.mem_meta_info = reduce_tensor(self.shared_memory)
 
         if server_cls:
