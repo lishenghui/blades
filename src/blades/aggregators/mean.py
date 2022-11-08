@@ -1,4 +1,3 @@
-import logging
 from typing import List, Union
 
 import torch
@@ -41,6 +40,7 @@ class _BaseAggregator(object):
             NotImplementedError:
         """
         raise NotImplementedError
+
 
 class Mean(_BaseAggregator):
     r"""Computes the ``sample mean`` over the updates from all give clients."""
