@@ -105,6 +105,7 @@ class Actor(object):
                 self.model.load_state_dict(copy.deepcopy(global_model.state_dict()))
             else:
                 vector_to_parameters(copy.deepcopy(model_vec), self.model.parameters())
+
             client.set_global_model_ref(self.model)
             local_dataset = self.dataset.get_train_loader(client.id())
             client.train_global_model(

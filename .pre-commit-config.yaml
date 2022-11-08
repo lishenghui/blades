@@ -4,7 +4,7 @@ repos:
     hooks:
       - id: pycln
   - repo: https://github.com/psf/black
-    rev: 22.8.0
+    rev: 22.10.0
     hooks:
       - id: black
   - repo: https://github.com/PyCQA/flake8
@@ -25,7 +25,7 @@ repos:
       - id: mixed-line-ending
         args: ["--fix=lf"]
   - repo: https://github.com/codespell-project/codespell
-    rev: v2.2.1
+    rev: v2.2.2
     hooks:
       - id: codespell
   - repo: https://github.com/executablebooks/mdformat
@@ -37,7 +37,7 @@ repos:
           - mdformat-openmmlab
           - mdformat_frontmatter
           - linkify-it-py
-  - repo: https://github.com/myint/docformatter
+  - repo: https://github.com/PyCQA/docformatter
     rev: v1.5.0
     hooks:
       - id: docformatter

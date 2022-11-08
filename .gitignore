@@ -27,3 +27,4 @@ src/blades/examples/data/*
 /data
 /scripts/wandb
 /src/tests/test_core/data/
+**/data/MNIST/**

@@ -25,9 +25,10 @@ test_batch_size: 128
 validate_interval: 100
 
 
+
 #Ray related configurations.
 
 # If you try to debug the code, use `local_mode:True`
 local_mode: False
-num_actors: 4
-gpu_per_actor: 0.19
+num_actors: 1
+gpu_per_actor: 0.09

@@ -8,6 +8,7 @@ from args import options
 from blades.core.simulator import Simulator
 from blades.datasets import CIFAR10, CIFAR100, MNIST
 from blades.models import CCTNet10, CCTNet100, MLP
+from blades.utils.utils import set_random_seed
 
 args = options
 if not ray.is_initialized():
@@ -20,7 +21,8 @@ if not os.path.exists(options.log_dir):
 
 # Use absolute path name, as Ray might have trouble in fetching relative path
 data_root = os.path.abspath("./data")
-
+seed = 0
+set_random_seed(seed)
 cache_name = (
     options.dataset
     + "_"
@@ -101,21 +103,20 @@ if options.algorithm == "fedsgd":
     opt = torch.optim.SGD(
         model.parameters(), lr=options.server_lr, momentum=options.serv_momentum
     )
-    lr_scheduler = torch.optim.lr_scheduler.MultiStepLR(
-        opt, milestones=[2000, 3000, 5000], gamma=0.5
-    )
+    # lr_scheduler = torch.optim.lr_scheduler.MultiStepLR(
+    #     opt, milestones=[2000, 3000, 5000], gamma=0.5
+    # )
     assert options.local_round == 1, "fedsgd requires that only one SGD is taken."
 
     # runtime parameters
     run_args = {
         "client_optimizer": "SGD",  # server_opt, server optimizer
         "server_optimizer": opt,  # client optimizer
-        "loss": "cross_entropy",  # loss funcstion
+        "loss": "cross_entropy",  # loss function
         "global_rounds": options.global_round,  # number of global rounds
         "local_steps": options.local_round,
         "client_lr": 1.0,
         "validate_interval": options.validate_interval,
-        "server_lr_scheduler": lr_scheduler,
     }
 
 elif options.algorithm == "fedavg":
@@ -135,7 +136,7 @@ elif options.algorithm == "fedavg":
         "global_model": model,  # global global_model
         "server_optimizer": server_opt,  # server_opt, server optimizer
         "client_optimizer": opt,  # client optimizer
-        "loss": "crossentropy",  # loss funcstion
+        "loss": "crossentropy",  # loss function
         "global_rounds": options.global_round,  # number of global rounds
         "local_steps": options.local_round,  # number of seps
         "client_lr": 0.1,  # learning rateteps per round
