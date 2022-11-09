@@ -3,14 +3,14 @@ dataset: cifar10
 non_iid: False
 alpha: 0.1
 num_clients: 40
-num_byzantine: 0
+num_byzantine: 5
 #trusted_id: 49
 
 
-attack: Signflipping
+attack: ALIE
 attack_kws: {"num_clients": 40, "num_byzantine": 5}
 
-agg: Mean
+agg: Median
 #aggregator_kws: {num_excluded: 1, k: 5}
 #aggregator_kws: {"linkage": "average"}
 
@@ -25,7 +25,7 @@ test_batch_size: 128
 validate_interval: 100
 
 
-
+bucketing: 5
 #Ray related configurations.
 
 # If you try to debug the code, use `local_mode:True`

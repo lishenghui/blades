@@ -53,7 +53,6 @@ class Mean(_BaseAggregator):
     ):
         updates = self._get_updates(inputs)
         values = updates.mean(dim=0)
-        # breakpoint()
         return values
 
     def __str__(self):

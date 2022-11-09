@@ -181,11 +181,7 @@ class BladesClient(object):
         self._save_para(self.global_model)
         self.global_model.train()
         for i in range(num_batches):
-            if self._id == "0":
-                breakpoint()
             data, target = next(train_set)
-            if self._id == "0":
-                breakpoint()
             data, target = data.to(self.device), target.to(self.device)
             data, target = self.on_train_batch_begin(data=data, target=target)
             opt.zero_grad()

@@ -39,19 +39,14 @@ def parse_arguments():
     parser.add_argument("--num_byzantine", type=int, default=5)
 
     parser.add_argument("--num_actors", type=int, default=5)
+    parser.add_argument("--bucketing", type=int, default=0)
     parser.add_argument("--gpu_per_actor", type=float, default=0.2)
     parser.add_argument("--server_lr", type=float, default=0.1)
-
-    parser.add_argument("--dp", action="store_true", default=False)
-
-    # Parameters for DP. They will take effect only if `dp`
-    # is  `True`.
-    parser.add_argument("--dp_privacy_delta", type=float, default=1e-6)
-    parser.add_argument("--dp_privacy_epsilon", type=float, default=1.0)
-    parser.add_argument("--dp_clip_threshold", type=float, default=0.5)
-
     parser.add_argument(
-        "--config_path", type=str, default=None, help="Path to config file."
+        "--config_path",
+        type=str,
+        default="../config/example.yaml",
+        help="Path to config file.",
     )
 
     options = parser.parse_args()
@@ -59,7 +54,6 @@ def parse_arguments():
     options.attack = options.attack.lower()
     if options.algorithm == "fedsgd":
         options.local_round = 1
-    options.dp_privacy_sensitivity = 2 * options.dp_clip_threshold / options.batch_size
     ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
 
     if options.config_path:
@@ -130,12 +124,6 @@ def parse_arguments():
         + (f"_bz{options.batch_size}")
         + (f"_localround{options.local_round}")
         + ("_noniid" if options.non_iid else "")
-        + (
-            f"_privacy_epsilon{options.dp_privacy_epsilon}_clip_threshold"
-            f"{options.dp_clip_threshold}"
-            if options.dp
-            else ""
-        )
         + f"_seed{options.seed}"
     )
 

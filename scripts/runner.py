@@ -3,7 +3,7 @@ import os
 import ray
 import torch
 
-from blades.aggregators import init_aggregator
+from blades.aggregators import get_aggregator
 from blades.attackers import init_attacker
 from args import options
 from simulator import Simulator
@@ -68,7 +68,7 @@ clients = [BladesClient(id=str(id)) for id in range(num_clients)]
 
 for i in range(num_byzantine):
     clients[i] = init_attacker(options.attack, {"id": str(i)} | options.attack_kws)
-agg = init_aggregator(options.agg, options.aggregator_kws)
+agg = get_aggregator(options.agg, options.aggregator_kws, bucketing=options.bucketing)
 world_size = 0
 
 server_kws = {
