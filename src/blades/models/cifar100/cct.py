@@ -10,7 +10,3 @@ class CCTNet100(nn.Module):
 
     def forward(self, x):
         return self.model(x)
-
-
-def create_model():
-    return CCTNet100(), nn.modules.loss.CrossEntropyLoss()

@@ -1,11 +1,12 @@
 
 dataset: cifar10
+model:
 non_iid: False
 alpha: 0.1
 num_clients: 40
 num_byzantine: 5
 #trusted_id: 49
-
+client_momentum: 0.99
 
 attack: ALIE
 attack_kws: {"num_clients": 40, "num_byzantine": 5}
@@ -19,13 +20,13 @@ algorithm: fedsgd
 
 local_round: 1
 global_round: 1000
-serv_momentum: 0.9
+serv_momentum: 0.0
 batch_size: 128
 test_batch_size: 128
 validate_interval: 100
 
 
-bucketing: 5
+bucketing: 0
 #Ray related configurations.
 
 # If you try to debug the code, use `local_mode:True`

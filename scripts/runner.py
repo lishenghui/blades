@@ -38,6 +38,7 @@ cache_name = (
     + f"_{str(options.num_clients)}_{str(options.seed)}"
     + ".obj"
 )
+
 if options.dataset == "cifar10":
     dataset = CIFAR10(
         data_root=data_root,
@@ -64,10 +65,17 @@ local_opt_cls = torch.optim.SGD
 local_opt_kws = {"lr": 1.0, "momentum": 0, "dampening": 0}
 dataset = CIFAR10(train_bs=64, num_clients=num_clients, seed=0)
 
-clients = [BladesClient(id=str(id)) for id in range(num_clients)]
+clients = [
+    BladesClient(id=str(id), momentum=options.client_momentum)
+    for id in range(num_clients)
+]
 
 for i in range(num_byzantine):
-    clients[i] = init_attacker(options.attack, {"id": str(i)} | options.attack_kws)
+    clients[i] = init_attacker(
+        options.attack,
+        {"id": str(i), "momentum": options.client_momentum} | options.attack_kws,
+    )
+
 agg = get_aggregator(options.agg, options.aggregator_kws, bucketing=options.bucketing)
 world_size = 0
 
