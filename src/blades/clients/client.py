@@ -186,6 +186,7 @@ class BladesClient(object):
             data, target = self.on_train_batch_begin(data=data, target=target)
             opt.zero_grad()
 
+            # breakpoint()
             output = self.global_model(data)
             # Clamp loss value to avoid possible 'Nan' gradient with some
             # attack types.
@@ -250,6 +251,7 @@ class BladesClient(object):
         with torch.no_grad():
             for (data, target) in dataloader:
                 data, target = data.to(self.device), target.to(self.device)
+                # breakpoint()
                 output = self.global_model.to(self.device)(data)
                 r["Loss"] += self.loss_func(output, target).item() * len(target)
                 r["Length"] += len(target)

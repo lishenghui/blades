@@ -48,7 +48,8 @@ class BladesServer(object):
         else:
             self.shared_memory = shared_memory
         self.clients = clients
-        self.model = model().to("cuda")
+        self.model = model.to("cuda")
+        # self.model = model().to("cuda")
         self.optimizer = opt_cls(self.model.parameters(), **opt_kws)
         self.aggregator = aggregator
         self.device = device
@@ -100,6 +101,7 @@ class BladesServer(object):
             self.gather_list = self.clients
             # self.gather_list = self.shared_memory
 
+        # breakpoint()
         update = self.aggregator(self.gather_list)
         self.zero_grad()
         beg = 0

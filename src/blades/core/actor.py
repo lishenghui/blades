@@ -6,6 +6,7 @@ import torch.nn as nn
 from blades.clients.client import BladesClient
 from blades.datasets.fldataset import FLDataset
 from blades.utils.torch_utils import vector_to_parameters
+from blades.models import get_model
 
 # from blades.utils.torch_utils import parameters_to_vector, vector_to_parameters
 from torch.optim import Optimizer
@@ -24,7 +25,8 @@ class Actor(object):
     def __init__(
         self,
         dataset: FLDataset,
-        model: nn.Module,
+        # model: nn.Module,
+        model_name: str,
         opt_cls: T,
         opt_kws: Dict,
         mem_meta_info: tuple = None,
@@ -44,7 +46,7 @@ class Actor(object):
         """
         set_random_seed(seed)
         self.dataset = dataset
-        self.model = model().to("cuda")
+        self.model = get_model(model_name).to("cuda")
         self.buffer_blocks = buffer_blocks
         self.optimizer = opt_cls(self.model.parameters(), **opt_kws)
         if mem_meta_info:

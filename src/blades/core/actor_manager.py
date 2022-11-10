@@ -3,7 +3,8 @@ from blades.core.actor import Actor
 from ray.util import ActorPool
 import torch
 from torch.multiprocessing.reductions import reduce_tensor
-from torch.nn import Module
+
+# from torch.nn import Module
 from blades.datasets.fldataset import FLDataset
 from blades.utils.torch_utils import get_num_params
 from blades.utils.collective import setup_dist
@@ -14,6 +15,7 @@ from typing import Dict, List, TypeVar
 from blades.utils.torch_utils import parameters_to_vector
 from torch.optim import Optimizer
 import logging
+from blades.models import get_model
 import numpy as np
 from blades.utils.utils import set_random_seed
 
@@ -28,7 +30,7 @@ class ActorManager:
     def __init__(
         self,
         dataset: FLDataset,
-        global_model: Module,
+        model: str,
         opt_cls: T,
         opt_kws: Dict,
         num_actors: int,
@@ -61,7 +63,7 @@ class ActorManager:
         self.num_selected_clients = num_selected_clients
 
         set_random_seed()
-        model_tmp = global_model().to("cuda")
+        model_tmp = get_model(model).to("cuda")
         self.num_params = get_num_params(model_tmp)
         block_groups = np.array_split(range(num_buffers), num_actors)
         self.shared_memory = torch.zeros((num_buffers, self.num_params)).to(self.device)
@@ -72,6 +74,7 @@ class ActorManager:
 
         if server_cls:
             server_kws |= {
+                "model": model_tmp,
                 "shared_memory": self.shared_memory,
                 # "mem_meta_info": self.mem_meta_info,
                 "device": self.device,
@@ -81,7 +84,7 @@ class ActorManager:
         self.ray_actors = [
             Actor.options(num_gpus=gpu_per_actor).remote(
                 dataset,
-                global_model,
+                model,
                 opt_cls,
                 opt_kws,
                 self.mem_meta_info,
