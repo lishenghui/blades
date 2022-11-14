@@ -19,6 +19,8 @@ from blades.models import get_model
 import numpy as np
 from blades.utils.utils import set_random_seed
 
+# import torch
+
 T = TypeVar("T", bound="Optimizer")
 T_SER = TypeVar("T_SER", bound="BladesServer")
 
@@ -71,6 +73,7 @@ class ActorManager:
             0,
         ] = parameters_to_vector(model_tmp.parameters()).detach()
         self.mem_meta_info = reduce_tensor(self.shared_memory)
+        print("ray.get_gpu_ids(): {}".format(ray.get_gpu_ids()))
 
         if server_cls:
             server_kws |= {

@@ -6,12 +6,15 @@ from blades.utils.torch_utils import get_num_params
 from blades.utils.torch_utils import parameters_to_vector
 from blades.utils.collective import setup_dist
 from torch.optim import Optimizer
-
+from torch.multiprocessing.reductions import reduce_tensor
+import ray
+from blades.models import get_model
+import torch.distributed as dist
 
 T = TypeVar("T", bound="Optimizer")
 
 
-# @ray.remote
+@ray.remote
 class BladesServer(object):
     """_summary_
 
@@ -27,9 +30,9 @@ class BladesServer(object):
         opt_kws: Dict = None,
         aggregator: Callable[[list], torch.Tensor] = None,
         world_size: int = 0,
-        device: str = "cpu",
-        mem_meta_info: torch.Tensor = None,
-        shared_memory: torch.Tensor = None,
+        device: str = "cuda",
+        # mem_meta_info: torch.Tensor = None,
+        # shared_memory: torch.Tensor = None,
     ):
         """_summary_
 
@@ -43,22 +46,73 @@ class BladesServer(object):
              "cpu".
             mem_meta_info (torch.Tensor, optional): _description_. Defaults to None.
         """
-        if mem_meta_info:
-            self.shared_memory = mem_meta_info[0](*mem_meta_info[1])
-        else:
-            self.shared_memory = shared_memory
+        # if mem_meta_info:
+        #     self.shared_memory = mem_meta_info[0](*mem_meta_info[1])
+        # else:
+        #     self.shared_memory = shared_memory
         self.clients = clients
-        self.model = model.to("cuda")
+        self.device = device
+        self.model = get_model(model).to(self.device)
+        self.num_params = get_num_params(self.model)
         # self.model = model().to("cuda")
         self.optimizer = opt_cls(self.model.parameters(), **opt_kws)
         self.aggregator = aggregator
-        self.device = device
+
         # Enable `torch.distributed` if GPU is available
-        if world_size > 0:
-            num_params = get_num_params(model)
-            self.group = setup_dist(world_size, 0)
-            self.gather_list = [torch.zeros(num_params).to(self.device)] * world_size
-            self.broad_cast_buffer = torch.zeros(num_params).to(self.device)
+        # if world_size > 0:
+        #     num_params = get_num_params(model)
+        #     self.group = setup_dist(world_size, 0)
+        #     self.gather_list = [torch.zeros(num_params).to(self.device)] * world_size
+        #     self.broad_cast_buffer = torch.zeros(num_params).to(self.device)
+
+    def get_gpu_id(self):
+        return ray.get_gpu_ids()[0]
+
+    def local_rank(self):
+        return self._lcoal_rank
+
+    def global_rank(self):
+        return self._global_rank
+
+    def set_ranks(self, global_rank, local_rank):
+        self._global_rank = global_rank
+        self._lcoal_rank = local_rank
+
+    def create_shared_memory(self, length):
+        self.shared_memory = torch.zeros((length, self.num_params)).to(self.device)
+        self.shared_memory[
+            0,
+        ] = parameters_to_vector(self.model.parameters()).detach()
+        self.mem_meta_info = reduce_tensor(self.shared_memory)
+        return self.get_gpu_id(), self.mem_meta_info
+
+    def gather(self):
+        # dst = 0
+        # if self.global_rank() == 0:
+        dist.gather(tensor=self.shared_memory, gather_list=self.gather_list)
+        updates = torch.cat(self.gather_list)
+        print(updates)
+        breakpoint()
+        # return updates
+        # elif self.local_rank() == 0:
+        #     dist.gather(tensor=self.shared_memory, dst=dst)
+        # else:
+        #     return
+
+    def init_dist(self, mem_dic, world_size, ser_gpu_id):
+        mem_meta_info = mem_dic[self.get_gpu_id()]
+        rank = self._global_rank
+        if self.local_rank() == 0:
+            self.group = setup_dist(world_size, rank)
+        else:
+            self.shared_memory = mem_meta_info[0](*mem_meta_info[1])
+
+        # if world_size > 0:
+        #     self.group = setup_dist(world_size, rank)
+        #     if rank == 0:
+        #         self.gather_list = [
+        #             torch.zeros_like(self.shared_memory) for _ in range(world_size)
+        #         ]
 
     def get_clients(self):
         return self.clients

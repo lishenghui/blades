@@ -8,6 +8,7 @@ from blades.attackers import init_attacker
 from args import options
 from simulator import Simulator
 from blades.datasets import CIFAR10
+import time
 
 # from blades.models import CCTNet10
 from blades.clients import BladesClient
@@ -89,13 +90,15 @@ server_kws = {
     "opt_kws": {"lr": 0.1, "momentum": 0.9, "dampening": 0},
     "aggregator": agg,
 }
+
+t_s = time.time()
 runner = Simulator(
     dataset=dataset,
     clients=clients,
     num_gpus=2,
     num_gpus_mgr=0.2,
-    num_actors_mgr=5,
-    num_gpus_actor=0.15,
+    num_actors_mgr=2,
+    num_gpus_actor=0.38,
     local_opt_cls=local_opt_cls,
     local_opt_kws=local_opt_kws,
     global_model=options.model,
@@ -103,7 +106,7 @@ runner = Simulator(
     server_kws=server_kws,
     log_path=options.log_dir,
 )
-
+print(f"init time: {time.time() - t_s}")
 runner.run(
     validate_interval=options.validate_interval, global_rounds=options.global_round
 )

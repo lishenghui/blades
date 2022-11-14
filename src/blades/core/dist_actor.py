@@ -25,8 +25,8 @@ from torch.multiprocessing.reductions import reduce_tensor
 T = TypeVar("T", bound="Optimizer")
 
 
-@ray.remote
-class Actor(object):
+# @ray.remote
+class DistActor(object):
     """Ray Actor."""
 
     def __init__(
@@ -72,18 +72,12 @@ class Actor(object):
     def get_gpu_id(self):
         return ray.get_gpu_ids()[0]
 
-    def set_ranks(self, local_rank):
-        # if local_rank == 0:
-        #     self._global_rank = gpu_id
-        # else:
-        #     self._global_rank = None
-        self._local_rank = local_rank
-
-    def set_local_rank(self, local_rank):
-        self._local_rank = local_rank
+    def set_ranks(self, global_rank, local_rank):
+        self._global_rank = global_rank
+        self._lcoal_rank = local_rank
 
     def local_rank(self):
-        return self._local_rank
+        return self._lcoal_rank
 
     def global_rank(self):
         return self._global_rank
@@ -118,11 +112,11 @@ class Actor(object):
         else:
             return None, None
 
-    def init_dist(self, mem_dic, world_size, dst_rank):
+    def init_dist(self, mem_dic, world_size):
         mem_meta_info = mem_dic[self.get_gpu_id()]
-        self.dst_rank = dst_rank
+        rank = self._global_rank
         if self.local_rank() == 0:
-            self.group = setup_dist(world_size, self.get_gpu_id())
+            self.group = setup_dist(world_size, rank)
         else:
             self.shared_memory = mem_meta_info[0](*mem_meta_info[1])
         # if world_size > 0:
@@ -223,19 +217,18 @@ class Actor(object):
     #             ]
 
     def gather(self):
-        # dst = 0
+        dst = 0
         # if self.global_rank() == 0:
         #     dist.gather(tensor=self.shared_memory, gather_list=self.gather_list)
         #     updates = torch.cat(self.gather_list)
         #     return updates
         if self.local_rank() == 0:
-            print(self._global_rank)
-            dist.gather(tensor=self.shared_memory, dst=self.dst_rank)
+            dist.gather(tensor=self.shared_memory, dst=dst)
         else:
             return
 
 
-def assign_rank(server, actors: List[Actor]):
+def assign_rank(server, actors: List):
     ser_gpu_id = ray.get(server.get_gpu_id.remote())
     ray.get(server.set_ranks.remote(ser_gpu_id, 0))
 
@@ -251,7 +244,7 @@ def assign_rank(server, actors: List[Actor]):
     for g_id, actor in zip(gpu_ids, actors):
         if g_id not in gpu_mapping:
             gpu_mapping[g_id] = 0
-        ret = actor.set_local_rank.remote(gpu_mapping[g_id])
+        ret = actor.set_ranks.remote(g_id, gpu_mapping[g_id])
         local_ranks.append(gpu_mapping[g_id])
         rets.append(ret)
         gpu_mapping[g_id] += 1
@@ -271,11 +264,6 @@ def assign_rank(server, actors: List[Actor]):
         )
         if x is not None
     )
-    ray.get(
-        [
-            actor.init_dist.remote(mem_meta_info, world_size, ser_gpu_id)
-            for actor in actors
-        ]
-    )
+    ray.get([actor.init_dist.remote(mem_meta_info, world_size) for actor in actors])
     # main_group = setup_dist(world_size, 3)
     print(gpu_mapping)
