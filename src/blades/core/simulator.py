@@ -1,6 +1,6 @@
 import logging
 import sys
-from typing import Dict, List, TypeVar, Optional
+from typing import Dict, List, Optional
 
 import numpy as np
 import ray
@@ -17,8 +17,8 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 logger.addHandler(logging.StreamHandler(sys.stdout))
 
-T = TypeVar("T", bound="Optimizer")
-T_SER = TypeVar("T_SER", bound="BladesServer")
+# T = TypeVar("T", bound="Optimizer")
+# T_SER = TypeVar("T_SER", bound="BladesServer")
 
 
 class Simulator(object):
@@ -30,10 +30,10 @@ class Simulator(object):
         num_gpus_mgr: float = 0.2,
         num_actors: int = 5,
         num_gpus_actor: float = 0.15,
-        local_opt_cls: T = None,
+        local_opt_cls=None,
         local_opt_kws: Dict = None,
         global_model: torch.nn.Module = None,
-        server_cls: T_SER = None,
+        server_cls=None,
         server_kws: Dict = None,
         num_gpus_server: Optional[float] = 0.1,
         device: str = "cuda",

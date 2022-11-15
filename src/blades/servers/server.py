@@ -1,4 +1,4 @@
-from typing import Callable, Dict, TypeVar
+from typing import Callable, Dict
 
 import ray
 import torch
@@ -12,7 +12,7 @@ from blades.utils.torch_utils import get_num_params
 from blades.utils.torch_utils import parameters_to_vector
 from blades.utils.utils import reset_model_weights, set_random_seed
 
-T = TypeVar("T", bound="Optimizer")
+# T = TypeVar("T", bound="Optimizer")
 
 
 @ray.remote
@@ -27,7 +27,7 @@ class BladesServer(object):
         self,
         model: torch.nn.Module,
         clients: BladesClient,
-        opt_cls: T = torch.optim.SGD,
+        opt_cls=torch.optim.SGD,
         opt_kws: Dict = None,
         aggregator: Callable[[list], torch.Tensor] = None,
         world_size: int = 0,

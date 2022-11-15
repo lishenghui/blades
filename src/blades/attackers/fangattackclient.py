@@ -83,8 +83,8 @@ class FangattackAdversary:
             ).T.to(device)
             * max_rand
             + torch.stack(
-            [(deviation > 0).type(torch.FloatTensor)] * min_rand.shape[1]
-        ).T.to(device)
+                [(deviation > 0).type(torch.FloatTensor)] * min_rand.shape[1]
+            ).T.to(device)
             * min_rand
         ).T
 

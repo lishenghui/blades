@@ -48,7 +48,7 @@ def bucketing_wrapper(aggregator, bucketing=5):
 
         reshuffled_inputs = []
         for t in range(T):
-            indices_slice = indices[t * bucketing: (t + 1) * bucketing]
+            indices_slice = indices[t * bucketing : (t + 1) * bucketing]
             g_bar = sum(inputs[i] for i in indices_slice) / len(indices_slice)
             reshuffled_inputs.append(g_bar)
         return aggregator(reshuffled_inputs)

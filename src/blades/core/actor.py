@@ -1,7 +1,7 @@
 import copy
 import random
 from collections import defaultdict
-from typing import Dict, List, TypeVar, Optional
+from typing import Dict, List, Optional
 
 import numpy as np
 import ray
@@ -22,7 +22,7 @@ from blades.utils.utils import set_random_seed
 # from blades.utils.torch_utils import parameters_to_vector, vector_to_parameters
 
 # from .dist_actor import BaseActor
-T = TypeVar("T", bound="Optimizer")
+# T = TypeVar("T", bound="Optimizer")
 
 
 @ray.remote
@@ -35,7 +35,7 @@ class Actor(object):
         dataset: FLDataset,
         # model: nn.Module,
         model_name: str,
-        opt_cls: T,
+        opt_cls,
         opt_kws: Dict,
         *,
         clients: List = None,
@@ -195,7 +195,7 @@ class Actor(object):
             )
             self.shared_memory[
                 self.base_mem + client.get_local_rank()
-                ] = client.get_update()
+            ] = client.get_update()
 
         # if self.local_rank() == 0:
         #     breakpoint()

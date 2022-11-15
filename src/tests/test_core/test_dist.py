@@ -4,6 +4,7 @@ import sys
 import numpy as np
 import ray
 import torch
+
 # import time
 from tqdm import trange
 
@@ -14,6 +15,7 @@ from blades.datasets import MNIST, CIFAR10
 from blades.models import MLP, CCTNet10
 from blades.servers import BladesServer
 from blades.utils.utils import set_random_seed
+
 # import os
 from blades.utils.utils import (
     top1_accuracy,
@@ -109,6 +111,7 @@ def test_actormanager():
                 ret_test = ray.get(ret_actor_mgr)
                 test_results = log_validate(ret_test)
                 t.set_postfix(loss=test_results[0], top1=test_results[1])
+
 
 # def test_actormanager_cross_GPU():
 #     device = "cuda"

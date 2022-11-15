@@ -215,8 +215,8 @@ class FLDataset(ABC):
 
                 continue
             else:
-                X = data[i * batch_size: (i + 1) * batch_size, :]
-                y = labels[i * batch_size: (i + 1) * batch_size]
+                X = data[i * batch_size : (i + 1) * batch_size, :]
+                y = labels[i * batch_size : (i + 1) * batch_size]
                 i += 1
                 X = torch.Tensor(X)
                 if self.train_transform:
