@@ -1,15 +1,12 @@
 import logging
+import random
 from collections import defaultdict
 from typing import Optional, Generator, Dict
 
+import numpy as np
 import torch
 import torch.nn as nn
-
 from torch.utils.data import DataLoader
-import numpy as np
-import random
-
-# from blades.utils.torch_utils import parameters_to_vector
 
 
 class BladesClient(object):

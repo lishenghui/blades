@@ -1,18 +1,18 @@
 import logging
 import os
 import pickle
+import random
 from abc import ABC
 from functools import partial
 from typing import Optional, Generator
 
 import numpy as np
+import ray
 import torch
 from sklearn.utils import shuffle
 
 from blades.utils.utils import set_random_seed
 from .customdataset import CustomTensorDataset
-import ray
-import random
 
 # import numpy as np
 
@@ -215,8 +215,8 @@ class FLDataset(ABC):
 
                 continue
             else:
-                X = data[i * batch_size : (i + 1) * batch_size, :]
-                y = labels[i * batch_size : (i + 1) * batch_size]
+                X = data[i * batch_size: (i + 1) * batch_size, :]
+                y = labels[i * batch_size: (i + 1) * batch_size]
                 i += 1
                 X = torch.Tensor(X)
                 if self.train_transform:

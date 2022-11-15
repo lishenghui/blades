@@ -1,3 +1,11 @@
+import importlib
+from typing import Dict, Optional
+from typing import List, Union
+
+import numpy as np
+import torch
+
+from blades.clients.client import BladesClient
 from .autogm import Autogm
 from .clippedclustering import Clippedclustering
 from .clustering import Clustering
@@ -5,17 +13,10 @@ from .dnc import Dnc
 from .fltrust import Fltrust
 from .geomed import Geomed
 from .mean import Mean
-import importlib
-from typing import Dict, Optional
 from .median import Median
 from .multikrum import Multikrum
 from .signguard import Signguard
 from .trimmedmean import Trimmedmean
-import numpy as np
-from typing import List, Union
-
-import torch
-from blades.clients.client import BladesClient
 
 
 def _get_updates(inputs: Union[List[BladesClient], List[torch.Tensor], torch.Tensor]):
@@ -47,7 +48,7 @@ def bucketing_wrapper(aggregator, bucketing=5):
 
         reshuffled_inputs = []
         for t in range(T):
-            indices_slice = indices[t * bucketing : (t + 1) * bucketing]
+            indices_slice = indices[t * bucketing: (t + 1) * bucketing]
             g_bar = sum(inputs[i] for i in indices_slice) / len(indices_slice)
             reshuffled_inputs.append(g_bar)
         return aggregator(reshuffled_inputs)

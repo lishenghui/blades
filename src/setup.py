@@ -5,7 +5,7 @@ requirements = [
     "torchvision>=0.11.3",
     "numpy>=1.19.4",
     "scipy>=1.5.4",
-    "ray>=1.0.0",
+    "ray",
     "sklearn>=0.0",
     "scikit-learn>=1.0.2",
     "matplotlib>=3.4.1",

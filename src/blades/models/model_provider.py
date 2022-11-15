@@ -1,6 +1,6 @@
 from pytorchcv.model_provider import get_model as ptcv_get_model
-from .cifar10.cct import CCTNet10
 
+from .cifar10.cct import CCTNet10
 # import torch
 from .resnet_cifar import resnet20
 

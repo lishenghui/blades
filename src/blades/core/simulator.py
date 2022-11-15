@@ -1,25 +1,17 @@
-# from blades.core import ActorManager
-import torch
-import ray
-from blades.servers import BladesServer
-from blades.clients import BladesClient
 import logging
 import sys
-from blades.datasets.fldataset import FLDataset
 from typing import Dict, List, TypeVar, Optional
-from torch.optim import Optimizer
-import wandb
-from blades.core.actor import Actor, assign_rank
 
-# from blades.utils.torch_utils import parameters_to_vector
-from tqdm import trange
 import numpy as np
+import ray
+import torch
+import wandb
+from tqdm import trange
 
-from blades.utils.utils import (
-    # initialize_logger,
-    top1_accuracy,
-)
-
+from blades.clients import BladesClient
+from blades.core.actor import Actor, assign_rank
+from blades.datasets.fldataset import FLDataset
+from blades.utils.utils import top1_accuracy
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -114,11 +106,6 @@ class Simulator(object):
     def run(self, validate_interval: int = 100, global_rounds: int = 4000):
         with trange(0, global_rounds + 1) as t:
             for global_rounds in t:
-                # client_groups = np.array_split(self.clients, self.num_gpus)
-                # ret_ids = [
-                #     actor_mgr.train.remote(clients=client_group)
-                #     for (actor_mgr, client_group) in zip(self.act_mgrs, client_groups)
-                # ]
                 ray.get(
                     [
                         actor.broadcast.remote()

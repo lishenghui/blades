@@ -1,26 +1,25 @@
+import copy
+import random
+from collections import defaultdict
 from typing import Dict, List, TypeVar, Optional
 
+import numpy as np
 import ray
 import torch
+import torch.distributed as dist
 import torch.nn as nn
+from torch.multiprocessing.reductions import reduce_tensor
 
 # from blades.clients.client import BladesClient
 from blades.datasets.fldataset import FLDataset
-from blades.utils.torch_utils import vector_to_parameters
 from blades.models import get_model
 from blades.utils.collective import setup_dist
-from collections import defaultdict
-import torch.distributed as dist
-
-# from blades.utils.torch_utils import parameters_to_vector, vector_to_parameters
-from torch.optim import Optimizer
-import copy
 from blades.utils.torch_utils import get_num_params
 from blades.utils.torch_utils import parameters_to_vector
+from blades.utils.torch_utils import vector_to_parameters
 from blades.utils.utils import set_random_seed
-import random
-import numpy as np
-from torch.multiprocessing.reductions import reduce_tensor
+
+# from blades.utils.torch_utils import parameters_to_vector, vector_to_parameters
 
 # from .dist_actor import BaseActor
 T = TypeVar("T", bound="Optimizer")
@@ -196,7 +195,7 @@ class Actor(object):
             )
             self.shared_memory[
                 self.base_mem + client.get_local_rank()
-            ] = client.get_update()
+                ] = client.get_update()
 
         # if self.local_rank() == 0:
         #     breakpoint()

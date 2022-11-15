@@ -42,8 +42,8 @@ class Dnc(_BaseAggregator):
             )
 
             good = s.argsort()[
-                : len(updates) - int(self.fliter_frac * self.num_byzantine)
-            ]
+                   : len(updates) - int(self.fliter_frac * self.num_byzantine)
+                   ]
             benign_ids.extend(good)
 
         benign_ids = list(set(benign_ids))

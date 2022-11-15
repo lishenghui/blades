@@ -1,22 +1,19 @@
+import logging
+from typing import Dict, List, TypeVar
+
+import numpy as np
 import ray
-from blades.core.actor import Actor
-from ray.util import ActorPool
 import torch
+import torch.distributed as dist
+from ray.util import ActorPool
 from torch.multiprocessing.reductions import reduce_tensor
 
-# from torch.nn import Module
-from blades.datasets.fldataset import FLDataset
-from blades.utils.torch_utils import get_num_params
-from blades.utils.collective import setup_dist
-from blades.servers import BladesServer
 from blades.clients import BladesClient
-import torch.distributed as dist
-from typing import Dict, List, TypeVar
-from blades.utils.torch_utils import parameters_to_vector
-from torch.optim import Optimizer
-import logging
+from blades.core.actor import Actor
+from blades.datasets.fldataset import FLDataset
 from blades.models import get_model
-import numpy as np
+from blades.utils.collective import setup_dist
+from blades.utils.torch_utils import get_num_params, parameters_to_vector
 from blades.utils.utils import set_random_seed
 
 # import torch

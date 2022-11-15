@@ -1,26 +1,25 @@
-from blades.core import ActorManager, Actor
-import torch
-from blades.datasets import MNIST, CIFAR10
-import ray
-from blades.servers import BladesServer
-from blades.aggregators import Mean
-from blades.models import MLP, CCTNet10
-from blades.clients import BladesClient
 import logging
 import sys
-from blades.utils.utils import set_random_seed
 
-# from blades.utils.torch_utils import parameters_to_vector
-
+import numpy as np
+import ray
+import torch
 # import time
 from tqdm import trange
-import numpy as np
 
+from blades.aggregators import Mean
+from blades.clients import BladesClient
+from blades.core import ActorManager, Actor
+from blades.datasets import MNIST, CIFAR10
+from blades.models import MLP, CCTNet10
+from blades.servers import BladesServer
+from blades.utils.utils import set_random_seed
 # import os
 from blades.utils.utils import (
     top1_accuracy,
 )
 
+# from blades.utils.torch_utils import parameters_to_vector
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -110,7 +109,6 @@ def test_actormanager():
                 ret_test = ray.get(ret_actor_mgr)
                 test_results = log_validate(ret_test)
                 t.set_postfix(loss=test_results[0], top1=test_results[1])
-
 
 # def test_actormanager_cross_GPU():
 #     device = "cuda"

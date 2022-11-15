@@ -1,15 +1,15 @@
 from typing import Callable, Dict, TypeVar
 
-from blades.clients import BladesClient
+import ray
 import torch
+import torch.distributed as dist
+from torch.multiprocessing.reductions import reduce_tensor
+
+from blades.clients import BladesClient
+from blades.models import get_model
+from blades.utils.collective import setup_dist
 from blades.utils.torch_utils import get_num_params
 from blades.utils.torch_utils import parameters_to_vector
-from blades.utils.collective import setup_dist
-from torch.optim import Optimizer
-from torch.multiprocessing.reductions import reduce_tensor
-import ray
-from blades.models import get_model
-import torch.distributed as dist
 from blades.utils.utils import reset_model_weights, set_random_seed
 
 T = TypeVar("T", bound="Optimizer")
