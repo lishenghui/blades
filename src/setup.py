@@ -13,6 +13,7 @@ requirements = [
     "setuptools~=58.0.4",
     "ruamel.yaml",
     "tqdm",
+    "pytorchcv",
 ]
 setup(
     name="blades",
