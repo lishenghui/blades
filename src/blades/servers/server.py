@@ -10,6 +10,7 @@ from torch.multiprocessing.reductions import reduce_tensor
 import ray
 from blades.models import get_model
 import torch.distributed as dist
+from blades.utils.utils import reset_model_weights, set_random_seed
 
 T = TypeVar("T", bound="Optimizer")
 
@@ -31,6 +32,7 @@ class BladesServer(object):
         aggregator: Callable[[list], torch.Tensor] = None,
         world_size: int = 0,
         device: str = "cuda",
+        random_seed=0,
         # mem_meta_info: torch.Tensor = None,
         # shared_memory: torch.Tensor = None,
     ):
@@ -52,7 +54,10 @@ class BladesServer(object):
         #     self.shared_memory = shared_memory
         self.clients = clients
         self.device = device
+        set_random_seed(random_seed)
         self.model = get_model(model).to(self.device)
+
+        reset_model_weights(self.model)
         self.num_params = get_num_params(self.model)
         # self.model = model().to("cuda")
         self.optimizer = opt_cls(self.model.parameters(), **opt_kws)
@@ -89,30 +94,38 @@ class BladesServer(object):
     def gather(self):
         # dst = 0
         # if self.global_rank() == 0:
-        dist.gather(tensor=self.shared_memory, gather_list=self.gather_list)
-        updates = torch.cat(self.gather_list)
-        print(updates)
-        breakpoint()
+        dist.gather(
+            tensor=self.shared_memory,
+            gather_list=self.gather_list,
+            dst=self.get_gpu_id(),
+        )
+        # self.updates = torch.cat(self.gather_list)
+        # print(updates)
+        # breakpoint()
         # return updates
         # elif self.local_rank() == 0:
         #     dist.gather(tensor=self.shared_memory, dst=dst)
         # else:
         #     return
 
+    def broadcast(self):
+        self.shared_memory[0] = parameters_to_vector(self.model.parameters())
+        if self.world_size > 1:
+            dist.broadcast(tensor=self.shared_memory[0], src=self.get_gpu_id())
+
     def init_dist(self, mem_dic, world_size, ser_gpu_id):
         mem_meta_info = mem_dic[self.get_gpu_id()]
-        rank = self._global_rank
+        self.world_size = world_size
+        # rank = self._global_rank
         if self.local_rank() == 0:
-            self.group = setup_dist(world_size, rank)
+            self.group = setup_dist(world_size, ser_gpu_id)
         else:
             self.shared_memory = mem_meta_info[0](*mem_meta_info[1])
 
-        # if world_size > 0:
-        #     self.group = setup_dist(world_size, rank)
-        #     if rank == 0:
-        #         self.gather_list = [
-        #             torch.zeros_like(self.shared_memory) for _ in range(world_size)
-        #         ]
+        if world_size > 0:
+            self.gather_list = [
+                torch.zeros_like(self.shared_memory) for _ in range(world_size)
+            ]
 
     def get_clients(self):
         return self.clients
@@ -148,15 +161,19 @@ class BladesServer(object):
 
         Args:
             update: The aggregated update.
+        #
         """
-        if update_list is not None:
-            self.gather_list = update_list
-        else:
-            self.gather_list = self.clients
-            # self.gather_list = self.shared_memory
-
+        # if update_list is not None:
+        #     self.gather_list = update_list
+        # else:
+        #     self.gather_list = self.clients
+        # self.gather_list = self.shared_memory
+        updates = torch.cat(self.gather_list)
+        updates = updates[: len(self.clients), :]
+        # print("updates from clients", updates)
+        # updates = torch.cat(self.gather_list)[:len[self.clients],]
+        grad = self.aggregator(updates)
         # breakpoint()
-        update = self.aggregator(self.gather_list)
         self.zero_grad()
         beg = 0
         for group in self.optimizer.param_groups:
@@ -164,7 +181,7 @@ class BladesServer(object):
                 if not p.requires_grad:
                     continue
                 end = beg + len(p.data.view(-1))
-                x = update[beg:end].reshape_as(p.data)
+                x = grad[beg:end].reshape_as(p.data)
                 p.grad = -x.clone().detach().to(p.device)
                 beg = end
         self.optimizer.step()
@@ -172,4 +189,5 @@ class BladesServer(object):
         self.shared_memory[
             0,
         ] = model_vec
+        # print("new model", model_vec)
         return True

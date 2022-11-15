@@ -53,6 +53,12 @@ class BladesClient(object):
         # set_random_seed(seed)
         self.random_states = {}
 
+    def set_local_rank(self, rank: int):
+        self._local_rank = rank
+
+    def get_local_rank(self):
+        return self._local_rank
+
     def set_id(self, id: str) -> None:
         """Sets the unique id of the client.
 
@@ -179,6 +185,7 @@ class BladesClient(object):
         """
         torch.use_deterministic_algorithms(True)
         self._save_para(self.global_model)
+
         self.global_model.train()
         for i in range(num_batches):
             data, target = next(train_set)
@@ -186,7 +193,8 @@ class BladesClient(object):
             data, target = self.on_train_batch_begin(data=data, target=target)
             opt.zero_grad()
 
-            # breakpoint()
+            # if self.id() == "0":
+            #     print("model from server", self._get_para(False))
             output = self.global_model(data)
             # Clamp loss value to avoid possible 'Nan' gradient with some
             # attack types.
@@ -197,7 +205,6 @@ class BladesClient(object):
             opt.step()
 
         update = self._get_para(current=True) - self._get_para(current=False)
-
         self.update_buffer = torch.clone(update).detach()
         if self.momentum > 0.0:
             if self.momentum_buff is None:

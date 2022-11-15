@@ -73,7 +73,7 @@ class ActorManager:
             0,
         ] = parameters_to_vector(model_tmp.parameters()).detach()
         self.mem_meta_info = reduce_tensor(self.shared_memory)
-        print("ray.get_gpu_ids(): {}".format(ray.get_gpu_ids()))
+        # print("ray.get_gpu_ids(): {}".format(ray.get_gpu_ids()))
 
         if server_cls:
             server_kws |= {

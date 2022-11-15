@@ -6,7 +6,7 @@ import torch
 from blades.aggregators import get_aggregator
 from blades.attackers import init_attacker
 from args import options
-from simulator import Simulator
+from blades.core.simulator import Simulator
 from blades.datasets import CIFAR10
 import time
 
@@ -97,8 +97,8 @@ runner = Simulator(
     clients=clients,
     num_gpus=2,
     num_gpus_mgr=0.2,
-    num_actors_mgr=2,
-    num_gpus_actor=0.38,
+    num_actors=10,
+    num_gpus_actor=0.25,
     local_opt_cls=local_opt_cls,
     local_opt_kws=local_opt_kws,
     global_model=options.model,

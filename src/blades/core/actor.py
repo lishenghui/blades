@@ -22,10 +22,12 @@ import random
 import numpy as np
 from torch.multiprocessing.reductions import reduce_tensor
 
+# from .dist_actor import BaseActor
 T = TypeVar("T", bound="Optimizer")
 
 
 @ray.remote
+# class Actor(BaseActor):
 class Actor(object):
     """Ray Actor."""
 
@@ -53,6 +55,8 @@ class Actor(object):
             lr (float): _description_
         #
         """
+        # super(Actor, self).__init__()
+
         self.device = "cuda"
         set_random_seed(seed)
         self.dataset = dataset
@@ -61,6 +65,12 @@ class Actor(object):
         self.optimizer = opt_cls(self.model.parameters(), **opt_kws)
         if clients is not None:
             self.clients = clients
+
+        client_rank = 0
+        for client in self.clients:
+            client.set_local_rank(client_rank)
+            client_rank += 1
+
         # if mem_meta_info:
         # self.shared_memory = mem_meta_info[0](*mem_meta_info[1])
         self.random_states = {}
@@ -120,7 +130,12 @@ class Actor(object):
 
     def init_dist(self, mem_dic, world_size, dst_rank):
         mem_meta_info = mem_dic[self.get_gpu_id()]
+        self.world_size = world_size
         self.dst_rank = dst_rank
+        if self.dst_rank == self.get_gpu_id():
+            self.base_mem = (self.local_rank() - 1) * len(self.clients)
+        else:
+            self.base_mem = self.local_rank() * len(self.clients)
         if self.local_rank() == 0:
             self.group = setup_dist(world_size, self.get_gpu_id())
         else:
@@ -179,28 +194,33 @@ class Actor(object):
                 num_batches=num_rounds,
                 global_state=self.model.state_dict(),
             )
+            self.shared_memory[
+                self.base_mem + client.get_local_rank()
+            ] = client.get_update()
 
-        update = torch.stack(list(map(lambda w: w.get_update(), clients)))
-        self.shared_memory[
-            self.local_rank() : self.local_rank() + len(self.clients),
-        ] = update
+        # if self.local_rank() == 0:
+        #     breakpoint()
+        # update = torch.stack(list(map(lambda w: w.get_update(), clients)))
+
+        # breakpoint()
+        # self.shared_memory[
+        #     base_mem : base_mem + len(self.clients),
+        # ] = update
         # self.restore_random_state()
+
         return clients
 
     def evaluate(
         self,
-        clients,
-        global_model: torch.nn.Module = None,
         round_number: int = None,
         batch_size: int = 128,
         metrics=None,
     ):
         update = []
-        if not global_model:
-            vector_to_parameters(self.shared_memory[0], self.model.parameters())
-
+        vector_to_parameters(self.shared_memory[0], self.model.parameters())
+        # breakpoint()
         self.model.eval()
-        for client in clients:
+        for client in self.clients:
             client.set_global_model_ref(self.model)
             data = self.dataset.get_all_test_data(client.id())
             result = client.evaluate(
@@ -229,10 +249,13 @@ class Actor(object):
         #     updates = torch.cat(self.gather_list)
         #     return updates
         if self.local_rank() == 0:
-            print(self._global_rank)
             dist.gather(tensor=self.shared_memory, dst=self.dst_rank)
         else:
             return
+
+    def broadcast(self):
+        if self.local_rank() == 0 and self.world_size > 1:
+            dist.broadcast(tensor=self.shared_memory[0], src=self.dst_rank)
 
 
 def assign_rank(server, actors: List[Actor]):
@@ -278,4 +301,3 @@ def assign_rank(server, actors: List[Actor]):
         ]
     )
     # main_group = setup_dist(world_size, 3)
-    print(gpu_mapping)

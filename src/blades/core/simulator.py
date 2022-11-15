@@ -15,10 +15,10 @@ from blades.core.actor import Actor, assign_rank
 from tqdm import trange
 import numpy as np
 
-# from blades.utils.utils import (
-#     initialize_logger,
-#     top1_accuracy,
-# )
+from blades.utils.utils import (
+    # initialize_logger,
+    top1_accuracy,
+)
 
 
 logger = logging.getLogger(__name__)
@@ -36,14 +36,14 @@ class Simulator(object):
         clients: List[BladesClient],
         num_gpus: int = 0,
         num_gpus_mgr: float = 0.2,
-        num_actors_mgr: int = 5,
+        num_actors: int = 5,
         num_gpus_actor: float = 0.15,
         local_opt_cls: T = None,
         local_opt_kws: Dict = None,
         global_model: torch.nn.Module = None,
         server_cls: T_SER = None,
         server_kws: Dict = None,
-        num_gpus_server: Optional[float] = 0.2,
+        num_gpus_server: Optional[float] = 0.1,
         device: str = "cuda",
         log_path: str = "./outputs",
     ) -> None:
@@ -52,7 +52,7 @@ class Simulator(object):
         self.num_gpus = num_gpus
         self.clients = clients
         # num_clients = len(clients)
-        num_actors = 10
+        # num_actors = 2
         # idx_groups = np.array_split(range(num_clients), num_actors)
         client_groups = np.array_split(self.clients, num_actors)
         for i in range(1):
@@ -80,6 +80,7 @@ class Simulator(object):
 
         server_kws |= {
             "model": global_model,
+            "clients": self.clients,
             # "shared_memory": self.shared_memory,
             # "mem_meta_info": self.mem_meta_info,
             "device": "cuda",
@@ -87,6 +88,7 @@ class Simulator(object):
         self.server = server_cls.options(num_gpus=num_gpus_server).remote(**server_kws)
 
         assign_rank(self.server, self.ray_actors)
+        # print("finished assign rank")
         #     actor_mgr = ActorManager.options(num_gpus=num_gpus_mgr).remote(
         #         dataset,
         #         global_model,
@@ -117,30 +119,38 @@ class Simulator(object):
                 #     actor_mgr.train.remote(clients=client_group)
                 #     for (actor_mgr, client_group) in zip(self.act_mgrs, client_groups)
                 # ]
-                ret_ids = [actor.local_train.remote() for actor in self.ray_actors]
-                ray.get(ret_ids)
+                ray.get(
+                    [
+                        actor.broadcast.remote()
+                        for actor in self.ray_actors + [self.server]
+                    ]
+                )
+                ray.get([actor.local_train.remote() for actor in self.ray_actors])
                 ray.get(
                     [actor.gather.remote() for actor in self.ray_actors + [self.server]]
                 )
-                # if global_rounds % validate_interval == 0 and global_rounds > 0:
-                #     ray.get([mgr.broadcast.remote() for mgr in self.act_mgrs])
-                #     ret_ids = [
-                #         actor_mgr.evaluate.remote(
-                #             clients=client_group,
-                #             round_number=global_rounds,
-                #             metrics={"top1": top1_accuracy},
-                #         )
-                #         for (actor_mgr, client_group) in zip(
-                #             self.act_mgrs, client_groups
-                #         )
-                #     ]
+                ray.get(self.server.global_update.remote())
 
-                #     results = ray.get(ret_ids)
-                #     results = [item for sublist in results for item in sublist]
-                #     test_results = self.log_validate(results)
+                if global_rounds % validate_interval == 0 and global_rounds > 0:
+                    ray.get(
+                        [
+                            actor.broadcast.remote()
+                            for actor in self.ray_actors + [self.server]
+                        ]
+                    )
+                    ret_ids = [
+                        actor.evaluate.remote(
+                            round_number=global_rounds,
+                            metrics={"top1": top1_accuracy},
+                        )
+                        for actor in self.ray_actors
+                    ]
 
-                # t.set_postfix(loss=test_results[0], top1=test_results[1])
-                print("training")
+                    results = ray.get(ret_ids)
+                    results = [item for sublist in results for item in sublist]
+                    test_results = self.log_validate(results)
+
+                    t.set_postfix(loss=test_results[0], top1=test_results[1])
 
     def log_validate(self, metrics):
         top1 = np.average(
@@ -159,5 +169,5 @@ class Simulator(object):
             "Loss": loss,
         }
         wandb.log(r)
-        self.json_logger.info(r)
+        # self.json_logger.info(r)
         return loss, top1

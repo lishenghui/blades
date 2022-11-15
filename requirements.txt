@@ -3,6 +3,7 @@ matplotlib>=3.4.1
 numpy>=1.19.4
 pre-commit
 pytorchcv
+pytorchcv
 ray>=1.0.0
 requests>=2.27.1
 ruamel.yaml>=0.17.21
