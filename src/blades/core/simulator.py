@@ -37,7 +37,6 @@ class Simulator(object):
         server_cls=None,
         server_kws: Dict = None,
         num_gpus_server: Optional[float] = 0.1,
-        device: str = "cuda",
         log_path: str = "./outputs",
     ) -> None:
 
@@ -129,5 +128,4 @@ class Simulator(object):
             "Loss": loss,
         }
         wandb.log(r)
-        # self.json_logger.info(r)
         return loss, top1

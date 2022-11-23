@@ -40,6 +40,9 @@ class Communicator(object):
             rank = gpu_ids[0]
         self._global_rank = rank
 
+    def save_update(self, rank, update_vec):
+        self.shared_memory[self.get_local_rank() + rank] = update_vec
+
     def get_global_rank(self):
         if self._global_rank is None:
             warnings.warn("`global_rank` is `None` so far, have you explicitly set?")

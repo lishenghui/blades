@@ -138,9 +138,7 @@ class Worker(Communicator):
                 num_batches=num_rounds,
                 global_state=self.model.state_dict(),
             )
-            self.shared_memory[
-                self.get_local_rank() + client.get_local_rank()
-            ] = client.get_update()
+            self.save_update(client.get_local_rank(), client.get_update())
 
         return clients
 
