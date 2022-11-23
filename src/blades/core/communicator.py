@@ -95,7 +95,6 @@ class Communicator(object):
             dist.broadcast(tensor=self.shared_memory[0], src=self._dis_rank)
 
 
-
 def _assign_global_ranks(server, actors: List[Communicator]):
     ser_submitted = server.set_global_rank.remote(0)
 
