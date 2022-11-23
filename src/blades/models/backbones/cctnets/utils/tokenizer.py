@@ -114,7 +114,7 @@ class TextTokenizer(nn.Module):
         new_mask = mask.unsqueeze(1).float()
         cnn_weight = torch.ones(
             (1, 1, self.conv_layers[0].kernel_size[0]),
-            device=mask.device,
+            device=mask._device,
             dtype=torch.float,
         )
         new_mask = F.conv1d(

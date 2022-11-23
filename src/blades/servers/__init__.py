@@ -1,4 +1,4 @@
-from .server import BladesServer
+from core.server import BladesServer
 
 # from .rsa_server import RSAServer
 

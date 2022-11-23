@@ -4,7 +4,7 @@ import numpy as np
 import torch
 
 from blades.clients import BladesClient
-from .server import BladesServer
+from core.server import BladesServer
 
 i = 1
 

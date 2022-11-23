@@ -6,18 +6,15 @@ from typing import Dict, List, Optional
 import numpy as np
 import ray
 import torch
-import torch.distributed as dist
 import torch.nn as nn
-from torch.multiprocessing.reductions import reduce_tensor
 
-# from blades.clients.client import BladesClient
 from blades.datasets.fldataset import FLDataset
 from blades.models import get_model
-from blades.utils.collective import setup_dist
 from blades.utils.torch_utils import get_num_params
-from blades.utils.torch_utils import parameters_to_vector
 from blades.utils.torch_utils import vector_to_parameters
 from blades.utils.utils import set_random_seed
+from .communicator import Communicator
+
 
 # from blades.utils.torch_utils import parameters_to_vector, vector_to_parameters
 
@@ -26,9 +23,8 @@ from blades.utils.utils import set_random_seed
 
 
 @ray.remote
-# class Actor(BaseActor):
-class Actor(object):
-    """Ray Actor."""
+class Worker(Communicator):
+    """Ray Worker."""
 
     def __init__(
         self,
@@ -54,13 +50,12 @@ class Actor(object):
             lr (float): _description_
         #
         """
-        # super(Actor, self).__init__()
-
-        self.device = "cuda"
+        # super(Worker, self).__init__()
+        super().__init__()
+        # self.device = "cpu" if ray.get_gpu_ids() == [] else "cuda"
         set_random_seed(seed)
         self.dataset = dataset
-        self.model = get_model(model_name).to(self.device)
-        # self.buffer_blocks = buffer_blocks
+        self.model = get_model(model_name).to(self._device)
         self.optimizer = opt_cls(self.model.parameters(), **opt_kws)
         if clients is not None:
             self.clients = clients
@@ -70,32 +65,14 @@ class Actor(object):
             client.set_local_rank(client_rank)
             client_rank += 1
 
-        # if mem_meta_info:
-        # self.shared_memory = mem_meta_info[0](*mem_meta_info[1])
         self.random_states = {}
-        self.num_params = get_num_params(self.model)
+        self._num_model_params = get_num_params(self.model)
 
     def get_num_clients(self):
         return len(self.clients)
 
-    def get_gpu_id(self):
-        return ray.get_gpu_ids()[0]
-
-    def set_ranks(self, local_rank):
-        # if local_rank == 0:
-        #     self._global_rank = gpu_id
-        # else:
-        #     self._global_rank = None
-        self._local_rank = local_rank
-
-    def set_local_rank(self, local_rank):
-        self._local_rank = local_rank
-
-    def local_rank(self):
-        return self._local_rank
-
-    def global_rank(self):
-        return self._global_rank
+    def get_num_model_params(self):
+        return self._num_model_params
 
     def cache_random_state(self) -> None:
         # This function should be used for reproducibility
@@ -116,35 +93,36 @@ class Actor(object):
     def init(self):
         return True
 
-    def create_shared_memory(self, length):
-        if self.local_rank() == 0:
-            self.shared_memory = torch.zeros((length, self.num_params)).to(self.device)
-            self.shared_memory[
-                0,
-            ] = parameters_to_vector(self.model.parameters()).detach()
-            self.mem_meta_info = reduce_tensor(self.shared_memory)
-            return self.get_gpu_id(), self.mem_meta_info
-        else:
-            return None, None
-
-    def init_dist(self, mem_dic, world_size, dst_rank):
-        mem_meta_info = mem_dic[self.get_gpu_id()]
-        self.world_size = world_size
-        self.dst_rank = dst_rank
-        if self.dst_rank == self.get_gpu_id():
-            self.base_mem = (self.local_rank() - 1) * len(self.clients)
-        else:
-            self.base_mem = self.local_rank() * len(self.clients)
-        if self.local_rank() == 0:
-            self.group = setup_dist(world_size, self.get_gpu_id())
-        else:
-            self.shared_memory = mem_meta_info[0](*mem_meta_info[1])
-        # if world_size > 0:
-        #     self.group = setup_dist(world_size, rank)
-        # if rank == 0:
-        #     self.gather_list = [
-        #         torch.zeros_like(self.shared_memory) for _ in range(world_size)
-        #     ]
+    # def create_shared_memory(self, length):
+    #     if self.local_rank() == 0:
+    #         self.shared_memory = torch.zeros((length, self.num_params)).to(
+    #         self.device)
+    #         self.shared_memory[
+    #             0,
+    #         ] = parameters_to_vector(self.model.parameters()).detach()
+    #         self.mem_meta_info = reduce_tensor(self.shared_memory)
+    #         return self.get_gpu_id(), self.mem_meta_info
+    #     else:
+    #         return None, None
+    #
+    # def init_dist(self, mem_dic, world_size, dst_rank):
+    #     if self.get_gpu_id() != -1:
+    #         mem_meta_info = mem_dic[self.get_gpu_id()]
+    #         self.world_size = world_size
+    #         self.dst_rank = dst_rank
+    #         if self.dst_rank == self.get_gpu_id():
+    #             self.base_mem = (self.local_rank() - 1) * len(self.clients)
+    #         else:
+    #             self.base_mem = self.local_rank() * len(self.clients)
+    #         if self.local_rank() == 0:
+    #             self.group = setup_dist(world_size, self.get_gpu_id())
+    #         else:
+    #             self.shared_memory = mem_meta_info[0](*mem_meta_info[1])
+    #     else:
+    #         pass
+    #         self.group = setup_dist(
+    #             world_size,
+    #         )
 
     def set_lr(self, lr: float) -> None:
         r"""change the learning rate of the client optimizer.
@@ -194,10 +172,10 @@ class Actor(object):
                 global_state=self.model.state_dict(),
             )
             self.shared_memory[
-                self.base_mem + client.get_local_rank()
+                self.get_local_rank() + client.get_local_rank()
             ] = client.get_update()
 
-        # if self.local_rank() == 0:
+        # if self.get_local_rank() == 0:
         #     breakpoint()
         # update = torch.stack(list(map(lambda w: w.get_update(), clients)))
 
@@ -231,72 +209,77 @@ class Actor(object):
             update.append(result)
         return update
 
-    # def init_dist(self, world_size):
-    #     assert self._lcoal_rank == 0
-    #     rank = self.rank
-    #     if world_size > 0:
-    #         self.group = setup_dist(world_size, rank)
-    #         if self.rank == 0:
-    #             self.gather_list = [
-    #                 torch.zeros_like(self.shared_memory) for _ in range(world_size)
-    #             ]
-
-    def gather(self):
-        # dst = 0
-        # if self.global_rank() == 0:
-        #     dist.gather(tensor=self.shared_memory, gather_list=self.gather_list)
-        #     updates = torch.cat(self.gather_list)
-        #     return updates
-        if self.local_rank() == 0:
-            dist.gather(tensor=self.shared_memory, dst=self.dst_rank)
-        else:
-            return
-
-    def broadcast(self):
-        if self.local_rank() == 0 and self.world_size > 1:
-            dist.broadcast(tensor=self.shared_memory[0], src=self.dst_rank)
+    # def gather(self):
+    #     # dst = 0
+    #     # if self.global_rank() == 0:
+    #     #     dist.gather(tensor=self.shared_memory, gather_list=self.gather_list)
+    #     #     updates = torch.cat(self.gather_list)
+    #     #     return updates
+    #     if self.local_rank() == 0 and self.get_gpu_id() != -1:
+    #         dist.gather(tensor=self.shared_memory, dst=self.dst_rank)
+    #     else:
+    #         return
+    #
+    # def broadcast(self):
+    #     if self.local_rank() == 0 and self.world_size > 1:
+    #         dist.broadcast(tensor=self.shared_memory[0], src=self.dst_rank)
 
 
-def assign_rank(server, actors: List[Actor]):
-    ser_gpu_id = ray.get(server.get_gpu_id.remote())
-    ray.get(server.set_ranks.remote(ser_gpu_id, 0))
+def _assign_global_ranks(server, actors: List[Worker]):
+    ser_submitted = server.set_global_rank.remote(0)
 
-    gpu_ids = ray.get([actor.get_gpu_id.remote() for actor in actors])
+    actors_submitted = [
+        actor.set_global_rank.remote(i + 1) for i, actor in enumerate(actors)
+    ]
+    ray.get([ser_submitted] + actors_submitted)
+
+
+def assign_rank(server, actors: List[Worker]):
+    _assign_global_ranks(server, actors)
+
+    ser_rank = ray.get(server.get_global_rank.remote())
+    worker_ranks = ray.get([actor.get_global_rank.remote() for actor in actors])
     num_clients = ray.get([actor.get_num_clients.remote() for actor in actors])
     num_clients_mapping = defaultdict(lambda: 0)
-    for idx, num in zip(gpu_ids, num_clients):
+    for idx, num in zip(worker_ranks, num_clients):
         num_clients_mapping[idx] += num
-    gpu_mapping = {ser_gpu_id: 1}
+
+    gpu_mapping = defaultdict(lambda: 0)
     local_ranks = []
     rets = []
-    world_size = len(set(gpu_ids + [ser_gpu_id]))
-    for g_id, actor in zip(gpu_ids, actors):
-        if g_id not in gpu_mapping:
-            gpu_mapping[g_id] = 0
-        ret = actor.set_local_rank.remote(gpu_mapping[g_id])
-        local_ranks.append(gpu_mapping[g_id])
-        rets.append(ret)
+
+    for g_id, actor in zip(worker_ranks, actors):
+        current_rank = gpu_mapping[g_id]
         gpu_mapping[g_id] += 1
+        ret = actor.set_local_rank.remote(current_rank)
+        local_ranks.append(current_rank)
+        rets.append(ret)
+
     ray.get(rets)
+
     shared_mem_len = max(num_clients_mapping.values())
-    actors = [
-        x
-        for x, _, _ in sorted(
-            zip(actors + [server], gpu_ids + [ser_gpu_id], local_ranks + [0]),
-            key=lambda x: (x[1], x[2]),
-        )
-    ]
+    num_model_param = ray.get(actors[0].get_num_model_params.remote())
+    # actors = [
+    #     x
+    #     for x, _, _ in sorted(
+    #         zip(actors + [server], worker_ranks + [ser_rank], local_ranks + [0]),
+    #         key=lambda x: (x[1], x[2]),
+    #     )
+    # ]
+    actors = actors + [server]
     mem_meta_info = dict(
         (x, y)
         for x, y in ray.get(
-            [actor.create_shared_memory.remote(shared_mem_len) for actor in actors]
+            [
+                actor.create_shared_memory.remote((shared_mem_len, num_model_param))
+                for actor in actors
+            ]
         )
         if x is not None
     )
-    ray.get(
-        [
-            actor.init_dist.remote(mem_meta_info, world_size, ser_gpu_id)
-            for actor in actors
-        ]
-    )
-    # main_group = setup_dist(world_size, 3)
+    print(mem_meta_info.keys())
+    world_size = max(worker_ranks) + 1
+    submitted = [
+        actor.setup_dist.remote(mem_meta_info, world_size, ser_rank) for actor in actors
+    ]
+    ret = ray.get(submitted)

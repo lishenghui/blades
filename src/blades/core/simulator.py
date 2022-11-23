@@ -9,13 +9,14 @@ import wandb
 from tqdm import trange
 
 from blades.clients import BladesClient
-from blades.core.actor import Actor, assign_rank
+from blades.core.worker import Worker, assign_rank
 from blades.datasets.fldataset import FLDataset
 from blades.utils.utils import top1_accuracy
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 logger.addHandler(logging.StreamHandler(sys.stdout))
+
 
 # T = TypeVar("T", bound="Optimizer")
 # T_SER = TypeVar("T_SER", bound="BladesServer")
@@ -27,7 +28,6 @@ class Simulator(object):
         dataset: FLDataset,
         clients: List[BladesClient],
         num_gpus: int = 0,
-        num_gpus_mgr: float = 0.2,
         num_actors: int = 5,
         num_gpus_actor: float = 0.15,
         local_opt_cls=None,
@@ -43,28 +43,19 @@ class Simulator(object):
         self.act_mgrs = []
         self.num_gpus = num_gpus
         self.clients = clients
-        # num_clients = len(clients)
-        # num_actors = 2
-        # idx_groups = np.array_split(range(num_clients), num_actors)
         client_groups = np.array_split(self.clients, num_actors)
-        for i in range(1):
-            if i == 0:
-                server_cls = server_cls
-                server_kws = server_kws
-                server_kws["clients"] = clients
-                num_gpus_mgr = num_gpus_mgr
-            else:
-                server_cls = None
-                num_gpus_mgr = num_gpus_mgr
+
+        server_cls = server_cls
+        server_kws = server_kws
+        server_kws["clients"] = clients
 
         self.ray_actors = [
-            Actor.options(num_gpus=num_gpus_actor).remote(
+            Worker.options(num_gpus=num_gpus_actor).remote(
                 dataset,
                 global_model,
                 local_opt_cls,
                 local_opt_kws,
                 clients=client_groups[i],
-                # buffer_blocks=list(idx_groups[i]),
             )
             for i in range(num_actors)
         ]
@@ -73,35 +64,13 @@ class Simulator(object):
         server_kws |= {
             "model": global_model,
             "clients": self.clients,
-            # "shared_memory": self.shared_memory,
-            # "mem_meta_info": self.mem_meta_info,
-            "device": "cuda",
         }
         self.server = server_cls.options(num_gpus=num_gpus_server).remote(**server_kws)
 
         assign_rank(self.server, self.ray_actors)
-        # print("finished assign rank")
-        #     actor_mgr = ActorManager.options(num_gpus=num_gpus_mgr).remote(
-        #         dataset,
-        #         global_model,
-        #         local_opt_cls,
-        #         local_opt_kws,
-        #         rank=i,
-        #         num_actors=num_actors_mgr,
-        #         num_buffers=len(client_groups[i]),
-        #         num_selected_clients=num_clients,
-        #         gpu_per_actor=num_gpus_actor,
-        #         world_size=num_gpus,
-        #         server_cls=server_cls,
-        #         server_kws=server_kws,
-        #         device=device,
-        #     )
-        #     ray.get(actor_mgr.init.remote())
-        #     self.act_mgrs.append(actor_mgr)
 
         # initialize_logger(log_path)
         # self.json_logger = logging.getLogger("stats")
-        # ray.get([mgr.init_dist.remote() for mgr in self.act_mgrs])
 
     def run(self, validate_interval: int = 100, global_rounds: int = 4000):
         with trange(0, global_rounds + 1) as t:
@@ -113,9 +82,12 @@ class Simulator(object):
                     ]
                 )
                 ray.get([actor.local_train.remote() for actor in self.ray_actors])
-                ray.get(
-                    [actor.gather.remote() for actor in self.ray_actors + [self.server]]
-                )
+
+                all_ret = [
+                    actor.gather.remote() for actor in (self.ray_actors + [self.server])
+                ]
+                ray.get(all_ret)
+
                 ray.get(self.server.global_update.remote())
 
                 if global_rounds % validate_interval == 0 and global_rounds > 0:

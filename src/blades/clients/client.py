@@ -29,8 +29,8 @@ class BladesClient(object):
         Args:
             id (str): a unique id of the client.
             momentum (float, optional): momentum factor (default: 0)
-            device (str): target device if specified, all parameters will be
-                        copied to that device.
+            device (str): target _device if specified, all parameters will be
+                        copied to that _device.
         """
 
         if momentum < 0.0:
@@ -206,7 +206,7 @@ class BladesClient(object):
         if self.momentum > 0.0:
             if self.momentum_buff is None:
                 self.momentum_buff = torch.zeros_like(
-                    self.update_buffer, device=self.update_buffer.device
+                    self.update_buffer, device=self.update_buffer._device
                 )
             self.momentum_buff.mul_(self.momentum).add_(
                 self.update_buffer, alpha=1 - self.dampening
