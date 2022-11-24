@@ -3,7 +3,7 @@ dataset: mnist
 model: toy_mlp
 non_iid: False
 alpha: 0.1
-num_clients: 10
+num_clients: 20
 num_byzantine: 0
 #trusted_id: 49
 client_momentum: 0.0
