@@ -190,8 +190,6 @@ class BladesClient(object):
             data, target = self.on_train_batch_begin(data=data, target=target)
             opt.zero_grad()
 
-            # if self.id() == "0":
-            #     print("model from server", self._get_para(False))
             output = self.global_model(data)
             # Clamp loss value to avoid possible 'Nan' gradient with some
             # attack types.

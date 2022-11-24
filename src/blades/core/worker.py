@@ -6,18 +6,13 @@ import numpy as np
 import ray
 import torch
 import torch.nn as nn
-
+from blades.utils.torch_utils import parameters_to_vector
 from blades.datasets.fldataset import FLDataset
 from blades.models import get_model
 from blades.utils.torch_utils import get_num_params
 from blades.utils.torch_utils import vector_to_parameters
 from blades.utils.utils import set_random_seed
 from .communicator import Communicator
-
-# from blades.utils.torch_utils import parameters_to_vector, vector_to_parameters
-
-# from .dist_actor import BaseActor
-# T = TypeVar("T", bound="Optimizer")
 
 
 @ray.remote
@@ -105,7 +100,6 @@ class Worker(Communicator):
         # clients: List[BladesClient],
         *,
         num_rounds: int = 1,
-        global_model: nn.Module = None,
     ) -> List:
         """A proxy method that provides local training for a set of clients.
 
@@ -120,14 +114,13 @@ class Worker(Communicator):
         """
         clients = self.clients
         # self.cache_random_state()
-        if not global_model:
-            model_vec = copy.deepcopy(self.shared_memory[0])
         for client in clients:
-            if global_model:
-                self.model.load_state_dict(copy.deepcopy(global_model.state_dict()))
-            else:
-                vector_to_parameters(copy.deepcopy(model_vec), self.model.parameters())
-
+            # if global_model:
+            #     self.model.load_state_dict(copy.deepcopy(global_model.state_dict()))
+            # else:
+            self.load_model_from_memory(self.model)
+            model_vec = parameters_to_vector(self.model.parameters())
+            # breakpoint()
             client.set_global_model_ref(self.model)
             local_dataset = self.dataset.get_train_loader(client.id())
             client.train_global_model(
@@ -149,7 +142,8 @@ class Worker(Communicator):
         metrics=None,
     ):
         update = []
-        vector_to_parameters(self.shared_memory[0], self.model.parameters())
+        # vector_to_parameters(self.shared_memory[0], self.model.parameters())
+        self.load_model_from_memory(self.model)
         # breakpoint()
         self.model.eval()
         for client in self.clients:

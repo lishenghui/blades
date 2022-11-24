@@ -12,7 +12,7 @@ client_momentum: 0.0
 #attack_kws: {"num_clients": 100, "num_byzantine": 5}
 
 # agg: Geomed
-agg: Median
+agg: Mean
 # agg: Mean
 #aggregator_kws: {num_excluded: 1, k: 5}
 #aggregator_kws: {"linkage": "average"}
@@ -25,7 +25,7 @@ global_round: 2000
 serv_momentum: 0.0
 batch_size: 128
 test_batch_size: 128
-validate_interval: 5
+validate_interval: 50
 
 
 bucketing: 0
