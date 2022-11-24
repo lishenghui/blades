@@ -2,6 +2,7 @@ from typing import Callable, Dict, List
 
 import ray
 import torch
+import torch.distributed as dist
 
 from blades.clients import BladesClient
 from blades.models import get_model
@@ -9,7 +10,7 @@ from blades.utils.torch_utils import get_num_params
 from blades.utils.torch_utils import parameters_to_vector
 from blades.utils.utils import reset_model_weights, set_random_seed
 from .communicator import Communicator
-import torch.distributed as dist
+
 
 # T = TypeVar("T", bound="Optimizer")
 
@@ -59,6 +60,7 @@ class BladesServer(Communicator):
         self.optimizer = opt_cls(self.model.parameters(), **opt_kws)
         self.aggregator = aggregator
         # self.set_local_rank()
+
     def get_clients(self):
         return self.clients
 
@@ -87,7 +89,8 @@ class BladesServer(Communicator):
     def broadcast(self):
         model_vec = parameters_to_vector(self.model.parameters())
         dist.broadcast(tensor=model_vec, src=self._dis_rank)
-            # breakpoint()
+        # breakpoint()
+
     def global_update(self, update_list=None) -> None:
         r"""Apply a step of global optimization.
 

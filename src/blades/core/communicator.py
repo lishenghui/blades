@@ -1,14 +1,15 @@
 import warnings
-from typing import Tuple
+from collections import defaultdict
 from typing import List
+from typing import Tuple
+
 import ray
-import copy
 import torch
 import torch.distributed as dist
-from collections import defaultdict
 from torch.multiprocessing.reductions import reduce_tensor
-from blades.utils.torch_utils import parameters_to_vector, vector_to_parameters
+
 from blades.utils.collective import setup_dist
+from blades.utils.torch_utils import vector_to_parameters
 
 
 class Communicator(object):
@@ -90,8 +91,6 @@ class Communicator(object):
                 world_size, self.get_global_rank(), backend=self._backend
             )
 
-
-
         if self.get_global_rank() == self._dis_rank:
             self.gather_list = [
                 torch.zeros_like(self.shared_memory) for _ in range(world_size)
@@ -115,7 +114,7 @@ class Communicator(object):
         if self._memo_length == len(self.gather_list[0]):
             updates = torch.cat(self.gather_list[1:])
         else:
-            updates = torch.cat(self.gather_list)[self._memo_length:,:]
+            updates = torch.cat(self.gather_list)[self._memo_length :, :]
         return updates
 
     def broadcast(self):
@@ -124,6 +123,7 @@ class Communicator(object):
 
     def load_model_from_memory(self, model):
         vector_to_parameters(self.model_memo, model.parameters())
+
 
 def _assign_global_ranks(server, actors: List[Communicator]):
     ser_submitted = server.set_global_rank.remote(0)
@@ -139,7 +139,7 @@ def assign_rank(server, actors: List[Communicator]):
     world_size = len(set(global_ranks))
 
     ser_rank = ray.get(server.get_global_rank.remote())
-    all_actors = [server]  + actors
+    all_actors = [server] + actors
     num_clients = [0] + ray.get([actor.get_num_clients.remote() for actor in actors])
 
     num_clients_mapping = defaultdict(lambda: 0)

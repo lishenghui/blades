@@ -9,8 +9,8 @@ import wandb
 from tqdm import trange
 
 from blades.clients import BladesClient
-from blades.core.worker import Worker
 from blades.core.communicator import assign_rank
+from blades.core.worker import Worker
 from blades.datasets.fldataset import FLDataset
 from blades.utils.utils import top1_accuracy
 

@@ -1,16 +1,17 @@
-import copy
 import random
 from typing import Dict, List, Optional
 
 import numpy as np
 import ray
 import torch
-import torch.nn as nn
-from blades.utils.torch_utils import parameters_to_vector
+
+# import torch.nn as nn
+
 from blades.datasets.fldataset import FLDataset
 from blades.models import get_model
 from blades.utils.torch_utils import get_num_params
-from blades.utils.torch_utils import vector_to_parameters
+
+# from blades.utils.torch_utils import parameters_to_vector
 from blades.utils.utils import set_random_seed
 from .communicator import Communicator
 
@@ -119,7 +120,7 @@ class Worker(Communicator):
             #     self.model.load_state_dict(copy.deepcopy(global_model.state_dict()))
             # else:
             self.load_model_from_memory(self.model)
-            model_vec = parameters_to_vector(self.model.parameters())
+            # model_vec = parameters_to_vector(self.model.parameters())
             # breakpoint()
             client.set_global_model_ref(self.model)
             local_dataset = self.dataset.get_train_loader(client.id())
