@@ -1,18 +1,22 @@
-from typing import Callable, Dict, TypeVar
+from typing import Callable, Dict, List
+
+import ray
+import torch
+import torch.distributed as dist
 
 from blades.clients import BladesClient
-import torch
+from blades.models import get_model
 from blades.utils.torch_utils import get_num_params
 from blades.utils.torch_utils import parameters_to_vector
-from blades.utils.collective import setup_dist
-from torch.optim import Optimizer
+from blades.utils.utils import reset_model_weights, set_random_seed
+from .communicator import Communicator
 
 
-T = TypeVar("T", bound="Optimizer")
+# T = TypeVar("T", bound="Optimizer")
 
 
-# @ray.remote
-class BladesServer(object):
+@ray.remote
+class BladesServer(Communicator):
     """_summary_
 
     Args:
@@ -22,14 +26,11 @@ class BladesServer(object):
     def __init__(
         self,
         model: torch.nn.Module,
-        clients: BladesClient,
-        opt_cls: T = torch.optim.SGD,
+        clients: List[BladesClient],
+        opt_cls=torch.optim.SGD,
         opt_kws: Dict = None,
         aggregator: Callable[[list], torch.Tensor] = None,
-        world_size: int = 0,
-        device: str = "cpu",
-        mem_meta_info: torch.Tensor = None,
-        shared_memory: torch.Tensor = None,
+        random_seed=0,
     ):
         """_summary_
 
@@ -39,26 +40,26 @@ class BladesServer(object):
             opt_kws (Dict): _description_
             aggregator (Callable[[list], torch.Tensor]): _description_
             world_size (int, optional): _description_. Defaults to 0.
-            device (str, optional): _description_. Defaults to
+            _device (str, optional): _description_. Defaults to
              "cpu".
             mem_meta_info (torch.Tensor, optional): _description_. Defaults to None.
         """
-        if mem_meta_info:
-            self.shared_memory = mem_meta_info[0](*mem_meta_info[1])
-        else:
-            self.shared_memory = shared_memory
+        # if mem_meta_info:
+        #     self.shared_memory = mem_meta_info[0](*mem_meta_info[1])
+        # else:
+        #     self.shared_memory = shared_memory
+        super().__init__()
         self.clients = clients
-        self.model = model.to("cuda")
+        self.device = "cpu" if ray.get_gpu_ids() == [] else "cuda"
+        set_random_seed(random_seed)
+        self.model = get_model(model).to(self.device)
+
+        reset_model_weights(self.model)
+        self.num_params = get_num_params(self.model)
         # self.model = model().to("cuda")
         self.optimizer = opt_cls(self.model.parameters(), **opt_kws)
         self.aggregator = aggregator
-        self.device = device
-        # Enable `torch.distributed` if GPU is available
-        if world_size > 0:
-            num_params = get_num_params(model)
-            self.group = setup_dist(world_size, 0)
-            self.gather_list = [torch.zeros(num_params).to(self.device)] * world_size
-            self.broad_cast_buffer = torch.zeros(num_params).to(self.device)
+        # self.set_local_rank()
 
     def get_clients(self):
         return self.clients
@@ -85,6 +86,11 @@ class BladesServer(object):
         r"""Returns the current global global_model."""
         return self.model
 
+    def broadcast(self):
+        model_vec = parameters_to_vector(self.model.parameters())
+        dist.broadcast(tensor=model_vec, src=self._dis_rank)
+        # breakpoint()
+
     def global_update(self, update_list=None) -> None:
         r"""Apply a step of global optimization.
 
@@ -94,15 +100,11 @@ class BladesServer(object):
 
         Args:
             update: The aggregated update.
+        #
         """
-        if update_list is not None:
-            self.gather_list = update_list
-        else:
-            self.gather_list = self.clients
-            # self.gather_list = self.shared_memory
-
+        updates = self.get_valid_updates()
+        grad = self.aggregator(updates)
         # breakpoint()
-        update = self.aggregator(self.gather_list)
         self.zero_grad()
         beg = 0
         for group in self.optimizer.param_groups:
@@ -110,12 +112,7 @@ class BladesServer(object):
                 if not p.requires_grad:
                     continue
                 end = beg + len(p.data.view(-1))
-                x = update[beg:end].reshape_as(p.data)
+                x = grad[beg:end].reshape_as(p.data)
                 p.grad = -x.clone().detach().to(p.device)
                 beg = end
         self.optimizer.step()
-        model_vec = parameters_to_vector(self.model.parameters())
-        self.shared_memory[
-            0,
-        ] = model_vec
-        return True

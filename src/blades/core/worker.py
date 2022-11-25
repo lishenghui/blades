@@ -1,36 +1,36 @@
-from typing import Dict, List, TypeVar, Optional
+import random
+from typing import Dict, List, Optional
 
+import numpy as np
 import ray
 import torch
-import torch.nn as nn
-from blades.clients.client import BladesClient
+
+# import torch.nn as nn
+
 from blades.datasets.fldataset import FLDataset
-from blades.utils.torch_utils import vector_to_parameters
 from blades.models import get_model
+from blades.utils.torch_utils import get_num_params
 
-# from blades.utils.torch_utils import parameters_to_vector, vector_to_parameters
-from torch.optim import Optimizer
-import copy
+# from blades.utils.torch_utils import parameters_to_vector
 from blades.utils.utils import set_random_seed
-import random
-import numpy as np
-
-T = TypeVar("T", bound="Optimizer")
+from .communicator import Communicator
 
 
 @ray.remote
-class Actor(object):
-    """Ray Actor."""
+class Worker(Communicator):
+    """Ray Worker."""
 
     def __init__(
         self,
         dataset: FLDataset,
         # model: nn.Module,
         model_name: str,
-        opt_cls: T,
+        opt_cls,
         opt_kws: Dict,
-        mem_meta_info: tuple = None,
-        buffer_blocks: List[int] = None,
+        *,
+        clients: List = None,
+        # mem_meta_info: tuple = None,
+        # buffer_blocks: List[int] = None,
         seed: Optional[int] = 0,
     ):
         """_summary_
@@ -44,14 +44,29 @@ class Actor(object):
             lr (float): _description_
         #
         """
+        # super(Worker, self).__init__()
+        super().__init__()
+        # self.device = "cpu" if ray.get_gpu_ids() == [] else "cuda"
         set_random_seed(seed)
         self.dataset = dataset
-        self.model = get_model(model_name).to("cuda")
-        self.buffer_blocks = buffer_blocks
+        self.model = get_model(model_name).to(self._device)
         self.optimizer = opt_cls(self.model.parameters(), **opt_kws)
-        if mem_meta_info:
-            self.shared_memory = mem_meta_info[0](*mem_meta_info[1])
+        if clients is not None:
+            self.clients = clients
+
+        client_rank = 0
+        for client in self.clients:
+            client.set_local_rank(client_rank)
+            client_rank += 1
+
         self.random_states = {}
+        self._num_model_params = get_num_params(self.model)
+
+    def get_num_clients(self):
+        return len(self.clients)
+
+    def get_num_model_params(self):
+        return self._num_model_params
 
     def cache_random_state(self) -> None:
         # This function should be used for reproducibility
@@ -69,9 +84,6 @@ class Actor(object):
         np.random.set_state(self.random_states["numpy"])
         random.setstate(self.random_states["python"])
 
-    def init(self):
-        return True
-
     def set_lr(self, lr: float) -> None:
         r"""change the learning rate of the client optimizer.
 
@@ -83,10 +95,9 @@ class Actor(object):
 
     def local_train(
         self,
-        clients: List[BladesClient],
+        # clients: List[BladesClient],
         *,
         num_rounds: int = 1,
-        global_model: nn.Module = None,
     ) -> List:
         """A proxy method that provides local training for a set of clients.
 
@@ -99,15 +110,15 @@ class Actor(object):
         Returns:
             List: a list of the given clients.
         """
+        clients = self.clients
         # self.cache_random_state()
-        if not global_model:
-            model_vec = copy.deepcopy(self.shared_memory[0])
         for client in clients:
-            if global_model:
-                self.model.load_state_dict(copy.deepcopy(global_model.state_dict()))
-            else:
-                vector_to_parameters(copy.deepcopy(model_vec), self.model.parameters())
-
+            # if global_model:
+            #     self.model.load_state_dict(copy.deepcopy(global_model.state_dict()))
+            # else:
+            self.load_model_from_memory(self.model)
+            # model_vec = parameters_to_vector(self.model.parameters())
+            # breakpoint()
             client.set_global_model_ref(self.model)
             local_dataset = self.dataset.get_train_loader(client.id())
             client.train_global_model(
@@ -118,28 +129,22 @@ class Actor(object):
                 num_batches=num_rounds,
                 global_state=self.model.state_dict(),
             )
+            self.save_update(client.get_local_rank(), client.get_update())
 
-        update = torch.stack(list(map(lambda w: w.get_update(), clients)))
-        self.shared_memory[
-            self.buffer_blocks,
-        ] = update
-        # self.restore_random_state()
         return clients
 
     def evaluate(
         self,
-        clients,
-        global_model: torch.nn.Module = None,
         round_number: int = None,
         batch_size: int = 128,
         metrics=None,
     ):
         update = []
-        if not global_model:
-            vector_to_parameters(self.shared_memory[0], self.model.parameters())
-
+        # vector_to_parameters(self.shared_memory[0], self.model.parameters())
+        self.load_model_from_memory(self.model)
+        # breakpoint()
         self.model.eval()
-        for client in clients:
+        for client in self.clients:
             client.set_global_model_ref(self.model)
             data = self.dataset.get_all_test_data(client.id())
             result = client.evaluate(

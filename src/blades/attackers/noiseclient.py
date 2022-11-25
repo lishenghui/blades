@@ -28,5 +28,5 @@ class NoiseClient(ByzantineClient):
     def omniscient_callback(self, server):
         noise = torch.normal(
             self._noise_mean, self._noise_std, size=super().get_update().shape
-        ).to(server.device)
+        ).to(server._device)
         self.save_update(noise)

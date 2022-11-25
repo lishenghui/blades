@@ -381,7 +381,7 @@ class MaskedTransformerClassifier(Module):
             if mask is not None:
                 mask = torch.cat(
                     [
-                        torch.ones(size=(mask.shape[0], 1), device=mask.device),
+                        torch.ones(size=(mask.shape[0], 1), device=mask._device),
                         mask.float(),
                     ],
                     dim=1,

@@ -41,6 +41,7 @@ def parse_arguments():
     parser.add_argument("--num_actors", type=int, default=5)
     parser.add_argument("--bucketing", type=int, default=0)
     parser.add_argument("--gpu_per_actor", type=float, default=0.2)
+    parser.add_argument("--num_gpus_server", type=float, default=0.2)
     parser.add_argument("--server_lr", type=float, default=0.1)
     parser.add_argument(
         "--config_path",
@@ -131,6 +132,7 @@ def parse_arguments():
         print("We currently do not have any GPU on your machine. ")
         options.num_gpus = 0
         options.gpu_per_actor = 0
+        options.num_gpus_server = 0
     return options
 
 

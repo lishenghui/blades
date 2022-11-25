@@ -1,4 +1,9 @@
 {
     "esbonio.sphinx.confDir": "",
-    "python.formatting.provider": "black"
+    "python.formatting.provider": "black",
+    "editor.rulers": [88,120],
+    "python.linting.pylintEnabled": true,
+    "python.linting.pylintArgs": [
+    "--enable=W0614"
+]
 }

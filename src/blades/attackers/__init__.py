@@ -1,10 +1,11 @@
 import importlib
-from .labelflippingclient import LabelflippingClient
-from .signflippingclient import SignflippingClient
-from .alieclient import AlieClient
-from .noiseclient import NoiseClient
-from .ipmclient import IpmClient
 from typing import Dict, Optional
+
+from .alieclient import AlieClient
+from .ipmclient import IpmClient
+from .labelflippingclient import LabelflippingClient
+from .noiseclient import NoiseClient
+from .signflippingclient import SignflippingClient
 
 
 def init_attacker(attack, attack_kws: Optional[Dict] = {}):

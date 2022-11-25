@@ -9,9 +9,10 @@ import numpy as np
 import torch
 from sklearn.utils import shuffle
 from torch.utils.data import DataLoader
+from torch.utils.data import RandomSampler
+
 from blades.utils.utils import set_random_seed
 from .customdataset import CustomTensorDataset
-from torch.utils.data import RandomSampler
 
 logger = logging.getLogger(__name__)
 

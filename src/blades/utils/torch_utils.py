@@ -58,7 +58,7 @@ def clip_para_norm_(
     norm_type = float(norm_type)
     if len(parameters) == 0:
         return torch.tensor(0.0)
-    device = parameters[0].device
+    device = parameters[0]._device
     if norm_type == inf:
         norms = [p.detach().abs().max().to(device) for p in parameters]
         total_norm = norms[0] if len(norms) == 1 else torch.max(torch.stack(norms))
@@ -83,11 +83,11 @@ def clip_para_norm_(
     clip_coef = max_norm / (total_norm + 1e-6)
     # Note: multiplying by the clamped coef is redundant when the coef is clamped to 1,
     # but doing so avoids a `if clip_coef < 1:` conditional which can require a CPU <=>
-    # device synchronization when the gradients do not reside in CPU memory.
+    # _device synchronization when the gradients do not reside in CPU memory.
     clip_coef_clamped = torch.clamp(clip_coef, max=1.0)
     for p in parameters:
         if p.dtype != torch.int64:
-            p.detach().mul_(clip_coef_clamped.to(p.device))
+            p.detach().mul_(clip_coef_clamped.to(p._device))
     return total_norm
 
 
@@ -128,7 +128,7 @@ def clip_tensor_norm_(
     clip_coef = max_norm / (total_norm + 1e-6)
     # Note: multiplying by the clamped coef is redundant when the coef is clamped to 1,
     # but doing so avoids a `if clip_coef < 1:` conditional which can require a CPU <=>
-    # device synchronization when the gradients do not reside in CPU memory.
+    # _device synchronization when the gradients do not reside in CPU memory.
     clip_coef_clamped = torch.clamp(clip_coef, max=1.0)
     for p in parameters:
         if p.dtype != torch.int64:
@@ -145,14 +145,14 @@ def parameters_to_vector(parameters: Iterable[torch.Tensor]) -> torch.Tensor:
     Returns:
         The parameters represented by a single vector
     """
-    # Flag for the device where the parameter is located
+    # Flag for the _device where the parameter is located
     param_device = None
 
     vec = []
     for param in parameters:
         if not param.requires_grad:
             continue
-        # Ensure the parameters are located in the same device
+        # Ensure the parameters are located in the same _device
         param_device = _check_param_device(param, param_device)
 
         vec.append(param.view(-1))
@@ -172,7 +172,7 @@ def vector_to_parameters(vec: torch.Tensor, parameters: Iterable[torch.Tensor]) 
         raise TypeError(
             "expected torch.Tensor, but got: {}".format(torch.typename(vec))
         )
-    # Flag for the device where the parameter is located
+    # Flag for the _device where the parameter is located
     param_device = None
 
     # Pointer for slicing the vector for each parameter
@@ -181,7 +181,7 @@ def vector_to_parameters(vec: torch.Tensor, parameters: Iterable[torch.Tensor]) 
         if not param.requires_grad:
             continue
 
-        # Ensure the parameters are located in the same device
+        # Ensure the parameters are located in the same _device
         param_device = _check_param_device(param, param_device)
 
         # The length of the parameter
@@ -195,17 +195,17 @@ def vector_to_parameters(vec: torch.Tensor, parameters: Iterable[torch.Tensor]) 
 
 def _check_param_device(param: torch.Tensor, old_param_device: Optional[int]) -> int:
     r"""This helper function is to check if the parameters are located in the
-    same device. Currently, the conversion between model parameters and single
+    same _device. Currently, the conversion between model parameters and single
     vector form is not supported for multiple allocations, e.g. parameters in
     different GPUs, or mixture of CPU/GPU.
 
     Args:
         param ([Tensor]): a Tensor of a parameter of a model
-        old_param_device (int): the device where the first parameter of a
+        old_param_device (int): the _device where the first parameter of a
                                 model is allocated.
 
     Returns:
-        old_param_device (int): report device for the first time
+        old_param_device (int): report _device for the first time
     """
 
     # Meet the first parameter

@@ -1,15 +1,12 @@
 import logging
+import random
 from collections import defaultdict
 from typing import Optional, Generator, Dict
 
+import numpy as np
 import torch
 import torch.nn as nn
-
 from torch.utils.data import DataLoader
-import numpy as np
-import random
-
-# from blades.utils.torch_utils import parameters_to_vector
 
 
 class BladesClient(object):
@@ -32,8 +29,8 @@ class BladesClient(object):
         Args:
             id (str): a unique id of the client.
             momentum (float, optional): momentum factor (default: 0)
-            device (str): target device if specified, all parameters will be
-                        copied to that device.
+            device (str): target _device if specified, all parameters will be
+                        copied to that _device.
         """
 
         if momentum < 0.0:
@@ -52,6 +49,12 @@ class BladesClient(object):
         self.set_id(id)
         # set_random_seed(seed)
         self.random_states = {}
+
+    def set_local_rank(self, rank: int):
+        self._local_rank = rank
+
+    def get_local_rank(self):
+        return self._local_rank
 
     def set_id(self, id: str) -> None:
         """Sets the unique id of the client.
@@ -179,6 +182,7 @@ class BladesClient(object):
         """
         torch.use_deterministic_algorithms(True)
         self._save_para(self.global_model)
+
         self.global_model.train()
         for i in range(num_batches):
             data, target = next(train_set)
@@ -186,7 +190,6 @@ class BladesClient(object):
             data, target = self.on_train_batch_begin(data=data, target=target)
             opt.zero_grad()
 
-            # breakpoint()
             output = self.global_model(data)
             # Clamp loss value to avoid possible 'Nan' gradient with some
             # attack types.
@@ -197,12 +200,11 @@ class BladesClient(object):
             opt.step()
 
         update = self._get_para(current=True) - self._get_para(current=False)
-
         self.update_buffer = torch.clone(update).detach()
         if self.momentum > 0.0:
             if self.momentum_buff is None:
                 self.momentum_buff = torch.zeros_like(
-                    self.update_buffer, device=self.update_buffer.device
+                    self.update_buffer, device=self.update_buffer._device
                 )
             self.momentum_buff.mul_(self.momentum).add_(
                 self.update_buffer, alpha=1 - self.dampening
