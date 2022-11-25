@@ -3,7 +3,7 @@ dataset: cifar10
 model: CCTNet10
 non_iid: False
 alpha: 0.1
-num_clients: 20
+num_clients: 40
 num_byzantine: 0
 #trusted_id: 49
 client_momentum: 0.0
@@ -21,7 +21,7 @@ gpu_server: 0.2
 algorithm: fedsgd
 
 local_round: 1
-global_round: 2000
+global_round: 4000
 serv_momentum: 0.0
 batch_size: 128
 test_batch_size: 128
@@ -33,6 +33,6 @@ bucketing: 0
 
 # If you try to debug the code, use `local_mode:True`
 local_mode: False
-num_actors: 8
-gpu_per_actor: 0.25
+num_actors: 20
+gpu_per_actor: 0.1
 num_gpus_server: 1.0

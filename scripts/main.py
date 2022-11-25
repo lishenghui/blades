@@ -64,7 +64,7 @@ world_size = 0
 
 server_kws = {
     "opt_cls": torch.optim.SGD,
-    "opt_kws": {"lr": 0.1, "momentum": 0.9, "dampening": 0},
+    "opt_kws": {"lr": 0.05, "momentum": 0.9, "dampening": 0},
     "aggregator": agg,
 }
 
