@@ -2,7 +2,6 @@ import os
 
 import ray
 import torch
-
 from blades.aggregators import get_aggregator
 from blades.datasets.data_provider import get_dataset
 from blades.attackers import init_attacker
@@ -21,6 +20,7 @@ set_random_seed(0, use_cuda=True)
 args = options
 if not ray.is_initialized():
     ray.init()
+    # ray.init(dashboard_host="147.8.183.198", dashboard_port=22223)
 else:
     ray.init(address="auto")
 

@@ -7,7 +7,7 @@ import ray
 import torch
 import torch.distributed as dist
 from torch.multiprocessing.reductions import reduce_tensor
-
+import copy
 from blades.utils.collective import setup_dist
 from blades.utils.torch_utils import vector_to_parameters
 
@@ -26,6 +26,9 @@ class Communicator(object):
         self._dis_rank = 0
         self._model_vec = None
 
+    def init(self):
+        return True
+
     def set_local_rank(self, local_rank):
         self._local_rank = local_rank
 
@@ -33,11 +36,10 @@ class Communicator(object):
         return self._local_rank
 
     def set_global_rank(self, rank: int):
-        # breakpoint()
         gpu_ids = ray.get_gpu_ids()
         if gpu_ids != []:
             warnings.warn(
-                "`global_rank` is meant to `gpu_id` if cuda is enable."
+                "`global_rank` is meant to `gpu_id` if cuda is enable. "
                 f"Setting it to `{gpu_ids[0]}`."
             )
             rank = gpu_ids[0]
@@ -67,34 +69,28 @@ class Communicator(object):
         else:
             return None, None
 
-    def _is_communicator(self):
-        return self.get_local_rank() == 0
-
-        # if self.get_global_rank() == self._dis_rank and self.get_local_rank() < 0:
-        #     return True
-        # elif self.get_global_rank() != self._dis_rank and self.get_local_rank() == 0:
-        #     return True
-        # else:
-        #     return False
-
     def setup_dist(self, mem_dic, world_size, dst_rank):
         self.world_size = world_size
         self._dis_rank = dst_rank
 
-        mem_meta_info = mem_dic[self.get_global_rank()][0]
-        self.shared_memory = mem_meta_info[0](*mem_meta_info[1])
-
-        model_mem_meta_info = mem_dic[self.get_global_rank()][1]
-        self.model_memo = model_mem_meta_info[0](*model_mem_meta_info[1])
         if self._is_communicator():
             self.group = setup_dist(
                 world_size, self.get_global_rank(), backend=self._backend
             )
+        else:
+            mem_meta_info = mem_dic[self.get_global_rank()][0]
+            self.shared_memory = mem_meta_info[0](*mem_meta_info[1])
+
+            model_mem_meta_info = mem_dic[self.get_global_rank()][1]
+            self.model_memo = model_mem_meta_info[0](*model_mem_meta_info[1])
 
         if self.get_global_rank() == self._dis_rank:
             self.gather_list = [
                 torch.zeros_like(self.shared_memory) for _ in range(world_size)
             ]
+
+    def _is_communicator(self):
+        return self.get_local_rank() == 0
 
     def gather(self):
         if self._is_communicator():
@@ -122,7 +118,7 @@ class Communicator(object):
             dist.broadcast(tensor=self.model_memo, src=self._dis_rank)
 
     def load_model_from_memory(self, model):
-        vector_to_parameters(self.model_memo, model.parameters())
+        vector_to_parameters(copy.deepcopy(self.model_memo), model.parameters())
 
 
 def _assign_global_ranks(server, actors: List[Communicator]):
@@ -158,9 +154,11 @@ def assign_rank(server, actors: List[Communicator]):
         current_rank = gpu_mapping[g_id]
         gpu_mapping[g_id] += 1
         ret1 = actor.set_local_rank.remote(current_rank)
-        if global_ranks.count(ser_rank) < 2:
+        if g_id == ser_rank and global_ranks.count(ser_rank) < 2:
             memo_length = shared_mem_len
-        ret2 = actor.set_memo_idx.remote(memo_base_mapping[g_id], memo_length)
+        memo_base = memo_base_mapping[g_id]
+        print(memo_base)
+        ret2 = actor.set_memo_idx.remote(memo_base, memo_length)
         memo_base_mapping[g_id] += memo_length
         local_ranks.append(current_rank)
         rets.extend([ret1, ret2])
@@ -172,13 +170,13 @@ def assign_rank(server, actors: List[Communicator]):
         for x, y in ray.get(
             [
                 actor.create_shared_memory.remote((shared_mem_len, num_model_param))
-                for actor in [server] + actors
+                for actor in all_actors
             ]
         )
         if x is not None
     )
     submitted = [
         actor.setup_dist.remote(mem_meta_info, world_size, ser_rank)
-        for actor in [server] + actors
+        for actor in all_actors
     ]
     ray.get(submitted)

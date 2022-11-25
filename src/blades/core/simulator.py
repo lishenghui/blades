@@ -49,6 +49,13 @@ class Simulator(object):
         server_kws = server_kws
         server_kws["clients"] = clients
 
+        server_kws |= {
+            "model": global_model,
+            "clients": self.clients,
+        }
+        self.server = server_cls.options(num_gpus=num_gpus_server).remote(**server_kws)
+        ray.get(self.server.init.remote())
+
         self.ray_actors = [
             Worker.options(num_gpus=num_gpus_actor).remote(
                 dataset,
@@ -60,12 +67,6 @@ class Simulator(object):
             for i in range(num_actors)
         ]
         ray.get([actor.init.remote() for actor in self.ray_actors])
-
-        server_kws |= {
-            "model": global_model,
-            "clients": self.clients,
-        }
-        self.server = server_cls.options(num_gpus=num_gpus_server).remote(**server_kws)
 
         assign_rank(self.server, self.ray_actors)
 

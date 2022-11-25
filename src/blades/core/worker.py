@@ -84,9 +84,6 @@ class Worker(Communicator):
         np.random.set_state(self.random_states["numpy"])
         random.setstate(self.random_states["python"])
 
-    def init(self):
-        return True
-
     def set_lr(self, lr: float) -> None:
         r"""change the learning rate of the client optimizer.
 
