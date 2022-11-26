@@ -95,9 +95,7 @@ class Worker(Communicator):
 
     def local_train(
         self,
-        # clients: List[BladesClient],
-        *,
-        num_rounds: int = 1,
+        num_steps: int = 1,
     ) -> List:
         """A proxy method that provides local training for a set of clients.
 
@@ -122,11 +120,11 @@ class Worker(Communicator):
             client.set_global_model_ref(self.model)
             local_dataset = self.dataset.get_train_loader(client.id())
             client.train_global_model(
-                train_set=local_dataset, num_batches=num_rounds, opt=self.optimizer
+                train_set=local_dataset, num_batches=num_steps, opt=self.optimizer
             )
             client.train_personal_model(
                 train_set=local_dataset,
-                num_batches=num_rounds,
+                num_batches=num_steps,
                 global_state=self.model.state_dict(),
             )
             self.save_update(client.get_local_rank(), client.get_update())

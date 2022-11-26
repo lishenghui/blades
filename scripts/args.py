@@ -12,7 +12,7 @@ def parse_arguments():
     parser.add_argument("--local_mode", action="store_true", default=False)
     parser.add_argument("--seed", type=int, default=1)
     parser.add_argument("--global_round", type=int, default=400)
-    parser.add_argument("--local_round", type=int, default=50)
+    parser.add_argument("--local_steps", type=int, default=50)
     parser.add_argument("--serv_momentum", type=float, default=0.0)
     parser.add_argument("--batch_size", type=int, default=32)
     parser.add_argument("--test_batch_size", type=int, default=128)
@@ -54,7 +54,7 @@ def parse_arguments():
     options.agg = options.agg.lower()
     options.attack = options.attack.lower()
     if options.algorithm == "fedsgd":
-        options.local_round = 1
+        options.local_steps = 1
     ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
 
     if options.config_path:
@@ -123,7 +123,7 @@ def parse_arguments():
         + (f"_lr{options.lr}")
         + (f"_serv_momentum{options.serv_momentum}")
         + (f"_bz{options.batch_size}")
-        + (f"_localround{options.local_round}")
+        + (f"_localround{options.local_steps}")
         + ("_noniid" if options.non_iid else "")
         + f"_seed{options.seed}"
     )

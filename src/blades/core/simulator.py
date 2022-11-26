@@ -73,7 +73,12 @@ class Simulator(object):
         # initialize_logger(log_path)
         # self.json_logger = logging.getLogger("stats")
 
-    def run(self, validate_interval: int = 100, global_rounds: int = 4000):
+    def run(
+        self,
+        validate_interval: int = 100,
+        global_rounds: int = 4000,
+        local_steps: int = 1,
+    ):
         with trange(0, global_rounds + 1) as t:
             for global_rounds in t:
                 ray.get(
@@ -82,7 +87,13 @@ class Simulator(object):
                         for actor in self.ray_actors + [self.server]
                     ]
                 )
-                ray.get([actor.local_train.remote() for actor in self.ray_actors])
+
+                ray.get(
+                    [
+                        actor.local_train.remote(num_steps=local_steps)
+                        for actor in self.ray_actors
+                    ]
+                )
 
                 all_ret = [
                     actor.gather.remote() for actor in (self.ray_actors + [self.server])

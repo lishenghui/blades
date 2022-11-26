@@ -1,6 +1,8 @@
 
 dataset: cifar10
 model: CCTNet10
+# dataset: mnist
+# model: toy_mlp
 non_iid: False
 alpha: 0.1
 num_clients: 40
@@ -12,18 +14,18 @@ client_momentum: 0.0
 #attack_kws: {"num_clients": 100, "num_byzantine": 5}
 
 # agg: Geomed
-agg: Median
-# agg: Mean
+# agg: Median
+agg: Mean
 #aggregator_kws: {num_excluded: 1, k: 5}
 #aggregator_kws: {"linkage": "average"}
 
 gpu_server: 0.2
 algorithm: fedsgd
 
-local_round: 1
+local_steps: 50
 global_round: 4000
 serv_momentum: 0.0
-batch_size: 128
+batch_size: 64
 test_batch_size: 128
 validate_interval: 50
 
@@ -34,5 +36,5 @@ bucketing: 0
 # If you try to debug the code, use `local_mode:True`
 local_mode: False
 num_actors: 20
-gpu_per_actor: 0.1
+gpu_per_actor: 0.14
 num_gpus_server: 1.0

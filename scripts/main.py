@@ -85,5 +85,7 @@ runner = Simulator(
 )
 print(f"init time: {time.time() - t_s}")
 runner.run(
-    validate_interval=options.validate_interval, global_rounds=options.global_round
+    validate_interval=options.validate_interval,
+    global_rounds=options.global_round,
+    local_steps=options.local_steps,
 )
