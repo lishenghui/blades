@@ -83,7 +83,7 @@ runner = Simulator(
     server_kws=server_kws,
     log_path=options.log_dir,
 )
-print(f"init time: {time.time() - t_s}")
+
 runner.run(
     validate_interval=options.validate_interval,
     global_rounds=options.global_round,

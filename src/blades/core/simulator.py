@@ -37,7 +37,6 @@ class Simulator(object):
         server_cls=None,
         server_kws: Dict = None,
         num_gpus_server: Optional[float] = 0.1,
-        log_path: str = "./outputs",
     ) -> None:
 
         self.act_mgrs = []

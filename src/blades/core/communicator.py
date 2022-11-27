@@ -70,7 +70,6 @@ class Communicator(object):
             return None, None
 
     def setup_dist(self, mem_dic, world_size, dst_rank):
-        self.world_size = world_size
         self._dis_rank = dst_rank
 
         if self._is_communicator():
@@ -121,16 +120,15 @@ class Communicator(object):
         vector_to_parameters(copy.deepcopy(self.model_memo), model.parameters())
 
 
-def _assign_global_ranks(server, actors: List[Communicator]):
-    ser_submitted = server.set_global_rank.remote(0)
-
-    actors_submitted = [
-        actor.set_global_rank.remote(i + 1) for i, actor in enumerate(actors)
-    ]
-    return ray.get([ser_submitted] + actors_submitted)
-
-
 def assign_rank(server, actors: List[Communicator]):
+    def _assign_global_ranks(server, actors: List[Communicator]):
+        ser_submitted = server.set_global_rank.remote(0)
+
+        actors_submitted = [
+            actor.set_global_rank.remote(i + 1) for i, actor in enumerate(actors)
+        ]
+        return ray.get([ser_submitted] + actors_submitted)
+
     global_ranks = _assign_global_ranks(server, actors)
     world_size = len(set(global_ranks))
 
