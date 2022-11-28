@@ -1,19 +1,19 @@
 import os
+import time
 
 import ray
 import torch
-from blades.aggregators import get_aggregator
-from blades.datasets.data_provider import get_dataset
-from blades.attackers import init_attacker
+
+import wandb
 from args import options
-from blades.core.simulator import Simulator
-import time
-from blades.core.config import ScalingConfig, RunConfig
+from blades.aggregators import get_aggregator
+from blades.attackers import init_attacker
 from blades.clients import BladesClient
 from blades.core import BladesServer
+from blades.core.config import ScalingConfig, RunConfig
+from blades.core.simulator import Simulator
+from blades.datasets.data_provider import get_dataset
 from blades.utils.utils import set_random_seed
-import wandb
-from blades.core.config import ScalingConfig
 
 wandb.init(project="blades", entity="lishenghui")
 
@@ -64,31 +64,30 @@ agg = get_aggregator(options.agg, options.aggregator_kws, bucketing=options.buck
 world_size = 0
 
 
-
 run_config = RunConfig(
-    server_cls = BladesServer,
-    server_kws = {
-    "opt_cls": torch.optim.SGD,
-    "opt_kws": {"lr": 0.05, "momentum": 0.9, "dampening": 0},
-    "aggregator": agg,
-},
-    clients = clients,
-    local_opt_cls = local_opt_cls,
-    local_opt_kws =  local_opt_kws,
-    global_model = options.model,
+    server_cls=BladesServer,
+    server_kws={
+        "opt_cls": torch.optim.SGD,
+        "opt_kws": {"lr": 0.05, "momentum": 0.9, "dampening": 0},
+        "aggregator": agg,
+    },
+    clients=clients,
+    local_opt_cls=local_opt_cls,
+    local_opt_kws=local_opt_kws,
+    global_model=options.model,
 )
 
 scaling_config = ScalingConfig(
-        num_workers=options.num_actors,
-        resources_per_worker={
-            "GPU": options.gpu_per_actor,
-            "CPU": 1,
-        },
-        server_resources={
-            "GPU": options.num_gpus_server,
-            "CPU": 1,
-        },
-    )
+    num_workers=options.num_actors,
+    resources_per_worker={
+        "GPU": options.gpu_per_actor,
+        "CPU": 1,
+    },
+    server_resources={
+        "GPU": options.num_gpus_server,
+        "CPU": 1,
+    },
+)
 
 t_s = time.time()
 runner = Simulator(

@@ -1,14 +1,12 @@
 import logging
 import sys
-from typing import Dict, List, Optional
+from typing import Optional
 
 import numpy as np
 import ray
-import torch
 import wandb
 from tqdm import trange
 
-from blades.clients import BladesClient
 from blades.core.communicator import assign_rank
 from blades.core.worker import Worker
 from blades.datasets.fldataset import FLDataset

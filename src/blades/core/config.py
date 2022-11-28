@@ -12,7 +12,7 @@ from typing import (
 )
 
 from ray.util.annotations import PublicAPI
-import torch
+
 if TYPE_CHECKING:
     from ray.tune.callback import Callback
     from ray.tune.progress_reporter import ProgressReporter
@@ -23,7 +23,6 @@ if TYPE_CHECKING:
 # Adopted from from
 # https://github.com/ray-project/ray/blob/master/python/ray/air/config.py
 
-SampleRange = Union["Domain", Dict[str, List]]
 
 MAX = "max"
 MIN = "min"
@@ -63,10 +62,10 @@ class ScalingConfig:
 
     # If adding new attributes here, please also update
     # ray.train.gbdt_trainer._convert_scaling_config_to_ray_params
-    server_resources: Optional[Union[Dict, SampleRange]] = None
-    num_workers: Optional[Union[int, SampleRange]] = None
-    use_gpu: Union[bool, SampleRange] = False
-    resources_per_worker: Optional[Union[Dict, SampleRange]] = None
+    server_resources: Optional[Dict] = None
+    num_workers: Optional[int] = None
+    use_gpu: bool = False
+    resources_per_worker: Optional[Dict] = None
 
     def __post_init__(self):
         self.use_gpu = self.num_gpus_per_worker > 0
@@ -153,7 +152,6 @@ class RunConfig:
     clients: List[Any] = None
     local_opt_cls: Optional[type] = None
     local_opt_kws: Optional[Union[Dict]] = None
-
 
 
 @dataclass
