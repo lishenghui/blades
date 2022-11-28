@@ -1,3 +1,4 @@
+import copy
 import warnings
 from collections import defaultdict
 from typing import List
@@ -7,7 +8,7 @@ import ray
 import torch
 import torch.distributed as dist
 from torch.multiprocessing.reductions import reduce_tensor
-import copy
+
 from blades.utils.collective import setup_dist
 from blades.utils.torch_utils import vector_to_parameters
 

@@ -5,8 +5,6 @@ import numpy as np
 import ray
 import torch
 
-# import torch.nn as nn
-
 from blades.datasets.fldataset import FLDataset
 from blades.models import get_model
 from blades.utils.torch_utils import get_num_params
@@ -16,6 +14,9 @@ from blades.utils.utils import set_random_seed
 from .communicator import Communicator
 
 
+# import torch.nn as nn
+
+
 @ray.remote
 class Worker(Communicator):
     """Ray Worker."""
@@ -23,7 +24,6 @@ class Worker(Communicator):
     def __init__(
         self,
         dataset: FLDataset,
-        # model: nn.Module,
         model_name: str,
         opt_cls,
         opt_kws: Dict,
