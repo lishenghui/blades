@@ -77,6 +77,7 @@ run_config = RunConfig(
     global_model=options.model,
 )
 
+
 scaling_config = ScalingConfig(
     num_workers=options.num_actors,
     resources_per_worker={
@@ -97,6 +98,7 @@ runner = Simulator(
 )
 
 print(f"init time: {time.time() - t_s}")
+
 runner.run(
     validate_interval=options.validate_interval,
     global_rounds=options.global_round,
