@@ -40,8 +40,6 @@ cache_name = (
 
 device = torch.device("cuda" if options.gpu_per_actor > 0 else "cpu")
 
-local_opt_cls = torch.optim.SGD
-local_opt_kws = {"lr": 1.0, "momentum": 0, "dampening": 0}
 dataset = get_dataset(
     options.dataset,
     train_bs=options.batch_size,
@@ -61,20 +59,19 @@ for i in range(options.num_byzantine):
     )
 
 agg = get_aggregator(options.agg, options.aggregator_kws, bucketing=options.bucketing)
-world_size = 0
-
 
 run_config = RunConfig(
     server_cls=BladesServer,
     server_kws={
         "opt_cls": torch.optim.SGD,
-        "opt_kws": {"lr": 0.05, "momentum": 0.9, "dampening": 0},
+        "opt_kws": {"lr": 0.1, "momentum": 0.9, "dampening": 0},
         "aggregator": agg,
     },
     clients=clients,
-    local_opt_cls=local_opt_cls,
-    local_opt_kws=local_opt_kws,
+    local_opt_cls=torch.optim.SGD,
+    local_opt_kws={"lr": 1.0, "momentum": 0, "dampening": 0},
     global_model=options.model,
+    global_steps=options.global_round,
 )
 
 
@@ -99,8 +96,4 @@ runner = Simulator(
 
 print(f"init time: {time.time() - t_s}")
 
-runner.run(
-    validate_interval=options.validate_interval,
-    global_rounds=options.global_round,
-    local_steps=options.local_steps,
-)
+runner.run()

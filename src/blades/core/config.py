@@ -1,10 +1,8 @@
 from dataclasses import dataclass
 from typing import (
     TYPE_CHECKING,
-    Callable,
     Dict,
     List,
-    Mapping,
     Optional,
     Union,
     Tuple,
@@ -14,10 +12,6 @@ from typing import (
 from ray.util.annotations import PublicAPI
 
 if TYPE_CHECKING:
-    from ray.tune.callback import Callback
-    from ray.tune.progress_reporter import ProgressReporter
-    from ray.tune.stopper import Stopper
-    from ray.tune.syncer import SyncConfig
     from ray.tune.utils.log import Verbosity
 
 # Adopted from from
@@ -143,25 +137,12 @@ class RunConfig:
     global_model: Optional[str] = None
     validate_interval: Union[int, "Verbosity"] = 3
     local_steps: Union[int, "Verbosity"] = 3
-    global_steps: Union[int, "Verbosity"] = 3
+    global_steps: Union[int, "Verbosity"] = None
     log_to_file: Union[bool, str, Tuple[str, str]] = False
 
-    server_cls: Optional[Union[type]] = None
-    server_kws: Optional[Union[Dict]] = None
+    server_cls: Optional[type] = None
+    server_kws: Optional[Dict] = None
 
     clients: List[Any] = None
     local_opt_cls: Optional[type] = None
-    local_opt_kws: Optional[Union[Dict]] = None
-
-
-@dataclass
-@PublicAPI(stability="beta")
-class ClientConfig:
-    name: Optional[str] = None
-    local_dir: Optional[str] = None
-    callbacks: Optional[List["Callback"]] = None
-    stop: Optional[Union[Mapping, "Stopper", Callable[[str, Mapping], bool]]] = None
-    sync_config: Optional["SyncConfig"] = None
-    progress_reporter: Optional["ProgressReporter"] = None
-    verbose: Union[int, "Verbosity"] = 3
-    log_to_file: Union[bool, str, Tuple[str, str]] = False
+    local_opt_kws: Optional[Dict] = None

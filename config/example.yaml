@@ -1,11 +1,12 @@
 
 dataset: cifar10
 model: CCTNet10
+
 # dataset: mnist
 # model: toy_mlp
 non_iid: False
 alpha: 0.1
-num_clients: 40
+num_clients: 20
 num_byzantine: 0
 #trusted_id: 49
 client_momentum: 0.0
@@ -22,7 +23,7 @@ agg: Mean
 gpu_server: 0.2
 algorithm: fedsgd
 
-local_steps: 50
+local_steps: 1
 global_round: 4000
 serv_momentum: 0.0
 batch_size: 64
@@ -35,6 +36,6 @@ bucketing: 0
 
 # If you try to debug the code, use `local_mode:True`
 local_mode: False
-num_actors: 20
+num_actors: 10
 gpu_per_actor: 0.14
 num_gpus_server: 1.0

@@ -18,10 +18,6 @@ logger.setLevel(logging.DEBUG)
 logger.addHandler(logging.StreamHandler(sys.stdout))
 
 
-# T = TypeVar("T", bound="Optimizer")
-# T_SER = TypeVar("T_SER", bound="BladesServer")
-
-
 class Simulator(object):
     def __init__(
         self,
@@ -33,9 +29,9 @@ class Simulator(object):
         self.scaling_config = (
             scaling_config if scaling_config is not None else ScalingConfig()
         )
+        self.run_config = run_config if run_config is not None else RunConfig()
         num_actors = self.scaling_config.num_workers
 
-        self.act_mgrs = []
         self.clients = run_config.clients
         client_groups = np.array_split(self.clients, num_actors)
 
@@ -66,12 +62,11 @@ class Simulator(object):
 
         assign_rank(self.server, self.ray_actors)
 
-    def run(
-        self,
-        validate_interval: int = 100,
-        global_rounds: int = 4000,
-        local_steps: int = 1,
-    ):
+    def run(self):
+        global_rounds = self.run_config.global_steps
+        validate_interval = self.run_config.validate_interval
+        local_steps = self.run_config.local_steps
+
         with trange(0, global_rounds + 1) as t:
             for global_rounds in t:
                 ray.get(

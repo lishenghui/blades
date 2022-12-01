@@ -90,7 +90,7 @@ class BladesServer(Communicator):
         model_vec = parameters_to_vector(self.model.parameters())
         dist.broadcast(tensor=model_vec, src=self._dis_rank)
 
-    def global_update(self, update_list=None) -> None:
+    def global_update(self) -> None:
         r"""Apply a step of global optimization.
 
             .. note::
@@ -103,6 +103,7 @@ class BladesServer(Communicator):
         """
         updates = self.get_valid_updates()
         grad = self.aggregator(updates)
+        breakpoint()
         self.zero_grad()
         beg = 0
         for group in self.optimizer.param_groups:
