@@ -1,6 +1,7 @@
 
 dataset: cifar10
-model: CCTNet10
+model: resnet20
+#model: CCTNet10
 
 # dataset: mnist
 # model: toy_mlp
@@ -20,11 +21,10 @@ agg: Mean
 #aggregator_kws: {num_excluded: 1, k: 5}
 #aggregator_kws: {"linkage": "average"}
 
-gpu_server: 0.2
 algorithm: fedsgd
 
 local_steps: 1
-global_round: 4000
+global_round: 20
 serv_momentum: 0.0
 batch_size: 64
 test_batch_size: 128
@@ -36,6 +36,6 @@ bucketing: 0
 
 # If you try to debug the code, use `local_mode:True`
 local_mode: False
-num_actors: 10
-gpu_per_actor: 0.14
+num_actors: 20
+gpu_per_actor: 0.1
 num_gpus_server: 1.0

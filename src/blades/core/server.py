@@ -103,7 +103,6 @@ class BladesServer(Communicator):
         """
         updates = self.get_valid_updates()
         grad = self.aggregator(updates)
-        breakpoint()
         self.zero_grad()
         beg = 0
         for group in self.optimizer.param_groups:

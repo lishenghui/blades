@@ -8,7 +8,7 @@ from .resnet_cifar import resnet20
 
 
 def get_model(name, pretrained=False):
-    if "resnet20" == name:
+    if name == "resnet20":
         net = resnet20()
     elif name == "CCTNet10":
         net = CCTNet10()

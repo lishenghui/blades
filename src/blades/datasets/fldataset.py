@@ -1,20 +1,18 @@
 import logging
 import os
 import pickle
-import random
 from abc import ABC
 from functools import partial
 from typing import Optional, Generator
 
 import numpy as np
-import ray
 import torch
 from sklearn.utils import shuffle
+from torch.utils.data import DataLoader
+from torch.utils.data import RandomSampler
 
 from blades.utils.utils import set_random_seed
 from .customdataset import CustomTensorDataset
-
-# import numpy as np
 
 logger = logging.getLogger(__name__)
 
@@ -39,7 +37,6 @@ class FLDataset(ABC):
     ):
         self.train_transform = train_transform
         self.test_transform = test_transform
-        self.random_states = {}
         if train_data:
             self.train_data = train_data
             self.test_data = test_data
@@ -183,23 +180,9 @@ class FLDataset(ABC):
 
         return train_user_ids, train_dataset, train_user_ids, test_dataset
 
-    def cache_random_state(self) -> None:
-        # This function should be used for reproducibility
-        if ray.get_gpu_ids() != []:
-            self.random_states["torch_cuda"] = torch.cuda.get_rng_state()
-        self.random_states["torch"] = torch.get_rng_state()
-        self.random_states["numpy"] = np.random.get_state()
-        self.random_states["python"] = random.getstate()
-
-    def restore_random_state(self) -> None:
-        # This function should be used for reproducibility
-        if ray.get_gpu_ids() != []:
-            torch.cuda.set_rng_state(self.random_states["torch_cuda"])
-        torch.set_rng_state(self.random_states["torch"])
-        np.random.set_state(self.random_states["numpy"])
-        random.setstate(self.random_states["python"])
-
-    def _preprocess_train_data(self, data, labels, batch_size, seed=0):
+    def _preprocess_train_data(
+        self, data, labels, batch_size, seed=0
+    ) -> (torch.Tensor, torch.LongTensor):
         i = 0
         # The following line is needed for reproducing the randomness of transforms.
         set_random_seed(seed)
@@ -221,9 +204,27 @@ class FLDataset(ABC):
                 X = torch.Tensor(X)
                 if self.train_transform:
                     X = self.train_transform(X)
-                self.cache_random_state()
                 yield X, torch.LongTensor(y)
-                self.restore_random_state()
+
+    def _build_dataloader(
+        self,
+        data,
+        labels,
+        batch_size,
+        transform_list=None,
+    ) -> CustomTensorDataset:
+        tensor_x = torch.Tensor(data)  # transform to torch tensor
+        tensor_y = torch.LongTensor(labels)
+        dataset = CustomTensorDataset(tensor_x, tensor_y, transform_list=transform_list)
+        sampler = RandomSampler(dataset, replacement=True, num_samples=int(1e5))
+        return iter(
+            DataLoader(
+                dataset=dataset,
+                sampler=sampler,
+                batch_size=batch_size,
+                pin_memory=True,
+            )
+        )
 
     def _preprocess_test_data(
         self,
@@ -240,10 +241,12 @@ class FLDataset(ABC):
         self._train_dls = {}
         self._test_dls = {}
         for idx, u_id in enumerate(self.train_data.keys()):
-            self._train_dls[u_id] = self._preprocess_train_data(
+            # self._train_dls[u_id] = self._preprocess_train_data(
+            self._train_dls[u_id] = self._build_dataloader(
                 data=np.array(self.train_data[u_id]["x"]),
                 labels=np.array(self.train_data[u_id]["y"]),
                 batch_size=self.train_bs,
+                transform_list=self.train_transform,
             )
 
             self._test_dls[u_id] = self._preprocess_test_data(

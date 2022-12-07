@@ -30,8 +30,8 @@ class Simulator(object):
             scaling_config if scaling_config is not None else ScalingConfig()
         )
         self.run_config = run_config if run_config is not None else RunConfig()
-        num_actors = self.scaling_config.num_workers
 
+        num_actors = self.scaling_config.num_workers
         self.clients = run_config.clients
         client_groups = np.array_split(self.clients, num_actors)
 

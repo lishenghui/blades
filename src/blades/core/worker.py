@@ -108,6 +108,7 @@ class Worker(Communicator):
         Returns:
             List: a list of the given clients.
         """
+
         clients = self.clients
         # self.cache_random_state()
         for client in clients:
