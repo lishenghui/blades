@@ -61,6 +61,8 @@ agg = get_aggregator(options.agg, options.aggregator_kws, bucketing=options.buck
 
 run_config = RunConfig(
     server_cls=BladesServer,
+    validate_interval=options.validate_interval,
+    local_steps=options.local_steps,
     server_kws={
         "opt_cls": torch.optim.SGD,
         "opt_kws": {"lr": 0.1, "momentum": 0.9, "dampening": 0},

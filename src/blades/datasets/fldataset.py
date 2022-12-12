@@ -222,7 +222,9 @@ class FLDataset(ABC):
                 dataset=dataset,
                 sampler=sampler,
                 batch_size=batch_size,
-                pin_memory=True,
+                # pin_memory=True,
+                # prefetch_factor=5,
+                # num_workers=1,
             )
         )
 

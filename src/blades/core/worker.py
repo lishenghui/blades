@@ -13,6 +13,7 @@ from blades.utils.torch_utils import get_num_params
 from blades.utils.utils import set_random_seed
 from .communicator import Communicator
 
+# from apex import amp
 
 # import torch.nn as nn
 
@@ -49,8 +50,10 @@ class Worker(Communicator):
         # self.device = "cpu" if ray.get_gpu_ids() == [] else "cuda"
         set_random_seed(seed)
         self.dataset = dataset
+        # breakpoint()
         self.model = get_model(model_name).to(self._device)
         self.optimizer = opt_cls(self.model.parameters(), **opt_kws)
+        # self.model, self.optimizer = amp.initialize(self.model, self.optimizer, opt_level="O1")
         if clients is not None:
             self.clients = clients
 
@@ -61,6 +64,8 @@ class Worker(Communicator):
 
         self.random_states = {}
         self._num_model_params = get_num_params(self.model)
+        # import nvidia_dlprof_pytorch_nvtx
+        # nvidia_dlprof_pytorch_nvtx.init()
 
     def get_num_clients(self):
         return len(self.clients)
@@ -109,7 +114,9 @@ class Worker(Communicator):
             List: a list of the given clients.
         """
 
+        # with torch.autograd.profiler.emit_nvtx():
         clients = self.clients
+        # with torch.autograd.profiler.emit_nvtx():
         # self.cache_random_state()
         for client in clients:
             # if global_model:
@@ -130,8 +137,6 @@ class Worker(Communicator):
             )
             self.save_update(client.get_local_rank(), client.get_update())
 
-        return clients
-
     def evaluate(
         self,
         round_number: int = None,
@@ -141,7 +146,6 @@ class Worker(Communicator):
         update = []
         # vector_to_parameters(self.shared_memory[0], self.model.parameters())
         self.load_model_from_memory(self.model)
-        # breakpoint()
         self.model.eval()
         for client in self.clients:
             client.set_global_model_ref(self.model)

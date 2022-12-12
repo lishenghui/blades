@@ -8,6 +8,8 @@ import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
 
+# from apex import amp
+
 
 class BladesClient(object):
     r"""Base class for all clients.
@@ -23,7 +25,6 @@ class BladesClient(object):
         momentum: Optional[float] = 0.0,
         dampening: Optional[float] = 0.0,
         device: Optional[torch.device] = torch.device("cuda"),
-        seed: Optional[int] = 0,
     ):
         """
         Args:
@@ -180,7 +181,8 @@ class BladesClient(object):
             num_batches: Number of batches of local update.
             opt: Optimizer.
         """
-        torch.use_deterministic_algorithms(True)
+        # torch.use_deterministic_algorithms(True)
+        # print(time.time())
         self._save_para(self.global_model)
 
         self.global_model.train()
@@ -194,8 +196,9 @@ class BladesClient(object):
             # Clamp loss value to avoid possible 'Nan' gradient with some
             # attack types.
             loss = torch.clamp(self.loss_func(output, target), 0, 1e6)
+            # with amp.scale_loss(loss, opt) as scaled_loss:
+            #     scaled_loss.backward()
             loss.backward()
-
             self.on_backward_end()
             opt.step()
 
@@ -214,6 +217,7 @@ class BladesClient(object):
         self.global_model = None
         self._state["saved_para"].clear()
         self.on_train_round_end()
+        # print(time.time())
 
     def train_personal_model(
         self, train_set: Generator, num_batches: int, global_state: Dict
