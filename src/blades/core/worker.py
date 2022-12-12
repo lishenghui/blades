@@ -53,7 +53,9 @@ class Worker(Communicator):
         # breakpoint()
         self.model = get_model(model_name).to(self._device)
         self.optimizer = opt_cls(self.model.parameters(), **opt_kws)
-        # self.model, self.optimizer = amp.initialize(self.model, self.optimizer, opt_level="O1")
+        # self.model, self.optimizer = amp.initialize(
+        #     self.model, self.optimizer, opt_level="O1"
+        # )
         if clients is not None:
             self.clients = clients
 
