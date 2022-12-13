@@ -48,21 +48,24 @@ If you are interested in this project, don't hesitate to contact me or make a PR
 
 
 
-`Documentation <https://bladesteam.github.io/>`_ | `Examples <https://bladesteam.github.io/examples/index.html>`_ | `API Reference  <https://bladesteam.github.io/references/api_reference.html>`_
-========================================================================================================================================================================================================
+..
+    `Documentation <https://bladesteam.github.io/>`_ | `Examples <https://bladesteam.github.io/examples/index.html>`_ | `API Reference  <https://bladesteam.github.io/references/api_reference.html>`_
 
 
 Installation
 ==================================================
 
-Option I. User Mode
----------------------------
+..
+    Option I. User Mode
+    ---------------------------
+..
+    >>> pip install blades
 
->>> pip install blades
 
-
-Option II (Recommended). Developer Mode
--------------------------------------------
+..
+    Option II (Recommended). Developer Mode
+..
+    -------------------------------------------
 
 You can also develop your own attack/defense and evaluate it by cloning Blades:
 
@@ -80,13 +83,16 @@ You can also develop your own attack/defense and evaluate it by cloning Blades:
 Verify the installation
 ==============================
 
-Option I. User Mode
----------------------------
-
-TBD
-
-Option II. Developer Mode
----------------------------
+..
+    Option I. User Mode
+..
+    ---------------------------
+..
+    TBD
+..
+    Option II. Developer Mode
+..
+    ---------------------------
 
 .. code-block:: bash
 
