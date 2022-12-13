@@ -1,5 +1,5 @@
 
-2022-12-04 15:22:33,577	INFO worker.py:1519 -- Started a local Ray instance. View the dashboard at [32m[1m127.0.0.1:8265 
+2022-12-04 15:22:33,577	INFO worker.py:1519 -- Started a local Ray instance. View the dashboard at [32m[1m127.0.0.1:8265
   0%|                                                                                                                          | 0/2001 [00:00<?, ?it/s]
 0
 0

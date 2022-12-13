@@ -15,7 +15,7 @@ config: {}
 2022-12-04 15:22:22,956 INFO    MainThread:3525 [wandb_init.py:init():658] updated telemetry
 2022-12-04 15:22:22,981 INFO    MainThread:3525 [wandb_init.py:init():693] communicating run to backend with 60 second timeout
 2022-12-04 15:22:23,433 INFO    MainThread:3525 [wandb_run.py:_on_init():2000] communicating current version
-2022-12-04 15:22:23,584 INFO    MainThread:3525 [wandb_run.py:_on_init():2004] got version response 
+2022-12-04 15:22:23,584 INFO    MainThread:3525 [wandb_run.py:_on_init():2004] got version response
 2022-12-04 15:22:23,584 INFO    MainThread:3525 [wandb_init.py:init():728] starting run threads in backend
 2022-12-04 15:22:28,596 INFO    MainThread:3525 [wandb_run.py:_console_start():1980] atexit reg
 2022-12-04 15:22:28,596 INFO    MainThread:3525 [wandb_run.py:_redirect():1838] redirect: SettingsConsole.WRAP_RAW
