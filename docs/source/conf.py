@@ -76,8 +76,8 @@ html_favicon = "_static/favicon.ico"
 sphinx_gallery_conf = {
     "line_numbers": False,
     "ignore_pattern": "/todo_",
-    "examples_dirs": "../../src/blades/examples",  # path to your example scripts
-    "gallery_dirs": "examples",  # path to where to save gallery generated output
+    "examples_dirs": "../../src/blades/_examples",  # path to your example scripts
+    "gallery_dirs": "_examples",  # path to where to save gallery generated output
 }
 
 # -- Options for HTML output -------------------------------------------------

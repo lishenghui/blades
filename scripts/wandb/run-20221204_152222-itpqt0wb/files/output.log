@@ -1,0 +1,37 @@
+
+2022-12-04 15:22:33,577	INFO worker.py:1519 -- Started a local Ray instance. View the dashboard at [32m[1m127.0.0.1:8265 
+  0%|                                                                                                                          | 0/2001 [00:00<?, ?it/s]
+0
+0
+0
+
+  0%|                                                                                                                          | 0/2001 [00:00<?, ?it/s][36m(BladesServer pid=3577)[39m RemotePdb session open at localhost:50998, use 'ray debug' to connect...
+  0%|                                                                                                                          | 0/2001 [00:54<?, ?it/s]
+Traceback (most recent call last):
+  File "/Users/sheli564/Desktop/blades/scripts/main.py", line 99, in <module>
+    runner.run()
+  File "/Users/sheli564/Desktop/blades/src/blades/core/simulator.py", line 91, in run
+    ray.get(self.server.global_update.remote())
+  File "/Users/sheli564/opt/miniconda3/lib/python3.9/site-packages/ray/_private/client_mode_hook.py", line 105, in wrapper
+    return func(*args, **kwargs)
+  File "/Users/sheli564/opt/miniconda3/lib/python3.9/site-packages/ray/_private/worker.py", line 2283, in get
+    values, debugger_breakpoint = worker.get_objects(object_refs, timeout=timeout)
+  File "/Users/sheli564/opt/miniconda3/lib/python3.9/site-packages/ray/_private/worker.py", line 668, in get_objects
+    data_metadata_pairs = self.core_worker.get_objects(
+  File "python/ray/_raylet.pyx", line 1445, in ray._raylet.CoreWorker.get_objects
+  File "python/ray/_raylet.pyx", line 190, in ray._raylet.check_status
+KeyboardInterrupt
+Traceback (most recent call last):
+  File "/Users/sheli564/Desktop/blades/scripts/main.py", line 99, in <module>
+    runner.run()
+  File "/Users/sheli564/Desktop/blades/src/blades/core/simulator.py", line 91, in run
+    ray.get(self.server.global_update.remote())
+  File "/Users/sheli564/opt/miniconda3/lib/python3.9/site-packages/ray/_private/client_mode_hook.py", line 105, in wrapper
+    return func(*args, **kwargs)
+  File "/Users/sheli564/opt/miniconda3/lib/python3.9/site-packages/ray/_private/worker.py", line 2283, in get
+    values, debugger_breakpoint = worker.get_objects(object_refs, timeout=timeout)
+  File "/Users/sheli564/opt/miniconda3/lib/python3.9/site-packages/ray/_private/worker.py", line 668, in get_objects
+    data_metadata_pairs = self.core_worker.get_objects(
+  File "python/ray/_raylet.pyx", line 1445, in ray._raylet.CoreWorker.get_objects
+  File "python/ray/_raylet.pyx", line 190, in ray._raylet.check_status
+KeyboardInterrupt

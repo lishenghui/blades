@@ -13,7 +13,7 @@ scripts/data
 *.whl
 *.egg
 *test_batch*
-src/blades/examples/data/*
+src/blades/deprecated/_examples/data/*
 */build/
 /docs/source/examples/
 /docs/source/_static/
