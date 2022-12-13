@@ -10,7 +10,7 @@ requirements = [
     "scikit-learn>=1.0.2",
     "matplotlib>=3.4.1",
     "requests>=2.27.1",
-    "setuptools~=58.0.4",
+    "setuptools",
     "ruamel.yaml",
     "tqdm",
 ]
