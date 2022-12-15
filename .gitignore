@@ -26,3 +26,4 @@ src/blades/deprecated/_examples/data/*
 /config/example_cpu.yaml
 /data
 **/data/MNIST/**
+**/wandb/
