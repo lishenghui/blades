@@ -4,6 +4,7 @@
 *.egg-info
 *__pycache__*
 *outputs
+wandb
 scripts/data
 *.pyc
 *.idea
@@ -23,7 +24,8 @@ src/blades/deprecated/_examples/data/*
 /src/tests/test_datasets/MNIST/
 /src/tests/test_datasets/data/
 /src/tests/data/
-/config/example_cpu.yaml
 /data
+/scripts/wandb
+/src/tests/test_core/data/
 **/data/MNIST/**
 **/wandb/

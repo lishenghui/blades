@@ -33,7 +33,3 @@ class MLP(nn.Module):
         x = self.fc3(x)
         x = F.log_softmax(x, dim=1)
         return x
-
-
-def create_model():
-    return MLP(), nn.modules.loss.CrossEntropyLoss()

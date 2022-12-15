@@ -1,15 +1,9 @@
 
-dataset: cifar10
-model: resnet20
-#model: CCTNet10
-
-# dataset: mnist
-# model: toy_mlp
+dataset: mnist
+model: toy_mlp
 non_iid: False
 alpha: 0.1
-
 num_clients: 20
-
 num_byzantine: 0
 #trusted_id: 49
 client_momentum: 0.0
@@ -17,16 +11,19 @@ client_momentum: 0.0
 #attack: ALIE
 #attack_kws: {"num_clients": 100, "num_byzantine": 5}
 
+# agg: Geomed
 agg: Mean
+# agg: Mean
 #aggregator_kws: {num_excluded: 1, k: 5}
 #aggregator_kws: {"linkage": "average"}
 
+gpu_server: 0.2
 algorithm: fedsgd
 
-local_steps: 1
-global_round: 100
+local_round: 1
+global_round: 2000
 serv_momentum: 0.0
-batch_size: 64
+batch_size: 128
 test_batch_size: 128
 validate_interval: 50
 
@@ -36,18 +33,5 @@ bucketing: 0
 
 # If you try to debug the code, use `local_mode:True`
 local_mode: False
-
-# num_actors: 4
-# gpu_per_actor: 0.15
-# num_gpus_server: 1.0
-
-# num_actors: 4
-# gpu_per_actor: 0.7
-# num_gpus_server: 0.3
-
-num_actors: 20
-gpu_per_actor: 0.15
-num_gpus_server: 0.5
-
-# num_actors: 1
-# gpu_per_actor: 0.5
+num_actors: 2
+gpu_per_actor: 0.09

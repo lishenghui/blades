@@ -13,6 +13,8 @@ class AlieClient(ByzantineClient):
     :param num_byzantine: Number of Byzantine input
     """
 
+    adv_set = False
+
     def __init__(
         self,
         num_clients: int,
@@ -22,6 +24,12 @@ class AlieClient(ByzantineClient):
         **kwargs,
     ):
         super().__init__(*args, **kwargs)
+        if not AlieClient.adv_set:
+            self.is_adv = True
+            AlieClient.adv_set = True
+        else:
+            self.is_adv = False
+
         # Number of supporters
         if z is not None:
             self.z_max = z
@@ -36,14 +44,12 @@ class AlieClient(ByzantineClient):
     def train_global_model(self, train_set: Generator, num_batches: int, opt) -> None:
         pass
 
+    def omniscient_callback(self, server):
+        if not self.is_adv:
+            return
 
-class AlieAdversary:
-    def __init__(self):
-        pass
-
-    def omniscient_callback(self, simulator):
         updates = []
-        for client in simulator._clients.values():
+        for client in server.get_clients():
             if not client.is_byzantine():
                 updates.append(client.get_update())
 
@@ -51,7 +57,7 @@ class AlieAdversary:
         mu = torch.mean(stacked_updates, 1)
         std = torch.std(stacked_updates, 1)
         update = None
-        for client in simulator._clients.values():
+        for client in server.get_clients():
             if client.is_byzantine():
                 if update is None:
                     update = mu - std * client.z_max

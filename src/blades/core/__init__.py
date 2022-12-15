@@ -1,10 +1,13 @@
 from blades.clients.client import ByzantineClient
-from blades.servers.server import BladesServer
+from .communicator import Communicator
+from .server import BladesServer
 from .simulator import Simulator
-
+from .worker import Worker
 
 __all__ = [
     "ByzantineClient",
     "BladesServer",
     "Simulator",
+    "Worker",
+    "Communicator",
 ]

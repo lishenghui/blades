@@ -117,7 +117,7 @@ class TransformerEncoderLayer(Module):
 
         self.activation = F.gelu
 
-    def forward(self, src: torch.Tensor, *args, **kwargs) -> torch.Tensor:
+    def forward(self, src: torch.Tensor) -> torch.Tensor:
         src = src + self.drop_path(self.self_attn(self.pre_norm(src)))
         src = self.norm1(src)
         src2 = self.linear2(self.dropout1(self.activation(self.linear1(src))))
@@ -245,9 +245,9 @@ class TransformerClassifier(Module):
                 x, (0, 0, 0, self.n_channels - x.size(1)), mode="constant", value=0
             )
 
-        if not self.seq_pool:
-            cls_token = self.class_emb.expand(x.shape[0], -1, -1)
-            x = torch.cat((cls_token, x), dim=1)
+        # if not self.seq_pool:
+        #     cls_token = self.class_emb.expand(x.shape[0], -1, -1)
+        #     x = torch.cat((cls_token, x), dim=1)
 
         if self.positional_emb is not None:
             x += self.positional_emb
@@ -381,7 +381,7 @@ class MaskedTransformerClassifier(Module):
             if mask is not None:
                 mask = torch.cat(
                     [
-                        torch.ones(size=(mask.shape[0], 1), device=mask.device),
+                        torch.ones(size=(mask.shape[0], 1), device=mask._device),
                         mask.float(),
                     ],
                     dim=1,

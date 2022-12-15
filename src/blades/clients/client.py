@@ -1,10 +1,14 @@
 import logging
+import random
 from collections import defaultdict
 from typing import Optional, Generator, Dict
 
+import numpy as np
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
+
+# from apex import amp
 
 
 class BladesClient(object):
@@ -20,14 +24,14 @@ class BladesClient(object):
         id: Optional[str] = None,
         momentum: Optional[float] = 0.0,
         dampening: Optional[float] = 0.0,
-        device: Optional[torch.device] = torch.device("cpu"),
+        device: Optional[torch.device] = torch.device("cuda"),
     ):
         """
         Args:
             id (str): a unique id of the client.
             momentum (float, optional): momentum factor (default: 0)
-            device (str): target device if specified, all parameters will be
-                        copied to that device.
+            device (str): target _device if specified, all parameters will be
+                        copied to that _device.
         """
 
         if momentum < 0.0:
@@ -35,13 +39,23 @@ class BladesClient(object):
 
         self.momentum = momentum
         self.momentum_buff = None
+        self.param_buff = None
         self.dampening = dampening
         self._state = defaultdict(dict)
         self._is_trusted: bool = False
         self._json_logger = logging.getLogger("stats")
         self.debug_logger = logging.getLogger("debug")
         self.device = device
+        self.set_loss()
         self.set_id(id)
+        # set_random_seed(seed)
+        self.random_states = {}
+
+    def set_local_rank(self, rank: int):
+        self._local_rank = rank
+
+    def get_local_rank(self):
+        return self._local_rank
 
     def set_id(self, id: str) -> None:
         """Sets the unique id of the client.
@@ -66,6 +80,22 @@ class BladesClient(object):
         '1'
         """
         return self._id
+
+    def cache_random_state(self) -> None:
+        # This function should be used for reproducibility
+        if self.device != torch.device("cpu"):
+            self.random_states["torch_cuda"] = torch.cuda.get_rng_state()
+        self.random_states["torch"] = torch.get_rng_state()
+        self.random_states["numpy"] = np.random.get_state()
+        self.random_states["python"] = random.getstate()
+
+    def restore_random_state(self) -> None:
+        # This function should be used for reproducibility
+        if self.device != torch.device("cpu"):
+            torch.cuda.set_rng_state(self.random_states["torch_cuda"])
+        torch.set_rng_state(self.random_states["torch"])
+        np.random.set_state(self.random_states["numpy"])
+        random.setstate(self.random_states["python"])
 
     def getattr(self, attr):
         return getattr(self, attr)
@@ -151,7 +181,10 @@ class BladesClient(object):
             num_batches: Number of batches of local update.
             opt: Optimizer.
         """
+        # torch.use_deterministic_algorithms(True)
+        # print(time.time())
         self._save_para(self.global_model)
+
         self.global_model.train()
         for i in range(num_batches):
             data, target = next(train_set)
@@ -163,17 +196,18 @@ class BladesClient(object):
             # Clamp loss value to avoid possible 'Nan' gradient with some
             # attack types.
             loss = torch.clamp(self.loss_func(output, target), 0, 1e6)
+            # with amp.scale_loss(loss, opt) as scaled_loss:
+            #     scaled_loss.backward()
             loss.backward()
-
             self.on_backward_end()
             opt.step()
-        update = self._get_para(current=True) - self._get_para(current=False)
 
+        update = self._get_para(current=True) - self._get_para(current=False)
         self.update_buffer = torch.clone(update).detach()
         if self.momentum > 0.0:
             if self.momentum_buff is None:
                 self.momentum_buff = torch.zeros_like(
-                    self.update_buffer, device=self.update_buffer.device
+                    self.update_buffer, device=self.update_buffer._device
                 )
             self.momentum_buff.mul_(self.momentum).add_(
                 self.update_buffer, alpha=1 - self.dampening
@@ -183,6 +217,7 @@ class BladesClient(object):
         self.global_model = None
         self._state["saved_para"].clear()
         self.on_train_round_end()
+        # print(time.time())
 
     def train_personal_model(
         self, train_set: Generator, num_batches: int, global_state: Dict
@@ -206,11 +241,12 @@ class BladesClient(object):
 
         Returns:
         """
-
+        dataloader = test_set
         dataloader = DataLoader(dataset=test_set, batch_size=batch_size)
         self.global_model.eval()
         r = {
             "_meta": {"type": "client_validation"},
+            "Client": self.id(),
             "E": round_number,
             "Length": 0,
             "Loss": 0,
@@ -221,6 +257,7 @@ class BladesClient(object):
         with torch.no_grad():
             for (data, target) in dataloader:
                 data, target = data.to(self.device), target.to(self.device)
+                # breakpoint()
                 output = self.global_model.to(self.device)(data)
                 r["Loss"] += self.loss_func(output, target).item() * len(target)
                 r["Length"] += len(target)

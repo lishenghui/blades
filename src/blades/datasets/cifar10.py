@@ -30,7 +30,7 @@ class CIFAR10(FLDataset):
         iid: Optional[bool] = True,
         alpha: Optional[float] = 0.1,
         num_clients: Optional[int] = 20,
-        seed=1,
+        seed=0,
         train_data=None,
         test_data=None,
         train_bs: Optional[int] = 32,

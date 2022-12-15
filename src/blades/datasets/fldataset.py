@@ -8,6 +8,8 @@ from typing import Optional, Generator
 import numpy as np
 import torch
 from sklearn.utils import shuffle
+from torch.utils.data import DataLoader
+from torch.utils.data import RandomSampler
 
 from blades.utils.utils import set_random_seed
 from .customdataset import CustomTensorDataset
@@ -204,6 +206,28 @@ class FLDataset(ABC):
                     X = self.train_transform(X)
                 yield X, torch.LongTensor(y)
 
+    def _build_dataloader(
+        self,
+        data,
+        labels,
+        batch_size,
+        transform_list=None,
+    ) -> CustomTensorDataset:
+        tensor_x = torch.Tensor(data)  # transform to torch tensor
+        tensor_y = torch.LongTensor(labels)
+        dataset = CustomTensorDataset(tensor_x, tensor_y, transform_list=transform_list)
+        sampler = RandomSampler(dataset, replacement=True, num_samples=int(1e5))
+        return iter(
+            DataLoader(
+                dataset=dataset,
+                sampler=sampler,
+                batch_size=batch_size,
+                # pin_memory=True,
+                # prefetch_factor=5,
+                # num_workers=1,
+            )
+        )
+
     def _preprocess_test_data(
         self,
         data,
@@ -219,10 +243,12 @@ class FLDataset(ABC):
         self._train_dls = {}
         self._test_dls = {}
         for idx, u_id in enumerate(self.train_data.keys()):
-            self._train_dls[u_id] = self._preprocess_train_data(
+            # self._train_dls[u_id] = self._preprocess_train_data(
+            self._train_dls[u_id] = self._build_dataloader(
                 data=np.array(self.train_data[u_id]["x"]),
                 labels=np.array(self.train_data[u_id]["y"]),
                 batch_size=self.train_bs,
+                transform_list=self.train_transform,
             )
 
             self._test_dls[u_id] = self._preprocess_test_data(

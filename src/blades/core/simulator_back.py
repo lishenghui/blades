@@ -1,59 +1,67 @@
 import logging
 import sys
-from typing import Optional
+from typing import Dict, List, Optional
 
 import numpy as np
 import ray
+import torch
 import wandb
 from tqdm import trange
 
+from blades.clients import BladesClient
 from blades.core.communicator import assign_rank
 from blades.core.worker import Worker
 from blades.datasets.fldataset import FLDataset
 from blades.utils.utils import top1_accuracy
-from .config import ScalingConfig, RunConfig
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 logger.addHandler(logging.StreamHandler(sys.stdout))
 
 
+# T = TypeVar("T", bound="Optimizer")
+# T_SER = TypeVar("T_SER", bound="BladesServer")
+
+
 class Simulator(object):
     def __init__(
         self,
         dataset: FLDataset,
-        scaling_config: Optional[ScalingConfig] = None,
-        run_config: Optional[RunConfig] = None,
+        clients: List[BladesClient],
+        num_gpus: int = 0,
+        num_actors: int = 5,
+        num_gpus_actor: float = 0.15,
+        local_opt_cls=None,
+        local_opt_kws: Dict = None,
+        global_model: torch.nn.Module = None,
+        server_cls=None,
+        server_kws: Dict = None,
+        num_gpus_server: Optional[float] = 0.1,
+        log_path: str = "./outputs",
     ) -> None:
 
-        self.scaling_config = (
-            scaling_config if scaling_config is not None else ScalingConfig()
-        )
-        self.run_config = run_config if run_config is not None else RunConfig()
-
-        num_actors = self.scaling_config.num_workers
-        self.clients = run_config.clients
+        self.act_mgrs = []
+        self.num_gpus = num_gpus
+        self.clients = clients
         client_groups = np.array_split(self.clients, num_actors)
 
-        server_kws = run_config.server_kws
-        server_kws["clients"] = self.clients
+        server_cls = server_cls
+        server_kws = server_kws
+        server_kws["clients"] = clients
 
         server_kws |= {
-            "model": run_config.global_model,
+            "model": global_model,
             "clients": self.clients,
         }
-        self.server = run_config.server_cls.options(
-            num_gpus=scaling_config.num_gpus_server
-        ).remote(**server_kws)
-
+        self.server = server_cls.options(num_gpus=num_gpus_server).remote(**server_kws)
         ray.get(self.server.init.remote())
 
         self.ray_actors = [
-            Worker.options(num_gpus=scaling_config.num_gpus_per_worker).remote(
+            Worker.options(num_gpus=num_gpus_actor).remote(
                 dataset,
-                run_config.global_model,
-                run_config.local_opt_cls,
-                run_config.local_opt_kws,
+                global_model,
+                local_opt_cls,
+                local_opt_kws,
                 clients=client_groups[i],
             )
             for i in range(num_actors)
@@ -62,11 +70,15 @@ class Simulator(object):
 
         assign_rank(self.server, self.ray_actors)
 
-    def run(self):
-        global_rounds = self.run_config.global_steps
-        validate_interval = self.run_config.validate_interval
-        local_steps = self.run_config.local_steps
+        # initialize_logger(log_path)
+        # self.json_logger = logging.getLogger("stats")
 
+    def run(
+        self,
+        validate_interval: int = 100,
+        global_rounds: int = 4000,
+        local_steps: int = 1,
+    ):
         with trange(0, global_rounds + 1) as t:
             for global_rounds in t:
                 ray.get(

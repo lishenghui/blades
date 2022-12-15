@@ -11,5 +11,5 @@ class LabelflippingClient(ByzantineClient):
         super().__init__(*args, **kwargs)
         self.num_classes = num_classes
 
-    def on_train_batch_begin(self, data, target, logs=None):
+    def on_train_batch_begin(self, data, target):
         return data, self.num_classes - 1 - target
