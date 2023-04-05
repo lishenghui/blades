@@ -7,9 +7,6 @@ class DistancemaximizationClient(ByzantineClient):
     def omniscient_callback(self, simulator):
         pass
 
-    def train_global_model(self, data_batches, opt):
-        pass
-
 
 class DistancemaximizationAdversary:
     r""""""
@@ -17,7 +14,6 @@ class DistancemaximizationAdversary:
     def __init__(
         self,
         num_byzantine: int,
-        agg: str,
         dev_type="sign",
         threshold=5.0,
         threshold_diff=1e-5,
@@ -26,12 +22,14 @@ class DistancemaximizationAdversary:
     ):
         super().__init__(*args, **kwargs)
         self.dev_type = dev_type
-        self.agg = agg
         self.threshold = threshold
         self.threshold_diff = threshold_diff
         self.num_byzantine = num_byzantine
 
     def attack(self, simulator):
+        if self.num_byzantine < 1:
+            return
+
         all_updates = torch.stack(
             list(map(lambda w: w.get_update(), simulator._clients.values()))
         )

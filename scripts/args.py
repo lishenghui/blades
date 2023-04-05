@@ -105,7 +105,6 @@ def parse_arguments():
         "fangattack": {"num_byzantine": options.num_byzantine, "agg": "median"},
         "distancemaximization": {
             "num_byzantine": options.num_byzantine,
-            "agg": "trimmedmean",
         },
     }
 
