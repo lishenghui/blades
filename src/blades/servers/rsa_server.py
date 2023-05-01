@@ -18,7 +18,6 @@ class RSAServer(BladesServer):
         weight_lambda: float = 0.01,
         batches_per_round: int = 1,
     ):
-
         super(RSAServer, self).__init__(optimizer, model, aggregator=aggregator)
         self.l1_lambda = l1_lambda
         self.weight_lambda = weight_lambda

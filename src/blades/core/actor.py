@@ -38,7 +38,7 @@ class _RayActor(object):
         self.optimizer = opt(self.model.parameters(), lr=lr)
 
     def set_lr(self, lr: float) -> None:
-        r"""change the learning rate of the client optimizer.
+        r"""Change the learning rate of the client optimizer.
 
         Args:
             lr (float): target learning rate.

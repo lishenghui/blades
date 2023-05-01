@@ -219,7 +219,7 @@ class BladesClient(object):
             r[name] = 0
 
         with torch.no_grad():
-            for (data, target) in dataloader:
+            for data, target in dataloader:
                 data, target = data.to(self.device), target.to(self.device)
                 output = self.global_model.to(self.device)(data)
                 r["Loss"] += self.loss_func(output, target).item() * len(target)

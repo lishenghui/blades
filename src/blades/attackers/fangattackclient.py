@@ -103,7 +103,6 @@ class FangattackAdversary:
         deviation = torch.sign(agg_updates)
 
         def compute_lambda(all_updates, model_re, n_attackers):
-
             distances = []
             n_benign, d = all_updates.shape
             for update in all_updates:

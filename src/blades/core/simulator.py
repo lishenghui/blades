@@ -70,7 +70,6 @@ class Simulator(object):
         seed: Optional[int] = None,
         **kwargs,
     ):
-
         if configs is None:
             configs = {}
         self.configs = configs

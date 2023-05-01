@@ -128,7 +128,7 @@ def set_random_seed(seed_value=0, use_cuda=False):
 
 
 def over_write_args_from_file(args, yml):
-    """overwrite arguments according to config file."""
+    """Overwrite arguments according to config file."""
     if yml == "":
         return
     with open(yml, "r", encoding="utf-8") as f:
