@@ -18,8 +18,8 @@ from ray.rllib.common import download_example_file, get_file_type
 
 
 def _register_all():
-    # from fllib.blades.algorithms.registry import ALGORITHMS, _get_algorithm_class
-    from fllib.blades.algorithms.registry import ALGORITHMS, _get_algorithm_class
+    # from blades.algorithms.registry import ALGORITHMS, _get_algorithm_class
+    from blades.algorithms.registry import ALGORITHMS, _get_algorithm_class
 
     for key, get_trainable_class_and_config in ALGORITHMS.items():
         register_trainable(key, get_trainable_class_and_config()[0])
@@ -120,7 +120,7 @@ def load_experiments_from_file(
             }
         }
 
-    for key, val in experiments.items():
+    for key, _ in experiments.items():
         experiments[key]["checkpoint_config"] = checkpoint_config or {}
     return experiments
 

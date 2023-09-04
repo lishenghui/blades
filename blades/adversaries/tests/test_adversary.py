@@ -2,14 +2,14 @@ import unittest
 
 import torch
 
-from fllib.blades.adversaries import (
+from blades.adversaries import (
     ALIEAdversary,
     IPMAdversary,
     SignFlipAdversary,
     LabelFlipAdversary,
     AdaptiveAdversary,
 )
-from fllib.blades.algorithms.fedavg import FedavgConfig
+from blades.algorithms.fedavg import FedavgConfig
 from fllib.datasets.catalog import DatasetCatalog
 
 from .simple_dataset import SimpleDataset
@@ -25,7 +25,7 @@ class TestAdversary(unittest.TestCase):
             .training(global_model=torch.nn.Linear(5, 5))
             .adversary(
                 num_malicious_clients=1,
-                adversary_config={"type": "fllib.blades.adversaries.AdaptiveAdversary"},
+                adversary_config={"type": "blades.adversaries.AdaptiveAdversary"},
             )
             .build()
         )

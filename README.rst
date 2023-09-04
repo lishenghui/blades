@@ -15,4 +15,3 @@ Installation
 
     cd fllib/blades
     python train.py file ./tuned_examples/fedavg_cnn_mnist.yaml
-

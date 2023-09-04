@@ -7,7 +7,7 @@ from fllib.models.catalog import ModelCatalog
 from fllib.datasets.catalog import DatasetCatalog
 from fllib.tasks import TaskSpec
 from fllib.clients import ClientConfig
-from fllib.blades.algorithms.fedavg import FedavgConfig
+from blades.algorithms.fedavg import FedavgConfig
 from fllib.core.execution.worker_group_config import WorkerGroupConfig
 
 

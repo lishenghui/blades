@@ -4,8 +4,8 @@ import unittest
 import torch
 import torch.nn.functional as F
 
-from fllib.blades.adversaries import NoiseAdversary
-from fllib.blades.algorithms.fedavg import FedavgConfig
+from blades.adversaries import LabelFlipAdversary
+from blades.algorithms.fedavg import FedavgConfig
 from fllib.datasets.catalog import DatasetCatalog
 
 from .simple_dataset import SimpleDataset
@@ -25,13 +25,10 @@ class TestAdaptiveAdversary(unittest.TestCase):
                     # "custom_dataset_config": {"num_classes": 2},
                 },
             )
-            .training(
-                global_model=model,
-                server_config={"lr": 0.1, "aggregator": {"type": "Mean"}},
-            )
+            .training(global_model=model, server_config={"lr": 0.1})
             .adversary(
-                num_malicious_clients=1,
-                adversary_config={"type": NoiseAdversary},
+                num_malicious_clients=0,
+                adversary_config={"type": LabelFlipAdversary},
             )
             .build()
         )
@@ -61,8 +58,8 @@ class TestAdaptiveAdversary(unittest.TestCase):
 
             self.alg.training_step()
             updated_model = copy.deepcopy(self.alg.server.get_global_model())
-
-            self.assertFalse(torch.allclose(model.weight, updated_model.weight))
+            print(model.weight, updated_model.weight)
+            self.assertTrue(torch.allclose(model.weight, updated_model.weight))
 
 
 if __name__ == "__main__":

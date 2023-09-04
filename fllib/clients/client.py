@@ -15,7 +15,7 @@ class Client:
         self.config = client_config
         self.callbacks = None
         self._train_round = 0
-        
+
         callback = from_config(self.config.callbacks_config)
         self.callbacks = ClientCallbackList(force_list(callback))
         self.callbacks.setup(self)

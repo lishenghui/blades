@@ -9,15 +9,15 @@ fedavg_blades:
         grid_search: [122]
       # grid_search: [121, 122, 123, 124, 125]
     dataset_config:
-      # type: cifar10
-      type: fashionmnist
+      type: cifar10
+      # type: fashionmnist
       num_clients: 60
       num_classes: 10
       train_batch_size: 64
       iid:
         grid_search: [False]
       alpha:
-         grid_search: [10]
+         grid_search: [0.1, 0.5, 1, 10]
 
     evaluation_interval: 50
 
@@ -37,8 +37,8 @@ fedavg_blades:
     # global_model:
       # grid_search: [cct]
     # global_model: cct
-    # global_model: resnet
-    global_model: cnn
+    global_model: resnet
+    # global_model: cnn
 
     client_config:
         lr: 1.0
@@ -73,14 +73,14 @@ fedavg_blades:
       grid_search: [6, 9, 12, 15, 18]
       # grid_search: [3, 6, 9, 12, 15, 18, 21]
     adversary_config:
-      # type: fllib.blades.adversaries.LabelFlipAdversary
+      # type: blades.adversaries.LabelFlipAdversary
       grid_search:
-        - type: fllib.blades.adversaries.ALIEAdversary
-        - type: fllib.blades.adversaries.LabelFlipAdversary
-        - type: fllib.blades.adversaries.NoiseAdversary
-        - type: fllib.blades.adversaries.SignFlipAdversary
-        # - type: fllib.blades.adversaries.AdaptiveAdversary
-        # - type: fllib.blades.adversaries.IPMAdversary
-        #   scale: 0.1
-        # - type: fllib.blades.adversaries.IPMAdversary
-        #   scale: 100
+        - type: blades.adversaries.ALIEAdversary
+        - type: blades.adversaries.LabelFlipAdversary
+        - type: blades.adversaries.NoiseAdversary
+        - type: blades.adversaries.SignFlipAdversary
+        - type: blades.adversaries.AdaptiveAdversary
+        - type: blades.adversaries.IPMAdversary
+          scale: 0.1
+        - type: blades.adversaries.IPMAdversary
+          scale: 100

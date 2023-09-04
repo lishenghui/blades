@@ -3,7 +3,7 @@ from ray.rllib.utils.annotations import override
 
 
 from fllib.algorithms import AlgorithmConfig
-from fllib.blades.clients.dp_client import DPCliengConfig
+from blades.clients.dp_client import DPCliengConfig
 
 from .fedavg import FedavgConfig, Fedavg
 

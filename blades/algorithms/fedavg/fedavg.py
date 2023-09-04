@@ -11,7 +11,7 @@ from ray.rllib.utils.debug import update_global_seed_if_necessary
 from fllib.types import NotProvided
 from fllib.clients import ClientConfig
 from fllib.constants import CLIENT_UPDATE, GLOBAL_MODEL, NUM_GLOBAL_STEPS
-from fllib.blades.adversaries import AdversaryConfig
+from blades.adversaries import AdversaryConfig
 from fllib.datasets.catalog import DatasetCatalog
 from fllib.types import PartialAlgorithmConfigDict
 from fllib.algorithms import Algorithm, AlgorithmConfig
@@ -58,7 +58,7 @@ class FedavgConfig(AlgorithmConfig):
 
     def get_client_config(self) -> ClientConfig:
         config = (
-            ClientConfig(class_specifier="fllib.blades.clients.Client")
+            ClientConfig(class_specifier="blades.clients.Client")
             # .training(
             #     num_batch_per_round=self.num_batch_per_round,
             #     lr=self.local_lr,

@@ -2,7 +2,7 @@ import unittest
 
 import ray
 
-import fllib.blades.algorithms.fedavg as fedavg
+import blades.algorithms.fedavg as fedavg
 
 import torch
 import torch.nn as nn

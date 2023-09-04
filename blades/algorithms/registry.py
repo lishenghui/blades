@@ -8,13 +8,13 @@ if TYPE_CHECKING:
 
 
 def _import_fedavg():
-    import fllib.blades.algorithms.fedavg as fedavg
+    import blades.algorithms.fedavg as fedavg
 
     return fedavg.Fedavg, fedavg.Fedavg.get_default_config()
 
 
 def _import_fedavgdp():
-    import fllib.blades.algorithms.fedavg as fedavg
+    import blades.algorithms.fedavg as fedavg
 
     return fedavg.FedavgDP, fedavg.FedavgDP.get_default_config()
 

@@ -1,7 +1,7 @@
 import unittest
 from unittest.mock import MagicMock
 import torch
-from fllib.blades.adversaries import AdaptiveAdversary
+from blades.adversaries import AdaptiveAdversary
 from fllib.constants import CLIENT_UPDATE
 
 

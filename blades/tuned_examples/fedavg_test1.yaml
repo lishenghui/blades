@@ -77,18 +77,18 @@ fedavg_blades:
       # grid_search: [6, 9, 12]
       # grid_search: [3, 6, 9, 12, 15, 18]
     adversary_config:
-      # type: fllib.blades.adversaries.LabelFlipAdversary
-      # type: fllib.blades.adversaries.SignFlipAdversary
-      # type: fllib.blades.adversaries.AdaptiveAdversary
+      # type: blades.adversaries.LabelFlipAdversary
+      # type: blades.adversaries.SignFlipAdversary
+      # type: blades.adversaries.AdaptiveAdversary
       grid_search:
-        # - type: fllib.blades.adversaries.AttackclippedclusteringAdversary
-        # - type: fllib.blades.adversaries.SignGuardAdversary
-        - type: fllib.blades.adversaries.MinMaxAdversary
-        # - type: fllib.blades.adversaries.ALIEAdversary
-        # - type: fllib.blades.adversaries.LabelFlipAdversary
-        # - type: fllib.blades.adversaries.NoiseAdversary
-        # - type: fllib.blades.adversaries.SignFlipAdversary
-        # - type: fllib.blades.adversaries.IPMAdversary
+        # - type: blades.adversaries.AttackclippedclusteringAdversary
+        # - type: blades.adversaries.SignGuardAdversary
+        - type: blades.adversaries.MinMaxAdversary
+        # - type: blades.adversaries.ALIEAdversary
+        # - type: blades.adversaries.LabelFlipAdversary
+        # - type: blades.adversaries.NoiseAdversary
+        # - type: blades.adversaries.SignFlipAdversary
+        # - type: blades.adversaries.IPMAdversary
         #   scale: 0.1
-        # - type: fllib.blades.adversaries.IPMAdversary
+        # - type: blades.adversaries.IPMAdversary
         #   scale: 100
