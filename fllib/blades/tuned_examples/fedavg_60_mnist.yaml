@@ -1,0 +1,83 @@
+fedavg_blades:
+  run: FEDAVG
+  stop:
+    training_iteration: 4000
+    train_loss: 100000
+
+  config:
+    seed:
+        # grid_search: [122, 123]
+      # grid_search: [111, 112]
+      grid_search: [111, 112, 123, 124, 125]
+    dataset_config:
+      type: mnist
+      num_clients: 60
+      num_classes: 10
+
+    evaluation_interval: 50
+
+
+    num_remote_workers: 1
+    num_gpus_per_worker: 0.5
+    num_cpus_per_worker: 4
+    num_cpus_for_driver: 12
+    num_gpus_for_driver: 0.5
+
+    # num_remote_workers: 1
+    # num_gpus_per_worker: 0.05
+    # num_cpus_per_worker: 1
+    # num_cpus_for_driver: 1
+    # num_gpus_for_driver: 0.05
+
+    # num_remote_workers: 14
+    # num_gpus_per_worker: 0.25
+    # num_cpus_per_worker: 2
+    # num_cpus_for_driver: 2
+    # num_gpus_for_driver: 0.5
+
+    # num_clients: 2
+    # global_model:
+      # grid_search: [cct]
+    # global_model: cct
+    global_model: mlp
+
+    # clients:
+    #   optimizer:
+    #     type: SGD
+    #     lr: 0.1
+    #     momentum: 0.9
+
+    server_config:
+      aggregator:
+        grid_search: [
+          type: Mean,
+          type: Median,
+          type: GeoMed,
+          type: DnC,
+          type: Trimmedmean
+          ]
+
+      optimizer:
+        type: SGD
+        lr: 0.1
+        # lr_schedule: [[0, 0.1], [1500, 0.1], [1501, 0.01], [2000, 0.01]]
+        # lr: 0.1
+        lr_schedule: [[0, 0.1], [3000, 0.1], [3001, 0.005], [4000, 0.005]]
+        momentum:
+          grid_search: [0.0]
+          # grid_search: [0.0, 0.5, 0.9]
+
+    num_malicious_clients:
+      grid_search: [0]
+      # grid_search: [3, 6, 9, 12, 15, 18]
+    adversary_config:
+      # type: fllib.blades.adversaries.LabelFlipAdversary
+      # type: fllib.blades.adversaries.SignFlipAdversary
+      # type: fllib.blades.adversaries.AdaptiveAdversary
+      grid_search:
+        - type: fllib.blades.adversaries.ALIEAdversary
+        - type: fllib.blades.adversaries.LabelFlipAdversary
+        - type: fllib.blades.adversaries.IPMAdversary
+          scale: 0.1
+        - type: fllib.blades.adversaries.IPMAdversary
+          scale: 100

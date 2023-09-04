@@ -1,0 +1,21 @@
+{
+  "esbonio.sphinx.confDir": "",
+  "python.formatting.provider": "black",
+  "editor.rulers": [
+    88
+  ],
+  "editor.defaultFormatter": "ms-python.black-formatter",
+  "editor.formatOnSave": true,
+  "python.linting.pylintEnabled": true,
+  "python.linting.pylintArgs": [
+    "--enable=W0614",
+    "--disable=C0114",
+    "--generated-members=numpy.* ,torch.*"
+  ],
+  "python.analysis.extraPaths": [
+    "./fllib/communication"
+  ],
+  "[python]": {
+    "editor.defaultFormatter": "ms-python.black-formatter"
+  }
+}

@@ -1,0 +1,84 @@
+fedavg_blades:
+  run: FEDAVG
+  stop:
+    training_iteration: 2000
+    # train_loss: 100
+
+  config:
+    seed:
+        # grid_search: [122, 123]
+      # grid_search: [113]
+      grid_search: [121, 122, 123, 124, 125]
+    dataset_config:
+      type: cifar10
+      num_clients: 60
+      num_classes: 10
+      train_batch_size: 64
+
+    evaluation_interval: 50
+
+    num_remote_workers: 0
+    num_gpus_per_worker: 0.
+    num_cpus_per_worker: 0
+    num_cpus_for_driver: 2
+    num_gpus_for_driver: 0.3
+
+    # num_remote_workers: 14
+    # num_gpus_per_worker: 0.25
+    # num_cpus_per_worker: 2
+    # num_cpus_for_driver: 2
+    # num_gpus_for_driver: 0.5
+
+    # global_model:
+      # grid_search: [cct]
+    # global_model: cct
+    global_model: resnet
+
+    client_config:
+        lr: 1.0
+        momentum:
+          grid_search: [0.0]
+
+    server_config:
+      aggregator:
+        grid_search: [
+          # type: Mean,
+          # type: Clippedclustering,
+          # type: Median,
+          # type: GeoMed,
+          # type: DnC,
+          # type: Trimmedmean,
+          # type: Signguard,
+          type: Centeredclipping
+          # type: Multikrum
+          ]
+
+      optimizer:
+        type: SGD
+        lr: 0.1
+        lr_schedule: [[0, 0.1], [1500, 0.1], [1501, 0.01], [2000, 0.01]]
+        # lr: 0.1
+        # lr_schedule: [[0, 0.1], [1500, 0.1],  [1501, 0.05], [3000, 0.05], [3001, 0.005], [4000, 0.005]]
+        momentum:
+          grid_search: [0.0]
+
+    num_malicious_clients:
+      # grid_search: [18]
+      # grid_search: [6, 9, 12]
+      grid_search: [3, 6, 9, 12, 15, 18]
+    adversary_config:
+      # type: fllib.blades.adversaries.LabelFlipAdversary
+      # type: fllib.blades.adversaries.SignFlipAdversary
+      # type: fllib.blades.adversaries.AdaptiveAdversary
+      grid_search:
+        # - type: fllib.blades.adversaries.SignGuardAdversary
+        # - type: fllib.blades.adversaries.SignGuardAdversary
+        # - type: fllib.blades.adversaries.ALIEAdversary
+        - type: fllib.blades.adversaries.MinMaxAdversary
+        # - type: fllib.blades.adversaries.LabelFlipAdversary
+        # - type: fllib.blades.adversaries.NoiseAdversary
+        # - type: fllib.blades.adversaries.SignFlipAdversary
+        # - type: fllib.blades.adversaries.IPMAdversary
+        #   scale: 0.1
+        # - type: fllib.blades.adversaries.IPMAdversary
+        #   scale: 100
