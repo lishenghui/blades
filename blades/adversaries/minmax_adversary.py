@@ -61,26 +61,3 @@ class MinMaxAdversary(Adversary):
             else:
                 high = mid
         return mean_grads - mid * deviation
-
-    def _attack_median_and_trimmedmean(self, algorithm: Algorithm):
-        benign_updates = self.get_benign_updates(algorithm)
-        mean_grads = benign_updates.mean(dim=0)
-        deviation = benign_updates.std(dim=0)
-        threshold = torch.cdist(benign_updates, benign_updates, p=2).max()
-        lambda_ = self.threshold
-
-        threshold_diff = self.threshold_diff
-        loss = 50
-        lambda_succ = 0
-        step_size = lambda_ / 2
-
-        while abs(lambda_succ - lambda_) > threshold_diff:
-            mal_update = torch.stack([mean_grads - lambda_ * deviation])
-            loss = torch.cdist(mal_update, benign_updates, p=2).max()
-            if loss < threshold:
-                lambda_succ = lambda_
-                lambda_ += step_size / 2
-            else:
-                lambda_ -= step_size / 2
-            step_size /= 2
-        return mean_grads - lambda_succ * deviation

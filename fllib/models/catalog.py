@@ -30,8 +30,6 @@ class ModelCatalog:
             model = model_cls()
         else:
             raise NotImplementedError
-        # torch.set_float32_matmul_precision("high")
-        # model = torch.compile(model)
         return model
 
     @staticmethod
