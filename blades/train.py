@@ -4,8 +4,9 @@ import json
 import os
 from pathlib import Path
 import sys
-import typer
 from typing import Optional
+
+import typer
 import yaml
 from ray.tune.registry import register_trainable
 import ray

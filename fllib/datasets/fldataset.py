@@ -82,7 +82,6 @@ class FLDataset(ABC):
         self.train_bs = train_bs
         self.test_bs = test_bs
         self.is_image = is_image
-        # breakpoint()
         if cache_name == "":
             cache_name = (
                 f"{self.__class__.__name__}_num_clients_{num_clients}_iid_{iid}"

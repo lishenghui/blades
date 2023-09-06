@@ -185,6 +185,7 @@ class AlgorithmConfig:
             task_spec=self.task_spec,
         ).update_from_dict(self.server_config)
 
+        print("server_config", config.to_dict())
         return config
 
     def get_worker_group_config(self) -> WorkerGroupConfig:

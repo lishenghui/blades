@@ -15,17 +15,21 @@ class TestAdaptiveAdversary(unittest.TestCase):
     def setUp(self):
         DatasetCatalog.register_custom_dataset("simple", SimpleDataset)
         model = torch.nn.Linear(2, 2)
+
+        self.global_lr = 0.1
         self.alg = (
             FedavgConfig()
             .data(
-                num_clients=3,
+                num_clients=1,
                 dataset_config={
                     "custom_dataset": "simple",
+                    "train_batch_size": 3,
                     "num_classes": 2,
                     # "custom_dataset_config": {"num_classes": 2},
                 },
             )
-            .training(global_model=model, server_config={"lr": 0.1})
+            .training(global_model=model, server_config={"lr": self.global_lr})
+            .client(client_config={"lr": 1.0})
             .adversary(
                 num_malicious_clients=0,
                 adversary_config={"type": LabelFlipAdversary},
@@ -36,6 +40,7 @@ class TestAdaptiveAdversary(unittest.TestCase):
             {
                 "custom_dataset": "simple",
                 "num_classes": 2,
+                "train_batch_size": 3,
                 # "custom_dataset_config": {"num_classes": 2},
             },
             num_clients=1,
@@ -49,7 +54,8 @@ class TestAdaptiveAdversary(unittest.TestCase):
         for _ in range(5):
             data, target = next(train_loader)
             model = copy.deepcopy(self.alg.server.get_global_model())
-            opt = torch.optim.SGD(model.parameters(), lr=0.1)
+            print("model", model.weight)
+            opt = torch.optim.SGD(model.parameters(), lr=self.global_lr)
             model.train()
             output = model(data)
             loss = F.cross_entropy(output, target)

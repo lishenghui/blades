@@ -21,7 +21,7 @@ class Worker:
         task_spec: TaskSpec = TaskSpec(),
         global_config: Dict[str, Any] = {},
         worker_scaling_config: WorkerGroupScalingConfig = WorkerGroupScalingConfig(),
-        device: str = "cuda",
+        device: str = "cpu",
     ) -> None:
         # pick the configs that we need for the learner from scaling config
         # self._distributed = worker_scaling_config.get("num_workers", 0) > 1

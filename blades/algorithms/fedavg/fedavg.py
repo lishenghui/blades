@@ -11,12 +11,13 @@ from ray.rllib.utils.debug import update_global_seed_if_necessary
 from fllib.types import NotProvided
 from fllib.clients import ClientConfig
 from fllib.constants import CLIENT_UPDATE, GLOBAL_MODEL, NUM_GLOBAL_STEPS
-from blades.adversaries import AdversaryConfig
 from fllib.datasets.catalog import DatasetCatalog
 from fllib.types import PartialAlgorithmConfigDict
 from fllib.algorithms import Algorithm, AlgorithmConfig
 from fllib.core.execution.worker_group import WorkerGroup
 from fllib.core.execution.worker_group_config import WorkerGroupConfig
+
+from blades.adversaries import AdversaryConfig
 
 
 class FedavgConfig(AlgorithmConfig):
@@ -175,6 +176,7 @@ class Fedavg(Algorithm):
         return worker_group
 
     def _setup_dataset(self):
+        print("self.config.dataset_config", self.config.dataset_config)
         self._dataset = DatasetCatalog.get_dataset(self.config.dataset_config)
 
         if self.worker_group.workers:
@@ -238,6 +240,7 @@ class Fedavg(Algorithm):
             "timestep": self._counters[NUM_GLOBAL_STEPS],
         }
         results = {"train_loss": np.mean(losses)}
+        print("updates", updates)
         server_return = self.server.step(updates, global_vars)
         results.update(server_return)
         return results

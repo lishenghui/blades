@@ -128,6 +128,8 @@ class ServerConfig:
             # correct methods to properly `.update()` those from given config dict
             # (to not lose any sub-keys).
 
+            if key == "lr":
+                self.optimizer.update(lr=value)
             if key in ["aggregator", "optimizer"]:
                 self.training(**{key: value})
 

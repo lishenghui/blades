@@ -27,6 +27,7 @@ class TestAdversary(unittest.TestCase):
                 num_malicious_clients=1,
                 adversary_config={"type": "blades.adversaries.AdaptiveAdversary"},
             )
+            .resources(num_gpus_for_driver=0, num_gpus_per_worker=0)
             .build()
         )
         self.adversary = self.algorithm.adversary

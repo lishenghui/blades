@@ -50,7 +50,6 @@ class DatasetCatalog:
             customized_dataset_kwargs = dict(
                 dataset_kwargs, **dataset_config.get("custom_dataset_config", {})
             )
-
             if isinstance(dataset_config["custom_dataset"], type):
                 dataset_cls = dataset_config["custom_dataset"]
             elif (
@@ -68,6 +67,10 @@ class DatasetCatalog:
 
             if "num_clients" in dataset_config:
                 customized_dataset_kwargs["num_clients"] = dataset_config["num_clients"]
+            if "train_batch_size" in dataset_config:
+                customized_dataset_kwargs["train_bs"] = dataset_config[
+                    "train_batch_size"
+                ]
             dataset = dataset_cls(**customized_dataset_kwargs)
         elif dataset_config.get("type") and dataset_config.get("num_clients"):
             dataset = make_dataset(
