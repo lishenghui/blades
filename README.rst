@@ -3,8 +3,8 @@ Installation
 
 .. code-block:: bash
 
-    git clone https://github.com/lishenghui/fllib
-    cd fllib
+    git clone https://github.com/lishenghui/blades
+    cd blades
     pip install -v -e .
     # "-v" means verbose, or more output
     # "-e" means installing a project in editable mode,
@@ -13,5 +13,5 @@ Installation
 
 .. code-block:: bash
 
-    cd fllib/blades
+    cd blades/blades
     python train.py file ./tuned_examples/fedavg_cnn_mnist.yaml
