@@ -46,6 +46,7 @@ class Server(LearningRateSchedule, _Base):
         lr = optimizer_config.get("lr", 0.1)
         lr_schedule = optimizer_config.get("lr_schedule", None)
         momentum = optimizer_config.get("momentum", 0)
+        self.config = {}
         LearningRateSchedule.__init__(self, lr, lr_schedule)
         self.device = device
         self._task = task_spec.build(self.device)

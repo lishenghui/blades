@@ -26,12 +26,13 @@ class Worker:
         # pick the configs that we need for the learner from scaling config
         # self._distributed = worker_scaling_config.get("num_workers", 0) > 1
         self._distributed = worker_scaling_config.num_workers > 1
-        self.device = (
-            "cuda"
-            # if worker_scaling_config.get("num_gpus_per_worker", 0) > 0
-            if worker_scaling_config.num_gpus_per_worker > 0
-            else device
-        )
+
+        if not self._distributed:
+            self.device = "cuda"
+        else:
+            self.device = (
+                "cuda" if worker_scaling_config.num_gpus_per_worker > 0 else device
+            )
         # if we are using gpu but we are not distributed, use this gpu for training
         # self._local_gpu_idx = worker_scaling_config.local_gpu_idx
         global_worker = ray._private.worker.global_worker

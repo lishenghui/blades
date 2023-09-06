@@ -240,7 +240,6 @@ class Fedavg(Algorithm):
             "timestep": self._counters[NUM_GLOBAL_STEPS],
         }
         results = {"train_loss": np.mean(losses)}
-        print("updates", updates)
         server_return = self.server.step(updates, global_vars)
         results.update(server_return)
         return results

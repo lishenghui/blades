@@ -19,6 +19,7 @@ class TestAdaptiveAdversary(unittest.TestCase):
         self.global_lr = 0.1
         self.alg = (
             FedavgConfig()
+            .resources(num_remote_workers=2, num_gpus_per_worker=0)
             .data(
                 num_clients=1,
                 dataset_config={
@@ -54,7 +55,6 @@ class TestAdaptiveAdversary(unittest.TestCase):
         for _ in range(5):
             data, target = next(train_loader)
             model = copy.deepcopy(self.alg.server.get_global_model())
-            print("model", model.weight)
             opt = torch.optim.SGD(model.parameters(), lr=self.global_lr)
             model.train()
             output = model(data)
@@ -64,7 +64,6 @@ class TestAdaptiveAdversary(unittest.TestCase):
 
             self.alg.training_step()
             updated_model = copy.deepcopy(self.alg.server.get_global_model())
-            print(model.weight, updated_model.weight)
             self.assertTrue(torch.allclose(model.weight, updated_model.weight))
 
 

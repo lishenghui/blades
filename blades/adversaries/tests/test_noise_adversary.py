@@ -17,6 +17,7 @@ class TestAdaptiveAdversary(unittest.TestCase):
         model = torch.nn.Linear(2, 2)
         self.alg = (
             FedavgConfig()
+            .resources(num_remote_workers=2, num_gpus_per_worker=0)
             .data(
                 num_clients=3,
                 dataset_config={
