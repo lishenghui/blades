@@ -29,8 +29,10 @@ Installation
 .. code-block:: bash
 
     cd blades/blades
-    python train.py file ./tuned_examples/fedavg_cnn_mnist.yaml
+    python train.py file ./tuned_examples/fedsgd_cnn_fashion_mnist.yaml
 
+
+**Blades** internally calls `ray.tune <https://docs.ray.io/en/latest/tune/tutorials/tune-output.html>`_; therefore, the experimental results are output to its default directory: ``~/ray_results``.
 
 Experiment Results
 ==================================================
@@ -123,9 +125,9 @@ Please cite our `paper <https://arxiv.org/abs/2206.05359>`_ (and the respective 
 
 ::
 
-   @article{li2022blades,
-     title={Blades: A Simulator for Attacks and Defenses in Federated Learning},
+   @article{li2023blades,
+     title={Blades: A Unified Benchmark Suite for Byzantine Attacks and Defenses in Federated Learning},
      author= {Li, Shenghui and Ju, Li and Zhang, Tianru and Ngai, Edith and Voigt, Thiemo},
      journal={arXiv preprint arXiv:2206.05359},
-     year={2022}
+     year={2023}
    }
