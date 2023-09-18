@@ -16,6 +16,8 @@ from .simple_dataset import SimpleDataset
 
 
 class TestAdversary(unittest.TestCase):
+    """Tests for the adversary class."""
+
     def setUp(self):
         DatasetCatalog.register_custom_dataset("simple", SimpleDataset)
 
@@ -33,10 +35,12 @@ class TestAdversary(unittest.TestCase):
         self.adversary = self.algorithm.adversary
 
     def test_on_algorithm_start(self):
+        """Tests the on_algorithm_start method."""
         for client in self.adversary.clients:
             self.assertTrue(client.is_malicious)
 
     def test_config(self):
+        """Tests the config method."""
         all_advs = [
             ALIEAdversary,
             IPMAdversary,

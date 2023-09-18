@@ -40,8 +40,8 @@ def _patch_path(path: str):
 
     Returns: Patched path.
     """
-    # This script runs in the ray/rllib dir.
-    rllib_dir = Path(__file__).parent
+    # This script runs in the fllib dir.
+    fllib_dir = Path(__file__).parent
     if isinstance(path, list):
         return [_patch_path(i) for i in path]
     elif isinstance(path, dict):
@@ -50,7 +50,7 @@ def _patch_path(path: str):
         if os.path.exists(path):
             return path
         else:
-            abs_path = str(rllib_dir.absolute().joinpath(path))
+            abs_path = str(fllib_dir.absolute().joinpath(path))
             return abs_path if os.path.exists(abs_path) else path
     else:
         return path

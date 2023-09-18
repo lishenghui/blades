@@ -7,13 +7,14 @@ from fllib.constants import CLIENT_UPDATE
 
 
 class Adversary:
-    def __init__(
-        self, clients: List, global_config: Dict = None, malicious_client_cls=None
-    ):
+    """Base class for all adversaries."""
+
+    def __init__(self, clients: List, global_config: Dict = None):
         self.clients = clients
         self.global_config = global_config
 
     def get_benign_updates(self, algorithm) -> torch.Tensor:
+        """Returns a tensor of benign updates from the local results."""
         updates = []
         for result in algorithm.local_results:
             psudo_grad = result.get(CLIENT_UPDATE, None)
@@ -29,14 +30,18 @@ class Adversary:
         return torch.vstack(updates)
 
     def on_algorithm_start(self, algorithm: Algorithm):
+        """Called when the algorithm starts."""
         for client in self.clients:
             client.to_malicious(local_training=False)
+        _ = algorithm  # Mute "unused argument" warning
 
     def on_local_round_end(self, algorithm):
-        pass
+        """Called when the local round ends."""
 
 
 class AdversaryConfig:
+    """Base class for all adversary configs."""
+
     def __init__(self, adversary_cls=Adversary, config=None) -> None:
         self.adversary_class: Type["Adversary"] = adversary_cls
         self.global_config: Dict[str, Any] = config
