@@ -14,6 +14,8 @@ from fllib.types import ResultDict, PartialAlgorithmConfigDict
 
 
 class Algorithm(Trainable):
+    """Base class for all FL Algorithms."""
+
     client_manager_cls = ClientManager
 
     def __init__(
@@ -118,10 +120,12 @@ class Algorithm(Trainable):
         return results
 
     def training_step(self):
+        """Performs a single training step and returns a dict of results."""
         return {}
 
     @classmethod
     def get_default_config(cls) -> AlgorithmConfig:
+        """Returns the default config (AlgorithmConfig object)"""
         return AlgorithmConfig()
 
     # @OverrideToImplementCustomLogic
@@ -166,7 +170,7 @@ class Algorithm(Trainable):
         )
 
     def evaluate(self):
-        pass
+        """Performs a single evaluation step and returns a dict of results."""
 
     # @override(Trainable)
     def save_checkpoint(self, checkpoint_dir: str) -> str:

@@ -115,6 +115,8 @@ class FedavgConfig(AlgorithmConfig):
 
 
 class Fedavg(Algorithm):
+    """Federated Averaging Algorithm."""
+
     def __init__(self, config=None, logger_creator=None, **kwargs):
         super().__init__(config, logger_creator, **kwargs)
         self._client_actors_affinity: DefaultDict[int, List[int]] = defaultdict(list)
@@ -177,7 +179,6 @@ class Fedavg(Algorithm):
         return worker_group
 
     def _setup_dataset(self):
-        print("self.config.dataset_config", self.config.dataset_config)
         self._dataset = DatasetCatalog.get_dataset(self.config.dataset_config)
 
         if self.worker_group.workers:

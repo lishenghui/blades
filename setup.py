@@ -5,7 +5,7 @@ requirements = [
     "torchvision",
     "torchaudio",
     "numpy>=1.19.4",
-    "ray>=2.4.0",
+    "ray>=2.6.0",
     "matplotlib>=3.4.1",
     "requests>=2.27.1",
     "setuptools",
