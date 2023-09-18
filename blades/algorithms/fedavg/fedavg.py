@@ -116,15 +116,16 @@ class FedavgConfig(AlgorithmConfig):
 
 class Fedavg(Algorithm):
     def __init__(self, config=None, logger_creator=None, **kwargs):
+        super().__init__(config, logger_creator, **kwargs)
         self._client_actors_affinity: DefaultDict[int, List[int]] = defaultdict(list)
         self.local_results = []
-        super().__init__(config, logger_creator, **kwargs)
 
     @classmethod
     def get_default_config(cls) -> AlgorithmConfig:
         return FedavgConfig()
 
     def setup(self, config: AlgorithmConfig):
+        super().setup(config)
         # Setup our config: Merge the user-supplied config dict (which could
         # be a partial config dict) with the class' default.
         if not isinstance(config, AlgorithmConfig):
@@ -242,6 +243,7 @@ class Fedavg(Algorithm):
         results = {"train_loss": np.mean(losses)}
         server_return = self.server.step(updates, global_vars)
         results.update(server_return)
+
         return results
 
     def evaluate(self):

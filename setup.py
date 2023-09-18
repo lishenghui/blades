@@ -11,6 +11,7 @@ requirements = [
     "setuptools",
     "ruamel.yaml",
     "tqdm",
+    "wandb",
     "typer",
     "dm_tree",
     "scikit-learn",

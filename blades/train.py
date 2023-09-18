@@ -1,25 +1,24 @@
 #!/usr/bin/env python
-import importlib
 import json
 import os
-from pathlib import Path
 import sys
+import importlib
+from pathlib import Path
 from typing import Optional
 
-import typer
 import yaml
-from ray.tune.registry import register_trainable
+import typer
 import ray
+from ray.tune.registry import register_trainable
 from ray.tune.resources import resources_to_json, json_to_resources
 from ray.tune.tune import run_experiments
 from ray.tune.schedulers import create_scheduler
 from ray.rllib.common import CLIArguments as cli
-from ray.rllib.common import FrameworkEnum, SupportedFileType
+from ray.rllib.common import SupportedFileType
 from ray.rllib.common import download_example_file, get_file_type
 
 
 def _register_all():
-    # from blades.algorithms.registry import ALGORITHMS, _get_algorithm_class
     from blades.algorithms.registry import ALGORITHMS, _get_algorithm_class
 
     for key, get_trainable_class_and_config in ALGORITHMS.items():
@@ -140,8 +139,11 @@ def file(
     # Additional config arguments used for overriding.
     v: bool = cli.V,
     vv: bool = cli.VV,
-    framework: FrameworkEnum = cli.Framework,
     trace: bool = cli.Trace,
+    # WandB options.
+    wandb_key: Optional[str] = cli.WandBKey,
+    wandb_project: Optional[str] = cli.WandBProject,
+    wandb_run_name: Optional[str] = cli.WandBRunName,
     # Ray cluster options.
     local_mode: bool = cli.LocalMode,
     ray_address: Optional[str] = cli.RayAddress,
@@ -170,8 +172,6 @@ def file(
         example_file=config_file, base_url=None
     )
 
-    framework = framework.value if framework else None
-
     checkpoint_config = {
         "checkpoint_frequency": checkpoint_freq,
         "checkpoint_at_end": checkpoint_at_end,
@@ -187,6 +187,8 @@ def file(
     exp_name = list(experiments.keys())[0]
     algo = experiments[exp_name]["run"]
 
+    # WandB logging support.
+    callbacks = None
     # if we had to download the config file, remove the temp file.
     if temp_file:
         temp_file.close()
@@ -195,7 +197,6 @@ def file(
         experiments=experiments,
         v=v,
         vv=vv,
-        framework=framework,
         trace=trace,
         ray_num_nodes=ray_num_nodes,
         ray_num_cpus=ray_num_cpus,
@@ -208,6 +209,11 @@ def file(
         scheduler=scheduler,
         scheduler_config=scheduler_config,
         algo=algo,
+        callbacks=callbacks,
+        # WandB options.
+        wandb_key=wandb_key,
+        wandb_project=wandb_project,
+        wandb_run_name=wandb_run_name,
     )
 
 
@@ -233,7 +239,6 @@ def run(
     # Additional config arguments used for overriding.
     v: bool = cli.V,
     vv: bool = cli.VV,
-    framework: FrameworkEnum = cli.Framework,
     trace: bool = cli.Trace,
     # Ray cluster options.
     local_mode: bool = cli.LocalMode,
@@ -258,8 +263,6 @@ def run(
     # If no subcommand is specified, simply run the following lines as the
     # "rllib train" main command.
     if ctx.invoked_subcommand is None:
-        framework = framework.value if framework else None
-
         config = json.loads(config)
         resources_per_trial = json_to_resources(resources_per_trial)
 
@@ -291,7 +294,6 @@ def run(
             experiments=experiments,
             v=v,
             vv=vv,
-            framework=framework,
             trace=trace,
             ray_num_nodes=ray_num_nodes,
             ray_num_cpus=ray_num_cpus,
@@ -311,7 +313,6 @@ def run_fllib_experiments(
     experiments: dict,
     v: cli.V,
     vv: cli.VV,
-    framework: str,
     trace: cli.Trace,
     ray_num_nodes: cli.RayNumNodes,
     ray_num_cpus: cli.RayNumCpus,
@@ -324,26 +325,30 @@ def run_fllib_experiments(
     scheduler: cli.Scheduler,
     scheduler_config: cli.SchedulerConfig,
     algo: cli.Algo,
+    callbacks=None,
+    # WandB options.
+    wandb_key: Optional[str] = cli.WandBKey,
+    wandb_project: Optional[str] = cli.WandBProject,
+    wandb_run_name: Optional[str] = cli.WandBRunName,
 ):
-    """Main training function for the RLlib CLI, whether you've loaded your
+    """Main training function for the blades, whether you've loaded your
     experiments from a config file or from command line options."""
 
     # Override experiment data with command line arguments.
     verbose = 1
     for exp in experiments.values():
+        if wandb_key is not None:
+            exp_name = list(experiments.keys())[0]
+            exp["config"]["wandb_api_key"] = wandb_key
+            exp["config"]["wandb_project"] = wandb_project or exp_name
+            exp["config"]["wandb_run_name"] = wandb_run_name or exp_name
+
         # Bazel makes it hard to find files specified in `args` (and `data`).
         # Look for them here.
         # NOTE: Some of our yaml files don't have a `config` section.
         input_ = exp.get("config", {}).get("input")
         if input_ and input_ != "sampler":
             exp["config"]["input"] = _patch_path(input_)
-
-        elif framework is not None:
-            exp["config"]["framework"] = framework
-        if trace:
-            if exp["config"]["framework"] not in ["tf2"]:
-                raise ValueError("Must enable --eager to enable tracing.")
-            exp["config"]["eager_tracing"] = True
         if v:
             exp["config"]["log_level"] = "INFO"
             verbose = 3  # Print details on trial result
@@ -383,6 +388,7 @@ def run_fllib_experiments(
         resume=resume,
         verbose=verbose,
         concurrent=True,
+        callbacks=callbacks,
     )
     ray.shutdown()
 
@@ -405,7 +411,7 @@ def run_fllib_experiments(
             "\nYou can now evaluate your trained algorithm from any "
             "checkpoint, e.g. by running:"
         )
-        print(Panel(f"[green]  rllib evaluate {checkpoints[0]} --algo {algo}"))
+        print(Panel(f"[green]  fllib evaluate {checkpoints[0]} --algo {algo}"))
 
 
 def main():

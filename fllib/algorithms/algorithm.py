@@ -1,14 +1,13 @@
 import os
 import pickle
 from typing import Callable, Dict, Optional, Union
-
+from ray.air.integrations.wandb import setup_wandb
 from ray.tune.logger import Logger
 from ray.tune.resources import Resources
 from ray.tune.trainable import Trainable
 from ray.util.annotations import PublicAPI
 from ray.tune.execution.placement_groups import PlacementGroupFactory
 
-from fllib.datasets.catalog import DatasetCatalog
 from fllib.algorithms.client_manager import ClientManager
 from fllib.algorithms.algorithm_config import AlgorithmConfig
 from fllib.types import ResultDict, PartialAlgorithmConfigDict
@@ -57,7 +56,6 @@ class Algorithm(Trainable):
         # Validate and freeze our AlgorithmConfig object (no more changes possible).
         config.validate()
         config.freeze()
-
         super().__init__(
             config=config,
             logger_creator=logger_creator,
@@ -87,23 +85,21 @@ class Algorithm(Trainable):
                 config_obj = AlgorithmConfig().from_dict(config_obj)
             config_obj.update_from_dict(config)
             self.config = config_obj
-
-        # config (dict): A dict of hyperparameters
-        # Do we have to run `self.evaluate()` this iteration?
-        if len(self.config.dataset_config) > 0:
-            self.dataset = DatasetCatalog.get_dataset(self.config.dataset_config)
-        else:
-            raise ValueError("Dataset config must be provided")
-
-        self.client_manager = self.client_manager_cls(
-            self.dataset.client_ids, client_config=self.config.get_client_config()
-        )
+        if config.get("wandb_api_key", False):
+            self.wandb = setup_wandb(
+                config.to_dict(),
+                # api_key_file="~/.wandb/api_key",
+                api_key=config.get("wandb_api_key", None),
+                trial_id=self.trial_id,
+                trial_name=self.trial_name,
+                group=config.get("wandb_group", None),
+                project=config.get("wandb_project", None),
+            )
 
     def step(self) -> ResultDict:
         # `self.iteration` gets incremented after this function returns,
         # meaning that e. g. the first time this function is called,
         # self.iteration will be 0.
-
         evaluate_this_iter = (
             self.config.evaluation_interval is not None
             and (self.iteration + 1) % self.config.evaluation_interval == 0
@@ -116,6 +112,9 @@ class Algorithm(Trainable):
 
         if evaluate_this_iter:
             results.update(self.evaluate())
+
+        if self.config.get("wandb_api_key", False):
+            self.wandb.log(results)
         return results
 
     def training_step(self):
