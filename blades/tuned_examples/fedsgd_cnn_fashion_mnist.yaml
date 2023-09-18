@@ -55,7 +55,8 @@ fedavg_blades:
           grid_search: [0.0]
 
     num_malicious_clients:
-      grid_search:  [3, 6]
+      grid_search:  [0,9]
+      # grid_search:  [3, 6]
       # grid_search:  [3, 6, 9, 12, 15, 18]
 
     adversary_config:

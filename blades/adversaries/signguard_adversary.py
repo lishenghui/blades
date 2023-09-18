@@ -44,7 +44,6 @@ class SignGuardAdversary(Adversary):
         # l2norms = [torch.norm(update).item() for update in benign_updates]
 
         # base_vector = find_orthogonal_unit_vector(mean_grads)
-        # breakpoint()
         # return M * base_vector
         num_para = len(mean_grads)
         pos = (mean_grads > 0).sum().item()  # / num_para

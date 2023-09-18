@@ -71,5 +71,4 @@ class Signguard(object):
             benign_updates.append(updates[idx])
 
         values = self.agg(benign_updates)
-        # breakpoint()
         return values

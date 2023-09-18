@@ -4,7 +4,8 @@ from typing import Callable, Optional, Type, Union
 
 from ray.tune.logger import Logger
 from ray.tune.registry import get_trainable_cls
-from ray.tune.result import TRIAL_INFO
+
+# from ray.tune.result import TRIAL_INFO
 from ray.util import log_once
 
 from fllib.types import (
@@ -85,7 +86,6 @@ class AlgorithmConfig:
         self.placement_strategy = "PACK"
 
         # self.data()`
-        self.dataset = "cifar10"
         self.dataset_config = {}
         self.num_clients = 0
 
@@ -421,16 +421,14 @@ class AlgorithmConfig:
 
             # Ray Tune saves additional data under this magic keyword.
             # This should not get treated as AlgorithmConfig field.
-            if key == TRIAL_INFO:
-                continue
+            # if key == TRIAL_INFO:
+            #     continue
 
             # Some keys specify config sub-dicts and therefore should go through the
             # correct methods to properly `.update()` those from given config dict
             # (to not lose any sub-keys).
-            elif key == "callbacks_config":
+            if key == "callbacks_config":
                 self.callbacks(callbacks_config=value)
-            elif key == "env_config":
-                self.environment(env_config=value)
             elif key.startswith("evaluation_"):
                 eval_call[key] = value
             elif key == "exploration_config":

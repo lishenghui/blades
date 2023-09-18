@@ -147,5 +147,4 @@ class DnC(object):
 
         benign_ids = list(set(benign_ids))
         benign_updates = updates[benign_ids, :].mean(dim=0)
-        # breakpoint()
         return benign_updates
