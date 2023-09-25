@@ -27,7 +27,9 @@ class Worker:
         # self._distributed = worker_scaling_config.get("num_workers", 0) > 1
         self._distributed = worker_scaling_config.num_workers > 1
 
-        if not self._distributed:
+        if worker_scaling_config.num_gpus_per_worker <= 0:
+            self.device = "cpu"
+        elif not self._distributed:
             self.device = "cuda"
         else:
             self.device = (
@@ -76,8 +78,8 @@ class Worker:
     def setup(self):
         """Setups the Worker.
 
-        This method should be called before the learner is used. It is
-        responsible for setting up the module and optimizers.
+        This method should be called before the learner is used. It is responsible for
+        setting up the module and optimizers.
         """
         if self._task_spec:
             self._task = self._task_spec.build(self.device)

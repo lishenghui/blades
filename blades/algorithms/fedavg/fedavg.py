@@ -17,7 +17,7 @@ from fllib.algorithms import Algorithm, AlgorithmConfig
 from fllib.core.execution.worker_group import WorkerGroup
 from fllib.core.execution.worker_group_config import WorkerGroupConfig
 
-from blades.adversaries import AdversaryConfig
+from blades.adversaries import Adversary, AdversaryConfig
 
 
 class FedavgConfig(AlgorithmConfig):
@@ -25,7 +25,6 @@ class FedavgConfig(AlgorithmConfig):
         """Initializes a FedavgConfig instance."""
         super().__init__(algo_class=algo_class or Fedavg)
 
-        # self.adversarial()`
         self.adversary_config = {}
 
         self.num_malicious_clients = 0
@@ -53,7 +52,7 @@ class FedavgConfig(AlgorithmConfig):
                 "AlgorithmConfig! Please call `freeze()` first."
             )
         config = AdversaryConfig(
-            adversary_cls=self.adversary_config["type"], config=self
+            adversary_cls=self.adversary_config.get("type", Adversary), config=self
         ).update_from_dict(self.adversary_config)
         return config
 
@@ -118,9 +117,9 @@ class Fedavg(Algorithm):
     """Federated Averaging Algorithm."""
 
     def __init__(self, config=None, logger_creator=None, **kwargs):
-        super().__init__(config, logger_creator, **kwargs)
         self._client_actors_affinity: DefaultDict[int, List[int]] = defaultdict(list)
         self.local_results = []
+        super().__init__(config, logger_creator, **kwargs)
 
     @classmethod
     def get_default_config(cls) -> AlgorithmConfig:

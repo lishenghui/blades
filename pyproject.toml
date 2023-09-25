@@ -1,0 +1,168 @@
+[build-system]
+requires=["flit_core >=3.2,<4"]
+build-backend="flit_core.buildapi"
+
+[project]
+name="blades"
+version="0.2.0"
+authors=[
+    {name="Shenghui Li", email="shenghui.li@it.uu.se"},
+]
+description="A Unified Benchmark Suite for Byzantine Attacks and Defenses in Federated Learning"
+readme="README.rst"
+requires-python=">=3.9"
+keywords=[
+    "deep-learning",
+    "pytorch",
+    "federated-learning",
+]
+classifiers=[
+    "Development Status :: 5 - Production/Stable",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3 :: Only",
+]
+dependencies=[
+    "torch>=2.0",
+    "torchvision",
+    "torchaudio",
+    "numpy>=1.19.4",
+    "ray>=2.7.0",
+    "matplotlib>=3.4.1",
+    "requests>=2.27.1",
+    "setuptools",
+    "ruamel.yaml",
+    "tqdm",
+    "wandb",
+    "typer",
+    "dm_tree",
+    "scikit-learn",
+    "pytest",
+    "ray[rllib]",
+    "pre-commit",
+    "torchmetrics",
+]
+
+[project.optional-dependencies]
+graphgym=[
+    "yacs",
+    "hydra-core",
+    "protobuf<4.21",
+    "pytorch-lightning",
+]
+modelhub=[
+    "huggingface_hub"
+]
+benchmark=[
+    "protobuf<4.21",
+    "wandb",
+    "pandas",
+    "networkx",
+    "matplotlib",
+]
+test=[
+    "pytest",
+    "pytest-cov",
+    "onnx",
+    "onnxruntime",
+]
+dev=[
+    "torch_geometric[test]",
+    "pre-commit",
+]
+full = [
+    "torch_geometric[graphgym, modelhub]",
+    "ase",
+    "h5py",
+    "numba",
+    "sympy",
+    "pandas",
+    "captum",
+    "rdflib",
+    "trimesh",
+    "networkx",
+    "graphviz",
+    "tabulate",
+    "matplotlib",
+    "pynndescent",
+    "torchmetrics",
+    "scikit-image",
+    "pytorch-memlab",
+    "pgmpy",
+    "opt_einsum",
+    "statsmodels",
+    "rdkit",
+]
+
+[project.urls]
+repository="https://github.com/lishenghui/blades"
+
+[tool.flit.module]
+name="blades"
+
+[tool.yapf]
+based_on_style = "pep8"
+split_before_named_assigns = false
+blank_line_before_nested_class_or_def = false
+
+[tool.isort]
+multi_line_output = 3
+include_trailing_comma = true
+skip = [".gitignore", "__init__.py"]
+
+[tool.codespell]
+skip = ["./src/3rdParty"]
+
+
+[tool.black]
+line_length = 88
+# exclude = [
+#     ".git",
+#     "__pycache__",
+#     "docs",
+#     "build",
+#     "dist",
+#     "blades/fllib/models/backbones"
+# ]
+
+
+[tool.pytest.ini_options]
+norecursedirs = "fllib/core"
+addopts = "--capture=no"
+filterwarnings = [
+    "ignore:distutils:DeprecationWarning",
+    "ignore:'torch_geometric.contrib' contains experimental code:UserWarning",
+    # Filter `torch` warnings:
+    "ignore:The PyTorch API of nested tensors is in prototype stage:UserWarning",
+    "ignore:scatter_reduce():UserWarning",
+    "ignore:Sparse CSR tensor support is in beta state:UserWarning",
+    "ignore:Sparse CSC tensor support is in beta state:UserWarning",
+    "ignore:torch.distributed._sharded_tensor will be deprecated:DeprecationWarning",
+    # Filter `captum` warnings:
+    "ignore:Setting backward hooks on ReLU activations:UserWarning",
+    "ignore:.*did not already require gradients, required_grads has been set automatically:UserWarning",
+    # Filter `pytorch_lightning` warnings:
+    "ignore:GPU available but not used:UserWarning",
+]
+
+[tool.pylint.messages_control]
+disable = [
+    "import-outside-toplevel",
+    "missing-module-docstring",
+    "missing-class-docstring",
+    "missing-function-docstring",
+    "empty-docstring",
+    "import-error",
+    "too-many-arguments",
+    "arguments-differ",
+    "invalid-name",
+    "redefined-builtin",
+]
+attr-rgx = "[A-Za-z_][A-Za-z0-9_]*$"
+argument-rgx = "[A-Za-z_][A-Za-z0-9_]*$"
+variable-rgx = "[A-Za-z_][A-Za-z0-9_]*$"
+generated-members = ["torch.*"]

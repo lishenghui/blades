@@ -256,8 +256,7 @@ def run(
     """Train a reinforcement learning agent from command line options. The
     options --env and --algo are required to run this command.
 
-    Training example via RLlib CLI:\n     rllib train --algo DQN --env
-    CartPole-v1\n\n
+    Training example via RLlib CLI:\n     rllib train --algo DQN --env CartPole-v1\n\n
     """
 
     # If no subcommand is specified, simply run the following lines as the

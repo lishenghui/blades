@@ -18,7 +18,7 @@ class TestAggregators(unittest.TestCase):
         ]
         self.mean = Mean()
         self.median = Median()
-        self.trimmedmean = Trimmedmean(2)
+        self.trimmedmean = Trimmedmean(1)
         self.geomed = GeoMed(eps=1e-8, maxiter=1000, ftol=1e-22)
         self.dnc = DnC(num_byzantine=1, sub_dim=2, num_iters=1)
 

@@ -11,11 +11,3 @@ exclude =
 max-line-length = 88
 max-complexity = 100
 ignore = W293,W504,W503,E203
-
-[tool.black]
-line-length = 88
-;include = '\.pyi?$'
-exclude = .git,__pycache__,docs,build,dist,blades/fllib/models/backbones
-
-[codespell]
-skip = ./src/3rdParty

@@ -10,7 +10,7 @@ class Embedder(nn.Module):
         pretrained_weight=None,
         embed_freeze=False,
         *args,
-        **kwargs
+        **kwargs,
     ):
         super(Embedder, self).__init__()
         self.embeddings = (

@@ -28,18 +28,27 @@ class Median(object):
 
 class Trimmedmean(object):
     def __init__(self, num_byzantine: int, *, filter_frac=1.0):
+        if filter_frac > 1.0 or filter_frac < 0.0:
+            raise ValueError(f"filter_frac should be in [0.0, 1.0], got {filter_frac}.")
+
+        if not isinstance(num_byzantine, int):
+            raise ValueError(
+                f"num_byzantine should be an integer, got {num_byzantine}."
+            )
+
         def round_up_to_power_of_two(num):
             num = int(num)
-            if num % 2 == 0:
-                return num
-            else:
-                return num + 1
+            return num
 
         self.num_excluded = round_up_to_power_of_two(filter_frac * num_byzantine)
 
     def __call__(self, inputs: List[torch.Tensor]):
         if len(inputs) <= self.num_excluded * 2:
-            raise ValueError("Not enough inputs to compute trimmed mean")
+            raise ValueError(
+                f"Not enough inputs to compute trimmed mean,"
+                f"got {len(inputs)} inputs but need at least "
+                f"{self.num_excluded * 2 + 1} inputs."
+            )
         inputs = torch.stack(inputs, dim=0)
         largest, _ = torch.topk(inputs, self.num_excluded, 0)
         neg_smallest, _ = torch.topk(-inputs, self.num_excluded, 0)

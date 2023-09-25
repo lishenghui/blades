@@ -1,6 +1,7 @@
 import unittest
 
 import torch
+import ray
 
 from blades.adversaries import (
     ALIEAdversary,
@@ -23,16 +24,23 @@ class TestAdversary(unittest.TestCase):
 
         self.algorithm = (
             FedavgConfig()
-            .data(num_clients=2, dataset_config={"custom_dataset": "simple"})
+            .data(
+                num_clients=2,
+                dataset_config={"custom_dataset": "simple", "num_classes": 2},
+            )
             .training(global_model=torch.nn.Linear(5, 5))
             .adversary(
                 num_malicious_clients=1,
                 adversary_config={"type": "blades.adversaries.AdaptiveAdversary"},
             )
-            .resources(num_remote_workers=2, num_gpus_per_worker=0)
+            .resources(num_remote_workers=1, num_gpus_per_worker=0)
             .build()
         )
         self.adversary = self.algorithm.adversary
+
+    @classmethod
+    def tearDownClass(cls):
+        ray.shutdown()
 
     def test_on_algorithm_start(self):
         """Tests the on_algorithm_start method."""
@@ -52,9 +60,9 @@ class TestAdversary(unittest.TestCase):
         for adv_cls in all_advs:
             config = (
                 FedavgConfig()
-                .resources(num_remote_workers=2, num_gpus_per_worker=0)
+                .resources(num_remote_workers=0, num_gpus_per_worker=0)
                 .data(
-                    num_clients=1,
+                    num_clients=2,
                     dataset_config={
                         "custom_dataset": "simple",
                         "num_classes": 2,

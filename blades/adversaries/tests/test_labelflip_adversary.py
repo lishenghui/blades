@@ -3,6 +3,7 @@ import unittest
 
 import torch
 import torch.nn.functional as F
+import ray
 
 from blades.adversaries import LabelFlipAdversary
 from blades.algorithms.fedavg import FedavgConfig
@@ -47,6 +48,10 @@ class TestAdaptiveAdversary(unittest.TestCase):
             num_clients=1,
             train_bs=3,
         )
+
+    @classmethod
+    def tearDownClass(cls):
+        ray.shutdown()
 
     def test_on_local_round_end(self):
         uid = self.global_dataset.client_ids[0]

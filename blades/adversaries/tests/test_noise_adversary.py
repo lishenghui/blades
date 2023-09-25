@@ -1,6 +1,7 @@
 import copy
 import unittest
 
+import ray
 import torch
 import torch.nn.functional as F
 
@@ -45,6 +46,10 @@ class TestAdaptiveAdversary(unittest.TestCase):
             num_clients=1,
             train_bs=3,
         )
+
+    @classmethod
+    def tearDownClass(cls):
+        ray.shutdown()
 
     def test_on_local_round_end(self):
         uid = self.global_dataset.client_ids[0]

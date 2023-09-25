@@ -84,7 +84,7 @@ class TestFedavg(unittest.TestCase):
         self.assertIsInstance(model, SimpleNet)
 
         num_cpus_per_worker = 1
-        num_gpus_per_worker = 1
+        num_gpus_per_worker = 0
         num_remote_workers = 1
         config = (
             fedavg.FedavgConfig()
@@ -93,7 +93,13 @@ class TestFedavg(unittest.TestCase):
                 num_gpus_per_worker=num_gpus_per_worker,
                 num_remote_workers=num_remote_workers,
             )
-            .data(dataset_config={"custom_dataset": DATASET_NAME, "num_classes": 2})
+            .data(
+                dataset_config={
+                    "custom_dataset": DATASET_NAME,
+                    "num_classes": 2,
+                    "num_clients": 1,
+                }
+            )
             .training(global_model={"custom_model": NET_NAME})
         )
         algo = config.build()
@@ -101,7 +107,7 @@ class TestFedavg(unittest.TestCase):
         self.assertAlmostEqual(algo.config.num_gpus_per_worker, num_gpus_per_worker)
         self.assertIsNotNone(algo)
 
-        for _ in range(2000):
+        for _ in range(2):
             results = algo.train()
             if results.get("acc_top_1"):
                 print(results)

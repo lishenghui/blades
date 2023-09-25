@@ -58,10 +58,41 @@ class AdversaryConfig:
 
         return config
 
+    def __getitem__(self, item):
+        """Shim method to still support accessing properties by key lookup.
+
+        This way, an AlgorithmConfig object can still be used as if a dict, e.g.
+        by Ray Tune.
+
+        Examples:
+            >>> from ray.rllib.algorithms.algorithm_config import AlgorithmConfig
+            >>> config = AlgorithmConfig()
+            >>> print(config["lr"])
+            ... 0.001
+        """
+        # TODO: Uncomment this once all algorithms use AlgorithmConfigs under the
+        #  hood (as well as Ray Tune).
+        # if log_once("algo_config_getitem"):
+        #    logger.warning(
+        #        "AlgorithmConfig objects should NOT be used as dict! "
+        #        f"Try accessing `{item}` directly as a property."
+        #    )
+        # In case user accesses "old" keys, which need to
+        # be translated to their correct property names.
+        # item = self._translate_special_keys(item)
+        return getattr(self, item)
+
+    def get(self, key, default=None):
+        """Shim method to help pretend we are a dict."""
+        # prop = self._translate_special_keys(key)
+        return getattr(self, key, default)
+
     def build(self, clients: List) -> "Adversary":
         """Builds the Adversary instance."""
         config_dict = self.to_dict()
-        cls = config_dict.pop("adversary_class")
+        cls = config_dict.pop("adversary_class", Adversary)
+        # if cls is None:
+        #     raise ValueError("No `adversary_class` specified in config.")
         return from_config(cls, config_dict, clients=clients)
 
     def update_from_dict(

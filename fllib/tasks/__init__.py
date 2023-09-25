@@ -1,4 +1,4 @@
 from .task import Task, TaskSpec
-from .mnist import MNIST
+from .image_classfication import ImageClassfication
 
-__all__ = ["Task", "TaskSpec", "MNIST"]
+__all__ = ["Task", "TaskSpec", "ImageClassfication"]

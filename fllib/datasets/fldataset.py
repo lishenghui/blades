@@ -70,6 +70,7 @@ class FLDataset(ABC):
     ):
         self.train_transform = train_transform
         self.test_transform = test_transform
+        self.num_clients = num_clients
         if train_data:
             self.train_data = train_data
             self.test_data = test_data
@@ -77,7 +78,6 @@ class FLDataset(ABC):
             self.train_bs = train_bs
             self._preprocess()
             return
-
         self.num_classes = num_classes
         self.train_bs = train_bs
         self.test_bs = test_bs
@@ -150,6 +150,7 @@ class FLDataset(ABC):
                 train_data=self.train_data,
                 test_data=self.test_data,
                 train_bs=self.train_bs,
+                num_clients=self.num_clients,
                 train_transform=self.train_transform,
                 test_transform=self.test_transform,
             ),

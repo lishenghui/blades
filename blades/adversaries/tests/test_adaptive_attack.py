@@ -3,6 +3,7 @@ from unittest.mock import MagicMock
 import torch
 from blades.adversaries import AdaptiveAdversary
 from fllib.constants import CLIENT_UPDATE
+import ray
 
 
 class TestAdaptiveAdversary(unittest.TestCase):
@@ -26,6 +27,10 @@ class TestAdaptiveAdversary(unittest.TestCase):
         )
         self.adversary = AdaptiveAdversary(self.clients, self.global_config)
         self.adversary.on_algorithm_start(self.algorithm)
+
+    @classmethod
+    def tearDownClass(cls):
+        ray.shutdown()
 
     def test_on_local_round_end(self):
         output = self.adversary.on_local_round_end(self.algorithm)

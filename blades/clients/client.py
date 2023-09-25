@@ -61,9 +61,9 @@ class Client(fllib.clients.Client):
 class ClientProxy:
     """Monkey patches a client to make it malicious.
 
-    This is used to simulate a malicious client. The client will act
-    maliciously after the `attack` method is called, while it will act benignly
-    after the `restore` method. To simulate such a behavior.
+    This is used to simulate a malicious client. The client will act maliciously after
+    the `attack` method is called, while it will act benignly after the `restore`
+    method. To simulate such a behavior.
     """
 
     is_malicious = True

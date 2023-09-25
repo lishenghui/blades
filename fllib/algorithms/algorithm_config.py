@@ -60,13 +60,14 @@ class AlgorithmConfig:
         # self.training()
         self.algo_class = algo_class
         self.global_model = None
-        # self.local_lr = 1.0
         self.num_batch_per_round = 1
         self.client_config = {}
         self.server_config = {}
         self.logger_creator = None
         self.learner_class = None
-        self.task_spec = TaskSpec(task_class="fllib.tasks.MNIST", alg_config=self)
+        self.task_spec = TaskSpec(
+            task_class="fllib.tasks.ImageClassfication", alg_config=self
+        )
         # experimental: this will contain the hyper-parameters that are passed to the
         # Learner, for computing loss, etc. New algorithms have to set this to their
         # own default. .training() will modify the fields of this object.
@@ -185,7 +186,6 @@ class AlgorithmConfig:
             task_spec=self.task_spec,
         ).update_from_dict(self.server_config)
 
-        print("server_config", config.to_dict())
         return config
 
     def get_worker_group_config(self) -> WorkerGroupConfig:
@@ -318,8 +318,8 @@ class AlgorithmConfig:
         """Freezes this config object, such that no attributes can be set
         anymore.
 
-        Algorithms should use this method to make sure that their config
-        objects remain read-only after this.
+        Algorithms should use this method to make sure that their config objects remain
+        read-only after this.
         """
         if self._is_frozen:
             return

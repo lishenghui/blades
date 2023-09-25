@@ -81,7 +81,7 @@ class TextTokenizer(nn.Module):
         activation=None,
         max_pool=True,
         *args,
-        **kwargs
+        **kwargs,
     ):
         super(TextTokenizer, self).__init__()
 

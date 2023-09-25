@@ -3,7 +3,7 @@ from fllib.tasks.task import Task
 import torch.nn.functional as F
 
 
-class MNIST(Task):
+class ImageClassfication(Task):
     @staticmethod
     def loss(
         model: torch.nn.Module,
