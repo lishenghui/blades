@@ -5,12 +5,15 @@ from ray.air.integrations.wandb import setup_wandb
 from ray.tune.logger import Logger
 from ray.tune.resources import Resources
 from ray.tune.trainable import Trainable
+from ray.rllib.utils import force_list
 from ray.util.annotations import PublicAPI
 from ray.tune.execution.placement_groups import PlacementGroupFactory
+from ray.rllib.utils.from_config import from_config
 
 from fllib.algorithms.client_manager import ClientManager
 from fllib.algorithms.algorithm_config import AlgorithmConfig
 from fllib.types import ResultDict, PartialAlgorithmConfigDict
+from fllib.algorithms.callbacks import AlgorithmCallbackList
 
 
 class Algorithm(Trainable):
@@ -58,6 +61,7 @@ class Algorithm(Trainable):
         # Validate and freeze our AlgorithmConfig object (no more changes possible).
         config.validate()
         config.freeze()
+
         super().__init__(
             config=config,
             logger_creator=logger_creator,
@@ -79,6 +83,11 @@ class Algorithm(Trainable):
     def setup(self, config: AlgorithmConfig):
         # Setup our config: Merge the user-supplied config dict (which could
         # be a partial config dict) with the class' default.
+
+        callback = from_config(config.pop("callbacks_config"))
+        self.callbacks = AlgorithmCallbackList(force_list(callback))
+        self.callbacks.setup(self)
+
         if not isinstance(config, AlgorithmConfig):
             assert isinstance(config, PartialAlgorithmConfigDict)
             config_obj = self.get_default_config()
@@ -109,9 +118,9 @@ class Algorithm(Trainable):
 
         # Results dict for training (and if appolicable: evaluation).
         results: ResultDict = {}
-
+        self.callbacks.on_train_round_begin()
         results = self.training_step()
-
+        self.callbacks.on_train_round_end()
         if evaluate_this_iter:
             results.update(self.evaluate())
 

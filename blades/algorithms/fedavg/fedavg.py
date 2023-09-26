@@ -153,6 +153,7 @@ class Fedavg(Algorithm):
         # Metrics-related properties.
         self._timers = defaultdict(_Timer)
         self._counters = defaultdict(int)
+        self.global_vars = defaultdict(lambda: defaultdict(list))
 
         clients = self.client_manager.clients
         if self.worker_group.workers:

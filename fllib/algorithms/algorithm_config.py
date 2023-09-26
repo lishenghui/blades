@@ -19,6 +19,7 @@ from fllib.core.execution.worker import Worker
 from fllib.clients import ClientConfig
 from fllib.algorithms.server_config import ServerConfig
 from fllib.core.execution.worker_group_config import WorkerGroupConfig
+from fllib.algorithms.callbacks import AlgorithmCallback
 
 if TYPE_CHECKING:
     from fllib.algorithms.algorithm import Algorithm
@@ -95,6 +96,8 @@ class AlgorithmConfig:
         # `self.evaluation()`
         self.evaluation_interval = 10
         self.evaluation_config = None
+
+        self.callbacks_config = AlgorithmCallback
 
     def client(self, *, client_config: Optional[dict] = NotProvided):
         if client_config is not NotProvided:
