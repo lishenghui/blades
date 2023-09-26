@@ -1,4 +1,6 @@
 from pathlib import Path
+from typing import Dict
+
 from torch.nn import Module
 from ray.rllib.utils.from_config import from_config
 from ray.rllib.utils.annotations import PublicAPI
@@ -43,7 +45,7 @@ def make_dataset(
 
 class DatasetCatalog:
     @staticmethod
-    def get_dataset(dataset_config: type = None, **dataset_kwargs) -> Module:
+    def get_dataset(dataset_config: Dict = None, **dataset_kwargs) -> Module:
         if dataset_config.get("custom_dataset"):
             # Allow model kwargs to be overridden / augmented by
             # custom_model_config.
@@ -76,7 +78,7 @@ class DatasetCatalog:
             dataset = make_dataset(
                 dataset_config.get("type"),
                 dataset_config.get("num_clients"),
-                train_batch_size=dataset_config.get("train_batch_size"),
+                train_batch_size=dataset_config.get("train_batch_size", 32),
                 seed=dataset_config.get("seed"),
                 iid=dataset_config.get("iid", True),
                 alpha=dataset_config.get("alpha", 0.1),

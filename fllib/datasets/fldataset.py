@@ -162,7 +162,6 @@ class FLDataset(ABC):
     ):
         x_test, y_test = test_set
         x_train, y_train = train_set
-
         if self.is_image:
             x_train = x_train.astype("float32") / 255.0
             x_test = x_test.astype("float32") / 255.0

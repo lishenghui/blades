@@ -47,59 +47,11 @@ dependencies=[
     "torchmetrics",
 ]
 
-[project.optional-dependencies]
-graphgym=[
-    "yacs",
-    "hydra-core",
-    "protobuf<4.21",
-    "pytorch-lightning",
-]
-modelhub=[
-    "huggingface_hub"
-]
-benchmark=[
-    "protobuf<4.21",
-    "wandb",
-    "pandas",
-    "networkx",
-    "matplotlib",
-]
-test=[
-    "pytest",
-    "pytest-cov",
-    "onnx",
-    "onnxruntime",
-]
-dev=[
-    "torch_geometric[test]",
-    "pre-commit",
-]
-full = [
-    "torch_geometric[graphgym, modelhub]",
-    "ase",
-    "h5py",
-    "numba",
-    "sympy",
-    "pandas",
-    "captum",
-    "rdflib",
-    "trimesh",
-    "networkx",
-    "graphviz",
-    "tabulate",
-    "matplotlib",
-    "pynndescent",
-    "torchmetrics",
-    "scikit-image",
-    "pytorch-memlab",
-    "pgmpy",
-    "opt_einsum",
-    "statsmodels",
-    "rdkit",
-]
-
 [project.urls]
 repository="https://github.com/lishenghui/blades"
+
+[project.scripts]
+blades = "blades.train:main"
 
 [tool.flit.module]
 name="blades"
