@@ -3,6 +3,7 @@ from ray import tune
 from fllib.algorithms import AlgorithmConfig
 
 from blades.algorithms.fedavg import FedavgConfig, Fedavg
+from ray.tune.stopper import MaximumIterationStopper
 
 
 class ExampleFedavgConfig(FedavgConfig):
@@ -14,7 +15,7 @@ class ExampleFedavgConfig(FedavgConfig):
             "type": "fashionmnist",
             "num_clients": 10,
             "num_classes": 10,
-            "train_batch_size": 10,
+            "train_batch_size": 32,
         }
         self.global_model = "cnn"
 
@@ -45,4 +46,5 @@ if __name__ == "__main__":
     tune.run(
         ExampleFedavg,
         config=config_dict,
+        stop=MaximumIterationStopper(100),
     )
