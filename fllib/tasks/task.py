@@ -94,7 +94,9 @@ class Task:
         self._lock = threading.RLock()
         self._optimizers = None
         self._saved_state_dict = None
-        self._num_classes = self.config.dataset_config.get("num_classes", None)
+
+        data_config = self.config.get("dataset_config", {})
+        self._num_classes = data_config.get("num_classes", None)
         self._metrics = self._init_metrics()
 
     @property

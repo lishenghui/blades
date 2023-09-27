@@ -26,7 +26,6 @@ class Worker:
         # pick the configs that we need for the learner from scaling config
         # self._distributed = worker_scaling_config.get("num_workers", 0) > 1
         self._distributed = worker_scaling_config.num_workers > 1
-
         if worker_scaling_config.num_gpus_per_worker <= 0:
             self.device = "cpu"
         elif not self._distributed:

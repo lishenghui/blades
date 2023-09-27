@@ -5,7 +5,6 @@ exclude =
     __pycache__,
     build,
     dist,
-    src/setup.py,
     fllib/models/backbones/*
 
 max-line-length = 88

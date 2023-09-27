@@ -66,9 +66,8 @@ class AlgorithmConfig:
         self.server_config = {}
         self.logger_creator = None
         self.learner_class = None
-        self.task_spec = TaskSpec(
-            task_class="fllib.tasks.ImageClassfication", alg_config=self
-        )
+        self.task_config = {"task_class": "fllib.tasks.ImageClassfication"}
+
         # experimental: this will contain the hyper-parameters that are passed to the
         # Learner, for computing loss, etc. New algorithms have to set this to their
         # own default. .training() will modify the fields of this object.
@@ -158,6 +157,9 @@ class AlgorithmConfig:
             self.num_remote_workers = num_remote_workers
         return self
 
+    def get_task_spec(self) -> TaskSpec:
+        return TaskSpec(task_class=self.task_config["task_class"], alg_config=self)
+
     def get_client_config(self) -> ClientConfig:
         if not self._is_frozen:
             raise ValueError(
@@ -185,8 +187,7 @@ class AlgorithmConfig:
 
         config = ServerConfig(
             class_specifier="fllib.algorithms.Server",
-            # global_model=self.global_model,
-            task_spec=self.task_spec,
+            task_spec=self.get_task_spec(),
         ).update_from_dict(self.server_config)
 
         return config
@@ -207,7 +208,6 @@ class AlgorithmConfig:
             )
             .worker(worker_class=Worker)
         )
-
         return config
 
     def get_default_worker_class(self) -> Union[Type["Worker"], str]:
@@ -346,7 +346,7 @@ class AlgorithmConfig:
         """
         config = copy.deepcopy(vars(self))
         config.pop("algo_class")
-        config.pop("_is_frozen")
+        config.pop("_is_frozen", None)
 
         # Worst naming convention ever: NEVER EVER use reserved key-words...
         if "lambda_" in config:
@@ -430,9 +430,9 @@ class AlgorithmConfig:
             # Some keys specify config sub-dicts and therefore should go through the
             # correct methods to properly `.update()` those from given config dict
             # (to not lose any sub-keys).
-            if key == "callbacks_config":
-                self.callbacks(callbacks_config=value)
-            elif key.startswith("evaluation_"):
+            # if key == "callbacks_config":
+            # self.callbacks(callbacks_config=value)
+            if key.startswith("evaluation_"):
                 eval_call[key] = value
             elif key == "exploration_config":
                 self.exploration(exploration_config=value)
@@ -464,21 +464,3 @@ class AlgorithmConfig:
         """Configures evaluation settings."""
         if evaluation_interval is not NotProvided:
             self.evaluation_interval = evaluation_interval
-
-        # if evaluation_config is not NotProvided:
-        #     # If user really wants to set this to None, we should allow this here,
-        #     # instead of creating an empty dict.
-        #     if evaluation_config is None:
-        #         self.evaluation_config = None
-        #     # Update (don't replace) the existing overrides with the provided ones.
-        #     else:
-        #         from ray.rllib.algorithms.algorithm import Algorithm
-
-        #         self.evaluation_config = deep_update(
-        #             self.evaluation_config or {},
-        #             evaluation_config,
-        #             True,
-        #             Algorithm._allow_unknown_subkeys,
-        #             Algorithm._override_all_subkeys_if_type_changes,
-        #             Algorithm._override_all_key_list,
-        #         )

@@ -81,9 +81,8 @@ class FedavgConfig(AlgorithmConfig):
                 num_cpus_per_worker=self.num_cpus_per_worker,
                 num_gpus_per_worker=self.num_gpus_per_worker,
             )
-            .task(task_spec=self.task_spec)
+            .task(task_spec=self.get_task_spec())
         )
-
         return config
 
     @override(AlgorithmConfig)
@@ -268,6 +267,7 @@ class Fedavg(Algorithm):
             )
         else:
             evaluate_results = self.worker_group.local_execute(validate_func, clients)
+
         results = {
             "ce_loss": np.average(
                 [metric["ce_loss"] for metric in evaluate_results],
