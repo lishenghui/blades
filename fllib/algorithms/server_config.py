@@ -23,7 +23,7 @@ class ServerConfig:
     def __init__(self, class_specifier, task_spec) -> None:
         super().__init__()
 
-        self.cls = class_specifier
+        self.class_specifier = class_specifier
         self.task_spec = task_spec
 
         # `self.training()`
@@ -76,9 +76,7 @@ class ServerConfig:
         Returns:
             Callable: the instantiated client.
         """
-        server_cls = self.cls
-        # if isinstance(server_cls, str):
-        #     raise ValueError("string `server_cls` is not supported in FLlib yet")
+        server_cls = self.class_specifier
         if server_cls is None:
             raise ValueError("server_cls is not set")
         return from_config(
