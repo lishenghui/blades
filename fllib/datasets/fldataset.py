@@ -139,7 +139,7 @@ class FLDataset(ABC):
                 pickle.load(f) for _ in range(5)
             ]
 
-        assert sorted(train_clients) == sorted(test_clients)
+        # assert sorted(train_clients) == sorted(test_clients)
         self._preprocess()
 
     def __reduce__(self):
@@ -180,7 +180,6 @@ class FLDataset(ABC):
         else:
             print("generating non-iid data")
             min_size = 0
-            # self.num_classes = 10
             N = y_train.shape[0]
             client_dataidx_map = {}
 
@@ -271,6 +270,7 @@ class FLDataset(ABC):
                 batch_size=self.train_bs,
             )
 
+        for idx, u_id in enumerate(self.test_data.keys()):
             self._test_dls[u_id] = self._preprocess_test_data(
                 data=np.array(self.test_data[u_id]["x"]),
                 labels=np.array(self.test_data[u_id]["y"]),
@@ -278,12 +278,22 @@ class FLDataset(ABC):
 
     @property
     def client_ids(self):
+        return list(set(self.train_client_ids) | set(self.test_client_ids))
+
+    @property
+    def train_client_ids(self):
         return list(self._train_dls.keys())
+
+    @property
+    def test_client_ids(self):
+        return list(self._test_dls.keys())
 
     def subset(self, u_ids: List[str]):
         subset = copy.deepcopy(self)
         subset._train_dls = {k: v for k, v in self._train_dls.items() if k in u_ids}
+        subset._test_dls = {k: v for k, v in self._test_dls.items() if k in u_ids}
         subset.train_data = {k: v for k, v in self.train_data.items() if k in u_ids}
+        subset.test_data = {k: v for k, v in self.test_data.items() if k in u_ids}
         return subset
 
     def split(self, n: int):
@@ -318,6 +328,7 @@ class FLDataset(ABC):
 
         Returns: the `generator` of dataset for the given `u_id`.
         """
+        # breakpoint()
         return self._train_dls[u_id]
 
     def get_test_loader(self, u_id):

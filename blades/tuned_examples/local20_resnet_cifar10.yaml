@@ -20,7 +20,7 @@ fedavg_blades:
     num_remote_workers: 0
     num_gpus_per_worker: 0.
     num_cpus_per_worker: 0
-    num_cpus_for_driver: 2
+    num_cpus_for_driver: 4
     num_gpus_for_driver: 0.25
 
     # num_remote_workers: 14

@@ -146,7 +146,10 @@ class Fedavg(Algorithm):
 
         self._setup_dataset()
         self.client_manager = self.client_manager_cls(
-            self._dataset.client_ids, client_config=self.config.get_client_config()
+            self._dataset.client_ids,
+            self._dataset.train_client_ids,
+            self._dataset.test_client_ids,
+            client_config=self.config.get_client_config(),
         )
 
         # Metrics-related properties.
@@ -210,8 +213,7 @@ class Fedavg(Algorithm):
             dataset = worker.dataset.get_train_loader(client.client_id)
             return client.train_one_round(dataset)
 
-        clients = self.client_manager.clients
-
+        clients = self.client_manager.trainable_clients
         if self.worker_group.workers:
             affinity_actors = [
                 self._client_actors_affinity[client.client_id] for client in clients
@@ -251,7 +253,8 @@ class Fedavg(Algorithm):
             GLOBAL_MODEL, self.server.get_global_model().state_dict()
         )
 
-        clients = self.client_manager.clients
+        clients = self.client_manager.testable_clients
+        # breakpoint()
 
         def validate_func(worker, client):
             test_loader = worker.dataset.get_test_loader(client.client_id)
