@@ -12,8 +12,9 @@ from fllib.datasets.fldataset import FLDataset
 from fllib.datasets.mnist import MNIST
 from fllib.constants import FLLIB_DATASET
 from fllib.datasets.fashionmnist import FASHIONMNIST
+from fllib.datasets.ucihar import UCIHAR
 
-__all__ = ["CIFAR10", "MNIST", "FASHIONMNIST"]
+__all__ = ["CIFAR10", "MNIST", "FASHIONMNIST", "UCIHAR"]
 
 
 def make_dataset(
@@ -28,7 +29,7 @@ def make_dataset(
     data_root: Path = (
         Path.home() / DEFAULT_DATA_ROOT
     )  # typing 'data_root' as a Path object
-    valid_datasets = ["cifar10", "mnist", "fashionmnist"]
+    valid_datasets = ["cifar10", "mnist", "fashionmnist", "ucihar"]
     if identifier not in valid_datasets:
         raise ValueError(f"Unknown dataset: {identifier}")
     dataset = globals()[identifier.upper()](

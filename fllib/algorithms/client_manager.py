@@ -2,16 +2,21 @@ from typing import Optional
 
 from ray.rllib.utils.from_config import from_config
 
-from fllib.clients import Client
+from fllib.clients import Client, ClientConfig
 
 
 class ClientManager:
-    def __init__(self, client_ids, client_config) -> None:
+    def __init__(
+        self, client_ids, train_client_ids, test_client_ids, client_config: ClientConfig
+    ) -> None:
         self._clients = []
         self._client_map = {}
-
         for client_id in client_ids:
-            config = client_config.client_id(client_id)
+            config = (
+                client_config.client_id(client_id)
+                .trainable(client_id in train_client_ids)
+                .testable(client_id in test_client_ids)
+            )
             self.add_client(config=config)
 
     @property
@@ -23,6 +28,16 @@ class ClientManager:
     def clients(self) -> list:
         """Returns the list of clients."""
         return self._clients
+
+    @property
+    def trainable_clients(self) -> list:
+        """Returns the list of clients."""
+        return [client for client in self._clients if client.config.is_trainable]
+
+    @property
+    def testable_clients(self) -> list:
+        """Returns the list of clients."""
+        return [client for client in self._clients if client.config.is_testable]
 
     def add_client(
         self,

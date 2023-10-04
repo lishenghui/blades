@@ -48,6 +48,9 @@ class ClientConfig:
         self.lr_scheduler = None
         self.lr_scheduler_config = None
 
+        self.is_trainable = True
+        self.is_testable = True
+
         # `self.callbacks()`
         self.callbacks_config = ClientCallback
 
@@ -71,6 +74,14 @@ class ClientConfig:
             self.lr = lr
         if momentum is not NotProvided:
             self.momentum = momentum
+        return self
+
+    def trainable(self, trainable: bool = True) -> "ClientConfig":
+        self.is_trainable = trainable
+        return self
+
+    def testable(self, testable: bool = True) -> "ClientConfig":
+        self.is_testable = testable
         return self
 
     def client_id(self, uid: str) -> "ClientConfig":

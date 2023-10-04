@@ -21,8 +21,13 @@ class ModelCatalog:
                 model = ResNet10()
             elif "mlp" in model_config:
                 model = MLP()
+            elif "harcnn" in model_config:
+                from fllib.models.ucihar.harcnn import HARCNN
+
+                model = HARCNN()
             elif "cnn" in model_config:
                 model = FashionCNN()
+
         elif isinstance(model_config, Module):
             model = model_config
         elif model_config.get("custom_model"):

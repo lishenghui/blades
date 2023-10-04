@@ -152,8 +152,16 @@ class DnC(object):
             good = s.argsort()[
                 : len(updates) - int(self.fliter_frac * self.num_byzantine)
             ]
-            benign_ids.extend(good)
+            benign_ids.append(good)
 
-        benign_ids = list(set(benign_ids))
+        # Convert the first list to a set to start the intersection
+        intersection_set = set(benign_ids[0])
+
+        # Iterate over the rest of the lists and get the intersection
+        for lst in benign_ids[1:]:
+            intersection_set.intersection_update(lst)
+
+        # Convert the set back to a list
+        benign_ids = list(intersection_set)
         benign_updates = updates[benign_ids, :].mean(dim=0)
         return benign_updates
