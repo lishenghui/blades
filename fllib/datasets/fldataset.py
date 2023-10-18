@@ -291,6 +291,7 @@ class FLDataset(ABC):
     def subset(self, u_ids: List[str]):
         subset = copy.deepcopy(self)
         subset._train_dls = {k: v for k, v in self._train_dls.items() if k in u_ids}
+        subset._test_dls = {k: v for k, v in self._test_dls.items() if k in u_ids}
         subset.train_data = {k: v for k, v in self.train_data.items() if k in u_ids}
         return subset
 
