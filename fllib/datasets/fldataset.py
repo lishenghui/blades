@@ -293,6 +293,7 @@ class FLDataset(ABC):
         subset._train_dls = {k: v for k, v in self._train_dls.items() if k in u_ids}
         subset._test_dls = {k: v for k, v in self._test_dls.items() if k in u_ids}
         subset.train_data = {k: v for k, v in self.train_data.items() if k in u_ids}
+        subset.test_data = {k: v for k, v in self.test_data.items() if k in u_ids}
         return subset
 
     def split(self, n: int):
@@ -327,6 +328,7 @@ class FLDataset(ABC):
 
         Returns: the `generator` of dataset for the given `u_id`.
         """
+        # breakpoint()
         return self._train_dls[u_id]
 
     def get_test_loader(self, u_id):
