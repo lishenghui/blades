@@ -1,12 +1,13 @@
 fedavg_blades:
   run: FEDAVG
   stop:
-    training_iteration: 2000
+    training_iteration: 400
 
   config:
     seed:
-        grid_search: [122]
-      # grid_search: [121, 122, 123, 124, 125]
+        # grid_search: [122, 123]
+      grid_search: [112]
+      # grid_search: [111, 112, 123, 124, 125]
     dataset_config:
       type: fashionmnist
       num_clients: 60
@@ -21,17 +22,27 @@ fedavg_blades:
     num_cpus_for_driver: 2
     num_gpus_for_driver: 0.3
 
+    # num_remote_workers: 14
+    # num_gpus_per_worker: 0.25
+    # num_cpus_per_worker: 2
+    # num_cpus_for_driver: 2
+    # num_gpus_for_driver: 0.5
+
+    # num_clients: 2
+    # global_model:
+      # grid_search: [cct]
+    # global_model: cct
     global_model: cnn
 
     client_config:
-        lr: 1.0
+        lr: 0.1
+        num_batch_per_round: 20
         momentum:
           grid_search: [0.0]
 
         # callbacks_config:
         #   type: blades.clients.callbacks.ClippingCallback
-        #   clip_threshold:
-        #     grid_search: [5.0]
+        #   clip_threshold: 10.0
 
     server_config:
       aggregator:
@@ -43,23 +54,25 @@ fedavg_blades:
           type: DnC,
           type: Trimmedmean,
           type: Signguard,
-          # type: Multikrum,
-          # type: Centeredclipping
           ]
 
       optimizer:
         type: SGD
-        lr: 0.1
-        lr_schedule: [[0, 0.1], [1500, 0.1], [1501, 0.01], [2000, 0.01]]
+        lr: 1.0
+        # lr_schedule: [[0, 0.1], [1500, 0.1], [1501, 0.01], [2000, 0.01]]
+        # lr: 0.1
+        # lr_schedule: [[0, 0.1], [1500, 0.1],  [1501, 0.05], [3000, 0.05], [3001, 0.005], [4000, 0.005]]
         momentum:
+          # grid_search: [0.0]
           grid_search: [0.0]
 
     num_malicious_clients:
-      # grid_search:  [0,9]
-      # grid_search:  [3, 6]
+      # grid_search: [0]
       grid_search:  [3, 6, 9, 12, 15, 18]
-
     adversary_config:
+      # type: blades.adversaries.LabelFlipAdversary
+      # type: blades.adversaries.SignFlipAdversary
+      # type: blades.adversaries.AdaptiveAdversary
       grid_search:
         - type: blades.adversaries.ALIEAdversary
         - type: blades.adversaries.LabelFlipAdversary

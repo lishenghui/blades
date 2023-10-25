@@ -6,7 +6,7 @@ fedavg_blades:
   config:
     seed:
         # grid_search: [122, 123]
-      grid_search: [111]
+      grid_search: [112]
       # grid_search: [111, 112, 123, 124, 125]
     dataset_config:
       type: fashionmnist

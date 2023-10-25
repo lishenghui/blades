@@ -2,26 +2,31 @@ fedavg_blades:
   run: FEDAVG
   stop:
     training_iteration: 400
-    train_loss: 100
+    # train_loss: 100
 
   config:
     seed:
         # grid_search: [122, 123]
-      # grid_search: [113]
-      grid_search: [111, 112, 123, 124, 125]
+      grid_search: [111]
+      # grid_search: [111, 112, 123, 124, 125]
     dataset_config:
       type: cifar10
       num_clients: 60
       num_classes: 10
       train_batch_size: 64
 
+      iid:
+        grid_search: [False]
+      alpha:
+        grid_search: [0.1, 0.5]
+
     evaluation_interval: 50
 
     num_remote_workers: 0
-    num_gpus_per_worker: 0.
+    num_gpus_per_worker: 0.5
     num_cpus_per_worker: 0
     num_cpus_for_driver: 4
-    num_gpus_for_driver: 0.25
+    num_gpus_for_driver: 0.5
 
     # num_remote_workers: 14
     # num_gpus_per_worker: 0.25
@@ -45,12 +50,12 @@ fedavg_blades:
       aggregator:
         grid_search: [
           # type: Mean,
-          # type: Clippedclustering,
           # type: Median,
           # type: GeoMed,
           # type: DnC,
-          # type: Trimmedmean
-          type: Signguard
+          # type: Trimmedmean,
+          # type: Signguard,
+          type: Clippedclustering,
           ]
 
       optimizer:
@@ -64,18 +69,19 @@ fedavg_blades:
           grid_search: [0.0]
 
     num_malicious_clients:
-      grid_search: [3, 15]
-      # grid_search:  [3, 6, 9, 12, 15, 18]
+      # grid_search: [3, 15]
+      grid_search:  [3, 6, 9, 12, 15, 18]
     adversary_config:
       # type: blades.adversaries.LabelFlipAdversary
       # type: blades.adversaries.SignFlipAdversary
       # type: blades.adversaries.AdaptiveAdversary
       grid_search:
         - type: blades.adversaries.ALIEAdversary
-        - type: blades.adversaries.LabelFlipAdversary
+        # - type: blades.adversaries.LabelFlipAdversary
         - type: blades.adversaries.NoiseAdversary
         - type: blades.adversaries.SignFlipAdversary
         - type: blades.adversaries.IPMAdversary
           scale: 0.1
         - type: blades.adversaries.IPMAdversary
           scale: 100
+        - type: blades.adversaries.MinMaxAdversary

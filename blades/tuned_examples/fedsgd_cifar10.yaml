@@ -16,10 +16,10 @@ fedavg_blades:
     evaluation_interval: 50
 
     num_remote_workers: 0
-    num_gpus_per_worker: 0.25
+    num_gpus_per_worker: 0.5
     num_cpus_per_worker: 0
     num_cpus_for_driver: 4
-    num_gpus_for_driver: 0.3
+    num_gpus_for_driver: 0.5
 
     global_model: resnet
 
@@ -36,13 +36,13 @@ fedavg_blades:
     server_config:
       aggregator:
         grid_search: [
-          type: Mean,
-          type: Clippedclustering,
-          type: Median,
-          type: GeoMed,
-          type: DnC,
+          # type: Mean,
+          # type: Clippedclustering,
+          # type: Median,
+          # type: GeoMed,
+          # type: DnC,
           type: Trimmedmean,
-          type: Signguard,
+          # type: Signguard,
           # type: Multikrum,
           # type: Centeredclipping
           ]
@@ -56,7 +56,8 @@ fedavg_blades:
 
     num_malicious_clients:
       # grid_search:  [3]
-      grid_search:  [3, 6, 9, 12, 15, 18]
+      grid_search:  [6, 9]
+      # grid_search:  [3, 6, 9, 12, 15, 18]
 
     adversary_config:
       grid_search:

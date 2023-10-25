@@ -17,7 +17,7 @@ fedavg_blades:
       iid:
         grid_search: [False]
       alpha:
-         grid_search: [0.1, 0.5, 1, 10]
+        grid_search: [0.1, 0.5, 1, 10]
 
     evaluation_interval: 50
 

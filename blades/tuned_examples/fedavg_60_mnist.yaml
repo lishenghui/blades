@@ -2,13 +2,13 @@ fedavg_blades:
   run: FEDAVG
   stop:
     training_iteration: 4000
-    train_loss: 100000
+    # train_loss: 100000
 
   config:
     seed:
         # grid_search: [122, 123]
-      # grid_search: [111, 112]
-      grid_search: [111, 112, 123, 124, 125]
+      grid_search: [111]
+      # grid_search: [111, 112, 123, 124, 125]
     dataset_config:
       type: mnist
       num_clients: 60
