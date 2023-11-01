@@ -185,5 +185,4 @@ if "__main__" == __name__:
     data_root = "./data"
     ucihar = UCIHAR(data_root=data_root, download=True)
     result = ucihar._generate_datasets()
-    breakpoint()
     print("done")

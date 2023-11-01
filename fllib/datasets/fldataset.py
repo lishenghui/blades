@@ -328,7 +328,6 @@ class FLDataset(ABC):
 
         Returns: the `generator` of dataset for the given `u_id`.
         """
-        # breakpoint()
         return self._train_dls[u_id]
 
     def get_test_loader(self, u_id):

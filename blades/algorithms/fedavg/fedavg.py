@@ -252,9 +252,7 @@ class Fedavg(Algorithm):
         self.worker_group.sync_state(
             GLOBAL_MODEL, self.server.get_global_model().state_dict()
         )
-
         clients = self.client_manager.testable_clients
-        # breakpoint()
 
         def validate_func(worker, client):
             test_loader = worker.dataset.get_test_loader(client.client_id)

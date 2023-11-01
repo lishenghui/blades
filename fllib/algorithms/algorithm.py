@@ -1,5 +1,3 @@
-import os
-import pickle
 from typing import Callable, Dict, Optional, Union
 from ray.air.integrations.wandb import setup_wandb
 from ray.tune.logger import Logger
@@ -180,39 +178,6 @@ class Algorithm(Trainable):
 
     def evaluate(self):
         """Performs a single evaluation step and returns a dict of results."""
-
-    # @override(Trainable)
-    def save_checkpoint(self, checkpoint_dir: str) -> str:
-        """Exports AIR Checkpoint to a local directory and returns its
-        directory path.
-
-        The structure of an Algorithm checkpoint dir will be as follows::
-
-            policies/
-                pol_1/
-                    policy_state.pkl
-                pol_2/
-                    policy_state.pkl
-            fllib_checkpoint.json
-            algorithm_state.pkl
-
-        Note: `fllib_checkpoint.json` contains a "version" key (e.g. with value 0.1)
-        helping RLlib to remain backward compatible wrt. restoring from checkpoints from
-        Ray 2.0 onwards.
-
-        Args:
-            checkpoint_dir: The directory where the checkpoint files will be stored.
-
-        Returns:
-            The path to the created AIR Checkpoint directory.
-        """
-        state = self.__getstate__()
-
-        state_file = os.path.join(checkpoint_dir, "algorithm_state.pkl")
-        with open(state_file, "wb") as f:
-            pickle.dump(state, f)
-
-        return checkpoint_dir
 
     @PublicAPI
     def __getstate__(self) -> Dict:
