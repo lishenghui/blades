@@ -1,17 +1,9 @@
 .. raw:: html
 
     <p align=center>
-        <img src="https://github.com/lishenghui/blades/blob/master/doc/source/images/blades_title.png" width="800" alt="Blades Logo">
+        <img src="https://github.com/lishenghui/blades/blob/master/docs/source/images/arch.png" width="1000" alt="Blades Logo">
     </p>
 
-
-
-+---------------------------------------------------------------------------------------------------+-----------------------------------------------------------------------------------------+
-| The architecture of Blades consists of three layers:                                              | .. image:: https://github.com/lishenghui/blades/blob/master/doc/source/images/arch.png  |
-|* **Application Layer** facilitates specific FL algorithms with attacks and defenses implementation|    :width: 600px                                                                        |
-|* **Execution Layer** provides a scalable backend for distributed training.                        |    :align: center                                                                       |
-|* **Data Layer** manages training data retrieval and preprocessing                                 |                                                                                         |
-+---------------------------------------------------------------------------------------------------+-----------------------------------------------------------------------------------------+
 
 Installation
 ==================================================
