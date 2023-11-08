@@ -29,9 +29,9 @@ Installation
 Experiment Results
 ==================================================
 
-.. image:: https://github.com/lishenghui/blades/blob/master/doc/source/images/fashion_mnist.png
+.. image:: https://github.com/lishenghui/blades/blob/master/docs/source/images/fashion_mnist.png
 
-.. image:: https://github.com/lishenghui/blades/blob/master/doc/source/images/cifar10.png
+.. image:: https://github.com/lishenghui/blades/blob/master/docs/source/images/cifar10.png
 
 
 
