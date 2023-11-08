@@ -7,14 +7,14 @@ import ray
 
 from blades.adversaries import LabelFlipAdversary
 from blades.algorithms.fedavg import FedavgConfig
-from fllib.datasets.catalog import DatasetCatalog
-
-from .simple_dataset import SimpleDataset
+from fllib.datasets import DatasetCatalog
+from torch.utils.data import DataLoader
+from fllib.datasets.tests.toy_dataset import ToyFLDataset
 
 
 class TestAdaptiveAdversary(unittest.TestCase):
     def setUp(self):
-        DatasetCatalog.register_custom_dataset("simple", SimpleDataset)
+        DatasetCatalog.register_custom_dataset("simple", ToyFLDataset)
         model = torch.nn.Linear(2, 2)
 
         self.global_lr = 0.1
@@ -25,9 +25,6 @@ class TestAdaptiveAdversary(unittest.TestCase):
                 num_clients=1,
                 dataset_config={
                     "custom_dataset": "simple",
-                    "train_batch_size": 3,
-                    "num_classes": 2,
-                    # "custom_dataset_config": {"num_classes": 2},
                 },
             )
             .training(global_model=model, server_config={"lr": self.global_lr})
@@ -41,12 +38,7 @@ class TestAdaptiveAdversary(unittest.TestCase):
         self.global_dataset = DatasetCatalog.get_dataset(
             {
                 "custom_dataset": "simple",
-                "num_classes": 2,
-                "train_batch_size": 3,
-                # "custom_dataset_config": {"num_classes": 2},
             },
-            num_clients=1,
-            train_bs=3,
         )
 
     @classmethod
@@ -54,18 +46,18 @@ class TestAdaptiveAdversary(unittest.TestCase):
         ray.shutdown()
 
     def test_on_local_round_end(self):
-        uid = self.global_dataset.client_ids[0]
-        train_loader = self.global_dataset.get_train_loader(uid)
+        train_set, _ = self.global_dataset.to_torch_datasets()
 
         for _ in range(5):
-            data, target = next(train_loader)
-            model = copy.deepcopy(self.alg.server.get_global_model())
-            opt = torch.optim.SGD(model.parameters(), lr=self.global_lr)
-            model.train()
-            output = model(data)
-            loss = F.cross_entropy(output, target)
-            loss.backward()
-            opt.step()
+            for data, target in DataLoader(dataset=train_set, batch_size=3):
+                model = copy.deepcopy(self.alg.server.get_global_model())
+                opt = torch.optim.SGD(model.parameters(), lr=0.1)
+                model.train()
+                output = model(data)
+                loss = F.cross_entropy(output, target)
+                loss.backward()
+                opt.step()
+                break
 
             self.alg.training_step()
             updated_model = copy.deepcopy(self.alg.server.get_global_model())

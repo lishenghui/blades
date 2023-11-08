@@ -5,14 +5,13 @@ fedavg_blades:
     # train_loss: 100000
 
   config:
-    seed:
+    random_seed:
         # grid_search: [122, 123]
       grid_search: [111]
       # grid_search: [111, 112, 123, 124, 125]
     dataset_config:
-      type: mnist
+      type: MNIST
       num_clients: 60
-      num_classes: 10
 
     evaluation_interval: 50
 

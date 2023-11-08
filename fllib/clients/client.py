@@ -53,7 +53,8 @@ class Client:
         num_batches = self.config.num_batch_per_round
         running_loss = 0
         for _ in range(num_batches):
-            data, target = next(data_reader)
+            # data, target = next(data_reader)
+            data, target = data_reader.get_next_train_batch()
             data, target = self.callbacks.on_train_batch_begin(data, target)
             loss = sess.task.train_one_batch(
                 data, target, self.callbacks.on_backward_end

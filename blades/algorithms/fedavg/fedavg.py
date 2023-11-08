@@ -11,7 +11,8 @@ from ray.rllib.utils.debug import update_global_seed_if_necessary
 from fllib.types import NotProvided
 from fllib.clients import ClientConfig
 from fllib.constants import CLIENT_UPDATE, GLOBAL_MODEL, NUM_GLOBAL_STEPS
-from fllib.datasets.catalog import DatasetCatalog
+from fllib.datasets import DatasetCatalog
+from fllib.datasets.dataset import FLDataset
 from fllib.types import PartialAlgorithmConfigDict
 from fllib.algorithms import Algorithm, AlgorithmConfig
 from fllib.core.execution.worker_group import WorkerGroup
@@ -138,7 +139,7 @@ class Fedavg(Algorithm):
             self.config = config_obj
 
         # Set Algorithm's seed.
-        update_global_seed_if_necessary("torch", self.config.seed)
+        update_global_seed_if_necessary("torch", self.config.random_seed)
 
         server_device = "cuda" if self.config.num_gpus_for_driver > 0 else "cpu"
         self.server = self.config.get_server_config().build(server_device)
@@ -210,7 +211,10 @@ class Fedavg(Algorithm):
         )
 
         def local_training(worker, client):
-            dataset = worker.dataset.get_train_loader(client.client_id)
+            if isinstance(worker.dataset, FLDataset):
+                dataset = worker.dataset.get_client_dataset(client.client_id)
+            else:
+                dataset = worker.dataset.get_train_loader(client.client_id)
             return client.train_one_round(dataset)
 
         clients = self.client_manager.trainable_clients
@@ -255,7 +259,13 @@ class Fedavg(Algorithm):
         clients = self.client_manager.testable_clients
 
         def validate_func(worker, client):
-            test_loader = worker.dataset.get_test_loader(client.client_id)
+            # test_loader = worker.dataset.get_test_loader(client.client_id)
+            if isinstance(worker.dataset, FLDataset):
+                test_loader = worker.dataset.get_client_dataset(
+                    client.client_id
+                ).get_test_loader()
+            else:
+                test_loader = worker.dataset.get_test_loader(client.client_id)
             return client.evaluate(test_loader)
 
         if self.worker_group.workers:
@@ -268,7 +278,6 @@ class Fedavg(Algorithm):
             )
         else:
             evaluate_results = self.worker_group.local_execute(validate_func, clients)
-
         results = {
             "ce_loss": np.average(
                 [metric["ce_loss"] for metric in evaluate_results],
@@ -281,3 +290,6 @@ class Fedavg(Algorithm):
         }
 
         return results
+
+    def save_checkpoint(self, checkpoint_dir: str) -> Dict | None:
+        pass

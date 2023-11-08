@@ -30,6 +30,8 @@ AlgorithmConfigDict = TrainerConfigDict = dict
 # the model catalog.
 ModelConfigDict = dict
 
+DatasetConfigDict = dict
+
 # Represents a generic identifier for a client (e.g., "client1").
 ClientID = str
 

@@ -4,14 +4,13 @@ fedavg_blades:
     training_iteration: 2000
 
   config:
-    seed:
+    random_seed:
         # grid_search: [121]
       grid_search: [121, 122, 123, 124, 125]
     dataset_config:
-      type: fashionmnist
+      type: FashionMNIST
       train_bs: 64
       num_clients: 60
-      num_classes: 10
       train_batch_size: 64
 
     evaluation_interval: 50

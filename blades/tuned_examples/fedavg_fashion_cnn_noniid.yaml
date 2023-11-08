@@ -5,14 +5,12 @@ fedavg_blades:
     # train_loss: 100000
 
   config:
-    seed:
+    random_seed:
         grid_search: [122]
       # grid_search: [121, 122, 123, 124, 125]
     dataset_config:
-      # type: cifar10
-      type: fashionmnist
+      type: FashionMNIST
       num_clients: 60
-      num_classes: 10
       train_batch_size: 64
       iid:
         grid_search: [False]

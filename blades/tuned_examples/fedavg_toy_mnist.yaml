@@ -5,22 +5,33 @@ fedavg_blades:
     train_loss: 100000
 
   config:
-    seed:
+    random_seed:
       grid_search: [111]
     dataset_config:
-      type: mnist
+      type: MNIST
       num_clients: 4
       num_classes: 10
       train_batch_size: 64
+      splitter_config:
+        type: IIDSplitter
+        # alpha: 100.
+        num_clients: 4
 
     evaluation_interval: 50
 
 
-    num_remote_workers: 2
-    num_gpus_per_worker: 0.0
-    num_cpus_per_worker: 1
-    num_cpus_for_driver: 1
-    num_gpus_for_driver: 0.
+    # num_remote_workers: 2
+    # num_gpus_per_worker: 0.0
+    # num_cpus_per_worker: 1
+    # num_cpus_for_driver: 1
+    # num_gpus_for_driver: 0.
+
+
+    num_remote_workers: 0
+    num_gpus_per_worker: 0.5
+    num_cpus_per_worker: 0
+    num_cpus_for_driver: 4
+    num_gpus_for_driver: 0.5
 
     global_model: mlp
 
@@ -38,7 +49,7 @@ fedavg_blades:
           grid_search: [0.0]
 
     num_malicious_clients:
-      grid_search: [1]
+      grid_search: [0]
     adversary_config:
       grid_search:
         - type: blades.adversaries.LabelFlipAdversary

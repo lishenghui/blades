@@ -1,12 +1,10 @@
 import copy
 import logging
 import threading
-from functools import partial
+from abc import abstractmethod
 from typing import TYPE_CHECKING, List, Union, Callable
 
 import torch
-import torchmetrics
-from torchmetrics import MetricCollection, Metric
 from ray.rllib.utils import force_list
 from ray.rllib.utils.from_config import from_config
 from ray.rllib.utils.torch_utils import convert_to_torch_tensor
@@ -27,26 +25,6 @@ if TYPE_CHECKING:
     from ray.rllib.evaluation import Episode  # noqa
 
 logger = logging.getLogger(__name__)
-
-
-class CustomCrossEntropy(Metric):
-    def __init__(self, dist_sync_on_step=False):
-        super().__init__(
-            dist_sync_on_step=dist_sync_on_step,
-            distributed_available_fn=lambda: False,
-        )
-        self.add_state("ce_loss", default=torch.tensor(0.0), dist_reduce_fx="sum")
-        self.add_state("num_examples", default=torch.tensor(0), dist_reduce_fx="sum")
-        self.ce_loss_func = torch.nn.CrossEntropyLoss(reduction="sum")
-
-    def update(self, y_pred: torch.Tensor, y_true: torch.Tensor):
-        loss = self.ce_loss_func(y_pred, y_true)
-        self.ce_loss += loss
-        self.num_examples += y_true.numel()
-
-    def compute(self):
-        ce_loss = self.ce_loss / self.num_examples
-        return ce_loss.item()
 
 
 class TaskSpec:
@@ -95,32 +73,11 @@ class Task:
         self._optimizers = None
         self._saved_state_dict = None
 
-        data_config = self.config.get("dataset_config", {})
-        self._num_classes = data_config.get("num_classes", None)
-        self._metrics = self._init_metrics()
+        self._metrics = None
 
     @property
     def model(self):
         return self._model
-
-    def _init_metrics(self):
-        # Define a base partial function with shared arguments
-
-        metrics = MetricCollection(
-            {
-                "ce_loss": CustomCrossEntropy(),
-            }
-        )
-        if self._num_classes:
-            base_accuracy = partial(
-                torchmetrics.Accuracy,
-                task="multiclass",
-                num_classes=self._num_classes,
-                distributed_available_fn=lambda: False,
-            )
-            for k in range(1, self._num_classes, 2):
-                metrics[f"acc_top_{k}"] = partial(base_accuracy, top_k=k)()
-        return metrics
 
     def loss_initialized(self):
         return self._loss_initialized
@@ -187,7 +144,13 @@ class Task:
             opt.step()
         return loss.item()
 
+    @abstractmethod
+    def init_metrics(self):
+        raise NotImplementedError
+
     def evaluate(self, test_loader):
+        if self._metrics is None:
+            self._metrics = self.init_metrics()
         device = next(self._model.parameters()).device
         self._metrics.to(device)
         self._metrics.reset()

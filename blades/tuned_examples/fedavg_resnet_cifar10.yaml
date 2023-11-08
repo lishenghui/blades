@@ -5,14 +5,13 @@ fedavg_blades:
     # train_loss: 100
 
   config:
-    seed:
+    random_seed:
         # grid_search: [122, 123]
       # grid_search: [113]
       grid_search: [121, 122, 123, 124, 125]
     dataset_config:
-      type: cifar10
+      type: CIFAR10
       num_clients: 60
-      num_classes: 10
       train_batch_size: 64
 
     evaluation_interval: 50

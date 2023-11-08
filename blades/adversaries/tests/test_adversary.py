@@ -11,24 +11,24 @@ from blades.adversaries import (
     AdaptiveAdversary,
 )
 from blades.algorithms.fedavg import FedavgConfig
-from fllib.datasets.catalog import DatasetCatalog
+from fllib.datasets import DatasetCatalog
 
-from .simple_dataset import SimpleDataset
+from fllib.datasets.tests.toy_dataset import ToyFLDataset
 
 
 class TestAdversary(unittest.TestCase):
     """Tests for the adversary class."""
 
     def setUp(self):
-        DatasetCatalog.register_custom_dataset("simple", SimpleDataset)
+        DatasetCatalog.register_custom_dataset("simple", ToyFLDataset)
 
         self.algorithm = (
             FedavgConfig()
             .data(
-                num_clients=2,
-                dataset_config={"custom_dataset": "simple", "num_classes": 2},
+                # num_clients=2,
+                dataset_config={"custom_dataset": "simple"},
             )
-            .training(global_model=torch.nn.Linear(5, 5))
+            .training(global_model=torch.nn.Linear(2, 2))
             .adversary(
                 num_malicious_clients=1,
                 adversary_config={"type": "blades.adversaries.AdaptiveAdversary"},
@@ -62,14 +62,14 @@ class TestAdversary(unittest.TestCase):
                 FedavgConfig()
                 .resources(num_remote_workers=0, num_gpus_per_worker=0)
                 .data(
-                    num_clients=2,
+                    # num_clients=2,
                     dataset_config={
                         "custom_dataset": "simple",
-                        "num_classes": 2,
+                        # "num_classes": 2,
                         # "custom_dataset_config": {"num_classes": 2},
                     },
                 )
-                .training(global_model=torch.nn.Linear(5, 5))
+                .training(global_model=torch.nn.Linear(2, 2))
             )
             if adv_cls == IPMAdversary:
                 adv = (

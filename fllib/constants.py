@@ -27,7 +27,7 @@ SERVER_RANK = 0
 
 DEFAULT_MASTER_PORT = "22225"
 
-DEFAULT_DATA_ROOT = "./fldata"
+DEFAULT_DATA_ROOT = "~/fldata"
 
 MAIN_ACTOR = "main_actor"
 

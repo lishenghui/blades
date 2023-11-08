@@ -1,13 +1,58 @@
 import os
 from typing import Optional
+from urllib.error import URLError
 
 import numpy as np
-from urllib.error import URLError
-from fllib.datasets import FLDataset
+import torch
+import torch.utils.data as data
 from torchvision.datasets.utils import (
     download_and_extract_archive,
     check_integrity,
 )
+
+from fllib.datasets import FLDataset, ClientDataset
+from fllib.constants import DEFAULT_DATA_ROOT
+
+
+class EmptyDataset(data.Dataset):
+    def __init__(self):
+        super().__init__()
+        self.data = []
+
+    def __len__(self):
+        return len(self.data)
+
+    def __getitem__(self, idx):
+        raise IndexError("This dataset is empty!")
+
+
+class _UCIHARClientDataset(data.Dataset):
+    def __init__(
+        self,
+        x: np.ndarray,
+        y: np.ndarray,
+        transform: Optional[callable] = None,
+        target_transform: Optional[callable] = None,
+    ):
+        super().__init__()
+        self.x = x
+        self.y = y
+        self.transform = transform
+        self.target_transform = target_transform
+
+    def __getitem__(self, index: int):
+        x, y = self.x[index], self.y[index]
+        x = torch.from_numpy(x)
+        y = torch.tensor(y, dtype=torch.long)
+
+        if self.transform is not None:
+            x = self.transform(x)
+        if self.target_transform is not None:
+            y = self.target_transform(y)
+        return x.float(), y
+
+    def __len__(self):
+        return len(self.x)
 
 
 class UCIHAR(FLDataset):
@@ -21,38 +66,23 @@ class UCIHAR(FLDataset):
         ("UCI%20HAR%20Dataset.zip", None),
     ]
 
+    # transform = transforms.Compose([transforms.ToTensor()])
+
     def __init__(
         self,
-        data_root: str = "./data",
-        cache_name: str = "",
-        iid: Optional[bool] = True,
-        alpha: Optional[float] = 0.1,
-        num_clients: Optional[int] = 20,
+        data_root: str = DEFAULT_DATA_ROOT,
         download: bool = True,
-        seed=1,
-        train_data=None,
-        test_data=None,
-        train_bs: Optional[int] = 64,
     ):
+        self.transform = None
+        self.target_transform = None
         if isinstance(data_root, str):
             data_root = os.path.expanduser(data_root)
         self.data_root = data_root
         if download:
             self.download()
-        super(UCIHAR, self).__init__(
-            (None, None),
-            (None, None),
-            data_root=data_root,
-            cache_name=cache_name,
-            iid=iid,
-            alpha=alpha,
-            num_clients=num_clients,
-            seed=seed,
-            train_data=train_data,
-            test_data=test_data,
-            train_bs=train_bs,
-            is_image=False,
-        )
+
+        # self.data, self.targets = self._load_data()
+        super().__init__(self._generate_datasets())
 
     def _check_exists(self) -> bool:
         return all(
@@ -156,33 +186,42 @@ class UCIHAR(FLDataset):
         )
         return (X_train, Y_train), (X_test, Y_test), (id_train, id_test)
 
-    def _generate_datasets(
-        self, train_set=None, test_set=None, iid=True, alpha=0.1, num_clients=20, seed=1
-    ):
+    def _generate_datasets(self):
         (X_train, Y_train), (X_test, Y_test), (id_train, id_test) = self._load_data()
         id_train_unique = np.unique(id_train)
         id_test_unique = np.unique(id_test)
 
-        train_dataset = {}
-        for uid in id_train_unique:
-            train_indices = np.where(id_train == uid)[0]
-            train_dataset[uid] = {
-                "x": X_train[train_indices],
-                "y": Y_train[train_indices].flatten(),
-            }
-        test_dataset = {}
-        for uid in id_test_unique:
-            test_indices = np.where(id_test == uid)[0]
-            if len(test_indices) > 0:
-                test_dataset[uid] = {
-                    "x": X_test[test_indices],
-                    "y": Y_test[test_indices].flatten(),
-                }
-        return id_train_unique, train_dataset, id_test_unique, test_dataset
+        uids = np.unique(np.concatenate((id_train_unique, id_test_unique)))
+        client_datasets = []
+        for uid in uids:
+            if uid in id_train_unique:
+                train_indices = np.where(id_train == uid)[0]
+                trainset = _UCIHARClientDataset(
+                    X_train[train_indices],
+                    Y_train[train_indices].flatten(),
+                    self.transform,
+                    self.target_transform,
+                )
+            else:
+                trainset = EmptyDataset()
+            if uid in id_test_unique:
+                test_indices = np.where(id_test == uid)[0]
+                testset = _UCIHARClientDataset(
+                    X_test[test_indices],
+                    Y_test[test_indices].flatten(),
+                    self.transform,
+                    self.target_transform,
+                )
+            else:
+                testset = EmptyDataset()
+            client_dataset = ClientDataset(uid, trainset, testset)
+            client_datasets.append(client_dataset)
+        return client_datasets
+
+    def __repr__(self) -> str:
+        return super().__repr__() + f"\nData Root: {self.data_root}"
 
 
 if "__main__" == __name__:
-    data_root = "./data"
-    ucihar = UCIHAR(data_root=data_root, download=True)
-    result = ucihar._generate_datasets()
-    print("done")
+    ucihar = UCIHAR()
+    print(ucihar)

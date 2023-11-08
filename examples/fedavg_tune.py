@@ -12,9 +12,8 @@ class ExampleFedavgConfig(FedavgConfig):
         super().__init__(algo_class=algo_class or ExampleFedavg)
 
         self.dataset_config = {
-            "type": "fashionmnist",
+            "type": "FashionMNIST",
             "num_clients": 10,
-            "num_classes": 10,
             "train_batch_size": 32,
         }
         self.global_model = "cnn"

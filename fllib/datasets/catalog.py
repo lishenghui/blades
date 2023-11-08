@@ -1,52 +1,127 @@
-from pathlib import Path
 from typing import Dict
-
-from torch.nn import Module
+from torch.utils.data import Dataset
+import torchvision.datasets as datasets
+import torchvision.transforms as transforms
 from ray.rllib.utils.from_config import from_config
 from ray.rllib.utils.annotations import PublicAPI
 from ray.tune.registry import _global_registry
 
-from fllib.constants import DEFAULT_DATA_ROOT
-from fllib.datasets.cifar10 import CIFAR10
-from fllib.datasets.fldataset import FLDataset
-from fllib.datasets.mnist import MNIST
+from fllib.types import DatasetConfigDict
 from fllib.constants import FLLIB_DATASET
-from fllib.datasets.fashionmnist import FASHIONMNIST
-from fllib.datasets.ucihar import UCIHAR
+from fllib.datasets.splitters import IIDSplitter
+from .ucihar import UCIHAR
+from .dataset import FLDataset
 
-__all__ = ["CIFAR10", "MNIST", "FASHIONMNIST", "UCIHAR"]
+
+_FLLIB_DATASETS = ["UCIHAR"]
 
 
-def make_dataset(
-    identifier: str,
-    num_clients: int,
-    train_batch_size: int = 32,
-    seed: int = 0,
-    iid: bool = True,
-    alpha: float = 0.1,
-    **kwargs,
-) -> FLDataset:
-    data_root: Path = (
-        Path.home() / DEFAULT_DATA_ROOT
-    )  # typing 'data_root' as a Path object
-    valid_datasets = ["cifar10", "mnist", "fashionmnist", "ucihar"]
-    if identifier not in valid_datasets:
-        raise ValueError(f"Unknown dataset: {identifier}")
-    dataset = globals()[identifier.upper()](
-        data_root=data_root,
-        # cache_name=f"{identifier}.obj",  # simplified cache name generation
-        train_bs=train_batch_size,
-        num_clients=num_clients,
-        seed=seed,
-        iid=iid,
-        alpha=alpha,
-    )  # built-in federated dataset
-    return dataset
+CIFAR10_stats = {
+    "mean": (0.4914, 0.4822, 0.4465),
+    "std": (0.2023, 0.1994, 0.2010),
+}
+
+
+torchvision_transforms = {
+    "CIFAR10": {
+        "train": transforms.Compose(
+            [
+                transforms.RandomResizedCrop(32, scale=(0.75, 1.0), ratio=(1.0, 1.0)),
+                transforms.RandomHorizontalFlip(p=0.5),
+                transforms.ToTensor(),  # Convert PIL.Image to Tensor
+                transforms.Normalize(
+                    mean=CIFAR10_stats["mean"], std=CIFAR10_stats["std"]
+                ),
+                transforms.RandomErasing(p=0.25),
+            ]
+        ),
+        "test": transforms.Compose(
+            [
+                transforms.ToTensor(),  # 将PIL.Image转换为张量
+                transforms.Normalize(
+                    mean=CIFAR10_stats["mean"], std=CIFAR10_stats["std"]
+                ),
+            ]
+        ),
+    },
+    "MNIST": {
+        "train": transforms.Compose(
+            [
+                transforms.ToTensor(),
+                transforms.Normalize(
+                    (0.1307,), (0.3081,)
+                ),  # Normalize the data with mean and std deviation
+            ]
+        ),
+        "test": transforms.Compose(
+            [
+                transforms.ToTensor(),  # Convert PIL.Image to Tensor
+                transforms.Normalize(
+                    (0.1307,), (0.3081,)
+                ),  # Normalize the data with mean and std deviation
+            ]
+        ),
+    },
+    "FashionMNIST": {
+        "train": transforms.Compose(
+            [
+                transforms.ToTensor(),
+                transforms.Normalize(
+                    (0.5,), (0.5,)
+                ),  # Normalizing with mean=0.5 and std=0.5
+            ]
+        ),
+        "test": transforms.Compose(
+            [
+                transforms.ToTensor(),
+                transforms.Normalize(
+                    (0.5,), (0.5,)
+                ),  # Normalizing with mean=0.5 and std=0.5
+            ]
+        ),
+    },
+}
 
 
 class DatasetCatalog:
+    torch_valid_datasets = ["CIFAR10", "MNIST", "FashionMNIST"]
+
     @staticmethod
-    def get_dataset(dataset_config: Dict = None, **dataset_kwargs) -> Module:
+    def from_torch(dataset_config: Dict = None):
+        dataset_name = dataset_config.get("type", None)
+        if dataset_name not in DatasetCatalog.torch_valid_datasets:
+            raise ValueError(f"Unknown dataset: {dataset_name}")
+        train_set = getattr(datasets, dataset_name)(
+            root="~/fldata",
+            train=True,
+            transform=torchvision_transforms[dataset_name]["train"],
+            download=True,
+        )
+        test_set = getattr(datasets, dataset_name)(
+            root="~/fldata",
+            train=False,
+            transform=torchvision_transforms[dataset_name]["test"],
+            download=True,
+        )
+        splitter_config = dataset_config.pop("splitter_config", {})
+        train_batch_size = dataset_config.pop("train_batch_size", 32)
+        test_batch_size = dataset_config.pop("test_batch_size", 32)
+        splitter = from_config(IIDSplitter, splitter_config)
+        subsets = splitter.generate_client_datasets(
+            train_set,
+            test_set,
+            train_batch_size=train_batch_size,
+            test_batch_size=test_batch_size,
+        )
+        return FLDataset(subsets)
+
+    @staticmethod
+    def _validate_config(config: DatasetConfigDict) -> None:
+        pass
+
+    @staticmethod
+    def get_dataset(dataset_config: Dict = None, **dataset_kwargs) -> Dataset:
+        DatasetCatalog._validate_config(dataset_config)
         if dataset_config.get("custom_dataset"):
             # Allow model kwargs to be overridden / augmented by
             # custom_model_config.
@@ -68,25 +143,14 @@ class DatasetCatalog:
                     FLLIB_DATASET, dataset_config["custom_dataset"]
                 )
 
-            if "num_clients" in dataset_config:
-                customized_dataset_kwargs["num_clients"] = dataset_config["num_clients"]
-            if "train_batch_size" in dataset_config:
-                customized_dataset_kwargs["train_bs"] = dataset_config[
-                    "train_batch_size"
-                ]
             dataset = dataset_cls(**customized_dataset_kwargs)
-        elif dataset_config.get("type") and dataset_config.get("num_clients"):
-            dataset = make_dataset(
-                dataset_config.get("type"),
-                dataset_config.get("num_clients"),
-                train_batch_size=dataset_config.get("train_batch_size", 32),
-                seed=dataset_config.get("seed"),
-                iid=dataset_config.get("iid", True),
-                alpha=dataset_config.get("alpha", 0.1),
-            )
+            return dataset
+        if dataset_config.get("type", None) in _FLLIB_DATASETS:
+            if dataset_config.get("type", None) == "UCIHAR":
+                dataset = UCIHAR(**dataset_kwargs)
+                return dataset
         else:
-            raise NotImplementedError
-        return dataset
+            return DatasetCatalog.from_torch(dataset_config)
 
     @staticmethod
     @PublicAPI

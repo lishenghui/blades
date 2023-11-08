@@ -7,13 +7,14 @@ from ray.tune.registry import get_trainable_cls
 
 # from ray.tune.result import TRIAL_INFO
 from ray.util import log_once
-
+from ray.tune.registry import _global_registry
 from fllib.types import (
     AlgorithmConfigDict,
     PartialAlgorithmConfigDict,
     TYPE_CHECKING,
     NotProvided,
 )
+from fllib.constants import FLLIB_DATASET
 from fllib.tasks import TaskSpec
 from fllib.core.execution.worker import Worker
 from fllib.clients import ClientConfig
@@ -56,7 +57,7 @@ class AlgorithmConfig:
     def __init__(self, algo_class=None):
         # Define all settings and their default values.
 
-        self.seed = 1234
+        self.random_seed = 1234
 
         # self.training()
         self.algo_class = algo_class
@@ -66,7 +67,7 @@ class AlgorithmConfig:
         self.server_config = {}
         self.logger_creator = None
         self.learner_class = None
-        self.task_config = {"task_class": "fllib.tasks.ImageClassfication"}
+        self.task_config = {"task_class": "fllib.tasks.GeneralClassfication"}
 
         # experimental: this will contain the hyper-parameters that are passed to the
         # Learner, for computing loss, etc. New algorithms have to set this to their
@@ -88,6 +89,7 @@ class AlgorithmConfig:
 
         # self.data()`
         self.dataset_config = {}
+        self.splitter_config = {}
         self.num_clients = 0
 
         self.reuse_actors = True
@@ -299,23 +301,33 @@ class AlgorithmConfig:
         """Validates all values in this config."""
 
         # Check that the `num_clients` is set correctly.
-        if self.dataset_config.get("num_clients", None) is None:
-            if self.num_clients < 1:
-                raise ValueError(
-                    "You must specify a `num_clients` in your `dataset_config`",
-                    "otherwise specify a `num_clients`!",
-                )
-            self.dataset_config["num_clients"] = self.num_clients
+        if self.dataset_config.get("custom_dataset"):
+            dataset_cls = _global_registry.get(
+                FLLIB_DATASET, self.dataset_config["custom_dataset"]
+            )
+            self.num_clients = dataset_cls.num_clients
         else:
-            if self.num_clients > 0:
-                raise ValueError(
-                    "You cannot specify both `num_clients` and `batch_size` in your",
-                    "`dataset_config`",
-                )
-            self.num_clients = self.dataset_config["num_clients"]
-
-        if self.dataset_config.get("seed", None) is None:
-            self.dataset_config["seed"] = self.seed
+            if self.dataset_config.get("num_clients", None) is None:
+                if self.num_clients < 1:
+                    raise ValueError(
+                        "You must specify a `num_clients` in your `dataset_config`",
+                        "otherwise specify a `num_clients`!",
+                    )
+                self.dataset_config["num_clients"] = self.num_clients
+            else:
+                if self.num_clients > 0:
+                    raise ValueError(
+                        "You cannot specify both `num_clients` and `batch_size` ",
+                        " in your `dataset_config`",
+                    )
+                self.num_clients = self.dataset_config["num_clients"]
+            self.splitter_config["num_clients"] = self.num_clients
+            if self.dataset_config.get("random_seed", None) is None:
+                self.dataset_config["random_seed"] = self.random_seed
+            self.splitter_config["random_seed"] = self.dataset_config["random_seed"]
+            self.dataset_config["splitter_config"] = self.splitter_config
+        if self.dataset_config.get("random_seed", None) is None:
+            self.dataset_config["random_seed"] = self.random_seed
 
     def freeze(self) -> None:
         """Freezes this config object, such that no attributes can be set
@@ -434,8 +446,6 @@ class AlgorithmConfig:
             # self.callbacks(callbacks_config=value)
             if key.startswith("evaluation_"):
                 eval_call[key] = value
-            elif key == "exploration_config":
-                self.exploration(exploration_config=value)
             elif key in ["model", "optimizer", "replay_buffer_config"]:
                 self.training(**{key: value})
             # If config key matches a property, just set it, otherwise, warn and set.

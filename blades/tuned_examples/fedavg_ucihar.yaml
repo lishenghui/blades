@@ -5,13 +5,12 @@ fedavg_blades:
     # train_loss: 100
 
   config:
-    seed:
+    random_seed:
       # grid_search: [121, 122, 123, 124, 125]
       grid_search: [121]
     dataset_config:
-      type: ucihar
+      type: UCIHAR
       num_clients: 30
-      num_classes: 6
       train_batch_size: 64
 
     evaluation_interval: 50
@@ -19,7 +18,7 @@ fedavg_blades:
     num_remote_workers: 0
     num_gpus_per_worker: 0.5
     num_cpus_per_worker: 0
-    num_cpus_for_driver: 4
+    num_cpus_for_driver: 8
     num_gpus_for_driver: 0.5
 
     global_model: harcnn

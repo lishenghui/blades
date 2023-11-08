@@ -1,4 +1,3 @@
-import torch
 from torch import nn
 
 
@@ -26,7 +25,6 @@ class FashionCNN(nn.Module):
         self.fc3 = nn.Linear(in_features=120, out_features=10)
 
     def forward(self, x):
-        x = torch.unsqueeze(x, 1)
         out = self.layer1(x)
         out = self.layer2(out)
         out = out.view(out.size(0), -1)
