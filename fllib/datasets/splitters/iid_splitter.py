@@ -1,4 +1,5 @@
-from typing import List, Tuple
+from typing import List
+
 import torch
 from torch.utils.data import Dataset, Subset
 
@@ -28,12 +29,9 @@ class IIDSplitter(DatasetSplitter):
 
     def split_datasets(
         self, train_dataset: Dataset, test_dataset: Dataset
-    ) -> List[Tuple[Subset, Subset]]:
+    ) -> tuple[list[Subset], list[Subset]]:
         # Use the split_dataset method to split both the training and testing datasets
         train_subsets = self.split_dataset(train_dataset)
         test_subsets = self.split_dataset(test_dataset)
 
-        # Combine the training and testing subsets into pairs
-        # paired_subsets = list(zip(train_subsets, test_subsets))
         return train_subsets, test_subsets
-        # return paired_subsets

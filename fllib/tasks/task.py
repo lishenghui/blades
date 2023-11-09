@@ -6,13 +6,13 @@ from typing import TYPE_CHECKING, List, Union, Callable
 
 import torch
 from ray.rllib.utils import force_list
-from ray.rllib.utils.from_config import from_config
-from ray.rllib.utils.torch_utils import convert_to_torch_tensor
 from ray.rllib.utils.annotations import (
     DeveloperAPI,
     OverrideToImplementCustomLogic,
     is_overridden,
 )
+from ray.rllib.utils.from_config import from_config
+from ray.rllib.utils.torch_utils import convert_to_torch_tensor
 from ray.rllib.utils.typing import (
     AlgorithmConfigDict,
     ModelWeights,

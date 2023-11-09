@@ -1,12 +1,11 @@
 from typing import List
 
-import torch
 import numpy as np
+import torch
 from numpy import inf
 from sklearn.cluster import AgglomerativeClustering
 
 from fllib.utils import torch_utils
-
 from .aggregators import Mean, Median
 
 

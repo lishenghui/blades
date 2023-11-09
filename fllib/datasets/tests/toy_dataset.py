@@ -1,7 +1,8 @@
 import torch
 from torch.utils.data import Dataset
-from fllib.datasets.splitters import IIDSplitter
+
 from fllib.datasets import FLDataset
+from fllib.datasets.splitters import IIDSplitter
 
 
 class _ToyDataset(Dataset):

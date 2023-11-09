@@ -1,6 +1,7 @@
 import unittest
-from torch.utils.data import Dataset
+
 import torch
+from torch.utils.data import Dataset
 
 # Assuming IIDSplitter is defined in the fllib.datasets.splitters module
 from fllib.datasets.splitters import IIDSplitter

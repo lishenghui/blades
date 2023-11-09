@@ -1,24 +1,23 @@
 from collections import defaultdict
 from typing import DefaultDict, List, Optional, Dict
 
-import ray
 import numpy as np
-from ray.util.timer import _Timer
+import ray
 from ray.rllib.utils import deep_update
 from ray.rllib.utils.annotations import override
 from ray.rllib.utils.debug import update_global_seed_if_necessary
-
-from fllib.types import NotProvided
-from fllib.clients import ClientConfig
-from fllib.constants import CLIENT_UPDATE, GLOBAL_MODEL, NUM_GLOBAL_STEPS
-from fllib.datasets import DatasetCatalog
-from fllib.datasets.dataset import FLDataset
-from fllib.types import PartialAlgorithmConfigDict
-from fllib.algorithms import Algorithm, AlgorithmConfig
-from fllib.core.execution.worker_group import WorkerGroup
-from fllib.core.execution.worker_group_config import WorkerGroupConfig
+from ray.util.timer import _Timer
 
 from blades.adversaries import Adversary, AdversaryConfig
+from fllib.algorithms import Algorithm, AlgorithmConfig
+from fllib.clients import ClientConfig
+from fllib.constants import CLIENT_UPDATE, GLOBAL_MODEL, NUM_GLOBAL_STEPS
+from fllib.core.execution.worker_group import WorkerGroup
+from fllib.core.execution.worker_group_config import WorkerGroupConfig
+from fllib.datasets import DatasetCatalog
+from fllib.datasets.dataset import FLDataset
+from fllib.types import NotProvided
+from fllib.types import PartialAlgorithmConfigDict
 
 
 class FedavgConfig(AlgorithmConfig):

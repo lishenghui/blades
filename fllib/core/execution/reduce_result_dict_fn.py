@@ -1,6 +1,7 @@
 """The following is set of default rllib reduction methods for ResultDicts."""
 
 from typing import List
+
 import numpy as np
 import tree  # pip install dm-tree
 from ray.rllib.utils.typing import ResultDict

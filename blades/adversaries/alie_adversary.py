@@ -1,10 +1,11 @@
-from typing import Dict
 import random
+from typing import Dict
 
 import torch
+
+from fllib.aggregators import Signguard
 from fllib.algorithms import Algorithm
 from fllib.constants import CLIENT_UPDATE
-from fllib.aggregators import Signguard
 from .adversary import Adversary
 
 

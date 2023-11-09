@@ -2,10 +2,11 @@ from typing import Type, Optional, Union
 
 from ray.rllib.utils.from_config import NotProvided
 
-from fllib.tasks import TaskSpec
+from fllib.core.execution.scaling_config import WorkerGroupScalingConfig
 from fllib.core.execution.worker import Worker
 from fllib.core.execution.worker_group import WorkerGroup
-from fllib.core.execution.scaling_config import WorkerGroupScalingConfig
+from fllib.tasks import TaskSpec
+
 
 # if TYPE_CHECKING:
 #     from fllib.core.execution.worker import Worker

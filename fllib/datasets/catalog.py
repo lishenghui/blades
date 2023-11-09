@@ -1,16 +1,21 @@
 from typing import Dict
-from torch.utils.data import Dataset
+
 import torchvision.datasets as datasets
 import torchvision.transforms as transforms
-from ray.rllib.utils.from_config import from_config
 from ray.rllib.utils.annotations import PublicAPI
+from ray.rllib.utils.from_config import from_config
 from ray.tune.registry import _global_registry
 
-from fllib.types import DatasetConfigDict
 from fllib.constants import FLLIB_DATASET
 from fllib.datasets.splitters import IIDSplitter
-from .ucihar import UCIHAR
+from fllib.types import DatasetConfigDict
 from .dataset import FLDataset
+from .ucihar import UCIHAR
+
+# @dataclass
+# class DatasetConfig:
+#     def __init__(self):
+#         splitter_config = {}
 
 
 _FLLIB_DATASETS = ["UCIHAR"]
@@ -84,12 +89,12 @@ torchvision_transforms = {
 
 
 class DatasetCatalog:
-    torch_valid_datasets = ["CIFAR10", "MNIST", "FashionMNIST"]
+    _torch_valid_datasets = ["CIFAR10", "MNIST", "FashionMNIST"]
 
     @staticmethod
     def from_torch(dataset_config: Dict = None):
         dataset_name = dataset_config.get("type", None)
-        if dataset_name not in DatasetCatalog.torch_valid_datasets:
+        if dataset_name not in DatasetCatalog._torch_valid_datasets:
             raise ValueError(f"Unknown dataset: {dataset_name}")
         train_set = getattr(datasets, dataset_name)(
             root="~/fldata",
@@ -120,7 +125,7 @@ class DatasetCatalog:
         pass
 
     @staticmethod
-    def get_dataset(dataset_config: Dict = None, **dataset_kwargs) -> Dataset:
+    def get_dataset(dataset_config: Dict = None, **dataset_kwargs) -> FLDataset:
         DatasetCatalog._validate_config(dataset_config)
         if dataset_config.get("custom_dataset"):
             # Allow model kwargs to be overridden / augmented by
@@ -161,7 +166,7 @@ class DatasetCatalog:
         in the model config.
 
         Args:
-            model_name: Name to register the model under.
-            model_class: Python class of the model.
+            dataset_name: Name to register the model under.
+            dataset_class: Python class of the dataset.
         """
         _global_registry.register(FLLIB_DATASET, dataset_name, dataset_class)

@@ -1,7 +1,9 @@
+import unittest
+
 import numpy as np
 import torch
-import unittest
 from torch.utils.data import Dataset
+
 from fllib.datasets.splitters import DirichletSplitter
 
 

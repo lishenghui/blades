@@ -1,8 +1,9 @@
-from typing import Any, Callable, Optional, TypeVar
 import sys
 import unittest
+from typing import Any, Callable, Optional, TypeVar
 
 import ray
+
 from fllib.core.execution.actor_manager import ActorManager
 
 T = TypeVar("T")

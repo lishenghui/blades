@@ -1,4 +1,5 @@
 import torch
+
 from fllib.algorithms import Algorithm
 from fllib.clients import ClientCallback
 from .adversary import Adversary

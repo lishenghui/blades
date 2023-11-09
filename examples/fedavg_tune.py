@@ -1,9 +1,9 @@
 import ray
 from ray import tune
-from fllib.algorithms import AlgorithmConfig
+from ray.tune.stopper import MaximumIterationStopper
 
 from blades.algorithms.fedavg import FedavgConfig, Fedavg
-from ray.tune.stopper import MaximumIterationStopper
+from fllib.algorithms import AlgorithmConfig
 
 
 class ExampleFedavgConfig(FedavgConfig):

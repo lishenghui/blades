@@ -1,8 +1,8 @@
 from .aggregators import Mean, Median, Trimmedmean, GeoMed, DnC
-from .clippedclustering import Clippedclustering
-from .signguard import Signguard
-from .multikrum import Multikrum
 from .centeredclipping import Centeredclipping
+from .clippedclustering import Clippedclustering
+from .multikrum import Multikrum
+from .signguard import Signguard
 
 __all__ = [
     "Mean",

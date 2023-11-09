@@ -5,9 +5,9 @@ from ray.rllib.utils import force_list
 from ray.rllib.utils.from_config import from_config
 
 from fllib.clients import ClientConfig
+from fllib.clients.callbacks import ClientCallbackList, ClientCallback
 from fllib.constants import CLIENT_UPDATE
 from fllib.core.execution.session import get_session
-from fllib.clients.callbacks import ClientCallbackList, ClientCallback
 
 
 class Client:

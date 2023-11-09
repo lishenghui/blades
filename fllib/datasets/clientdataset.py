@@ -28,6 +28,8 @@ class ClientDataset:
 
     @property
     def train_set_size(self):
+        if self._train_set is None:
+            return 0
         return len(self._train_set)
 
     @property
@@ -40,6 +42,8 @@ class ClientDataset:
 
     @property
     def test_set_size(self):
+        if self._test_set is None:
+            return 0
         return len(self._test_set)
 
     def _create_train_loader(self):
@@ -97,3 +101,10 @@ class ClientDataset:
         self.__dict__.update(state)
         self.train_loader = None  # Train DataLoader will be created dynamically
         self.test_loader = None  # Test DataLoader will be created dynamically
+
+    def __repr__(self):
+        return (
+            f"Client ID: {self.uid} \n"
+            f"[Train set size: {self.train_set_size} \n"
+            f"Test set size: {self.test_set_size}]"
+        )

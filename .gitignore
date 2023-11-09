@@ -18,3 +18,4 @@ scripts/data
 ./src/dist/
 *.pytest_cache/
 fllib/datasets/test/~/fllib/data/cifar10
+*.DS_Store

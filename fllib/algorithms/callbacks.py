@@ -1,5 +1,5 @@
-from typing import List, TYPE_CHECKING
 import warnings
+from typing import List, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from fllib.algorithms import Algorithm

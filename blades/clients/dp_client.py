@@ -1,9 +1,9 @@
 import torch
 
-from fllib.types import NotProvided
 from blades.clients import Client
 from fllib.clients.callbacks import ClientCallback
 from fllib.clients.client_config import ClientConfig
+from fllib.types import NotProvided
 from fllib.utils.torch_utils import clip_tensor_norm_
 
 

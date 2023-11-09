@@ -1,9 +1,11 @@
 import unittest
 from unittest.mock import MagicMock
+
+import ray
 import torch
+
 from blades.adversaries import AdaptiveAdversary
 from fllib.constants import CLIENT_UPDATE
-import ray
 
 
 class TestAdaptiveAdversary(unittest.TestCase):

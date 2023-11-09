@@ -2,8 +2,8 @@ import unittest
 
 import ray
 
-from fllib.core.execution.worker import Worker
 from fllib.core.execution.scaling_config import WorkerGroupScalingConfig
+from fllib.core.execution.worker import Worker
 
 
 def get_worker(scaling_config) -> Worker:

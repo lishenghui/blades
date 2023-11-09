@@ -1,12 +1,15 @@
+import itertools
 from abc import ABC, abstractmethod
 from typing import List, Any, Callable, Iterator, Dict, Tuple
-import itertools
+
 import numpy as np
 import torch
 from torch.utils.data import Dataset, Subset
+
 from fllib.datasets.clientdataset import ClientDataset
 
 
+# TODO: Rename to DatasetPartitioner, which sounds more appropriate.
 class DatasetSplitter(ABC):
     """An abstract base class for dataset splitting strategies that considers
     random states from both NumPy and PyTorch."""
@@ -123,10 +126,10 @@ class DatasetSplitter(ABC):
                client_id and the value is a tuple of two Subsets (training and testing).
         """
 
-    def _default_client_id_generator(self):
+    @staticmethod
+    def _default_client_id_generator():
         """A default generator for client IDs that yields sequential
         numbers."""
-        # return lambda: (f"client_{i}" for i in itertools.count(1))
         return (f"client_{i}" for i in itertools.count(1))
 
     def generate_client_ids(self) -> List[Any]:

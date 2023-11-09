@@ -1,10 +1,10 @@
 import pickle
 import unittest
+
 import torch
-from fllib.datasets import ClientDataset
-
-
 from torch.utils.data import Dataset
+
+from fllib.datasets import ClientDataset
 
 
 class SimpleDataset(Dataset):

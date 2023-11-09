@@ -1,21 +1,21 @@
 #!/usr/bin/env python
+import importlib
 import json
 import os
 import sys
-import importlib
 from pathlib import Path
 from typing import Optional
 
-import yaml
-import typer
 import ray
-from ray.tune.registry import register_trainable
-from ray.tune.resources import resources_to_json, json_to_resources
-from ray.tune.tune import run_experiments
-from ray.tune.schedulers import create_scheduler
+import typer
+import yaml
 from ray.rllib.common import CLIArguments as cli
 from ray.rllib.common import SupportedFileType
 from ray.rllib.common import download_example_file, get_file_type
+from ray.tune.registry import register_trainable
+from ray.tune.resources import resources_to_json, json_to_resources
+from ray.tune.schedulers import create_scheduler
+from ray.tune.tune import run_experiments
 
 
 def _register_all():

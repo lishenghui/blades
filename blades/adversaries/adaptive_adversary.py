@@ -1,9 +1,9 @@
 from typing import Dict
 
 import torch
+
 from fllib.algorithms import Algorithm
 from fllib.constants import CLIENT_UPDATE
-
 from .adversary import Adversary
 
 

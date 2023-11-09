@@ -10,8 +10,9 @@ from torchvision.datasets.utils import (
     check_integrity,
 )
 
-from fllib.datasets import FLDataset, ClientDataset
 from fllib.constants import DEFAULT_DATA_ROOT
+from .dataset import FLDataset
+from .clientdataset import ClientDataset
 
 
 class EmptyDataset(data.Dataset):

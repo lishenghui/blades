@@ -1,8 +1,8 @@
 from functools import partial
 
 import torch
-import torchmetrics
 import torch.nn.functional as F
+import torchmetrics
 from torchmetrics import MetricCollection, Metric
 
 from fllib.tasks.task import Task

@@ -1,4 +1,5 @@
-from typing import List, Tuple, Callable, Iterator
+from typing import List, Callable, Iterator, Any
+
 import torch
 from torch.utils.data import Dataset, Subset
 
@@ -24,7 +25,7 @@ class DirichletSplitter(DatasetSplitter):
 
     def split_datasets(
         self, train_dataset: Dataset, test_dataset: Dataset
-    ) -> List[Tuple[Subset, Subset]]:
+    ) -> tuple[list[Subset[Any]], list[Subset[Any]]]:
         # Split train dataset and get the class proportions
         train_subsets, class_proportions = self._split_single_dataset(train_dataset)
 
@@ -62,8 +63,9 @@ class DirichletSplitter(DatasetSplitter):
             len(targets) >= self.num_clients
         ), "Not enough samples to distribute to each client"
 
+    @staticmethod
     def _get_class_indices(
-        self, targets: torch.Tensor, num_classes: int
+        targets: torch.Tensor, num_classes: int
     ) -> List[torch.Tensor]:
         return [torch.where(targets == i)[0] for i in range(num_classes)]
 

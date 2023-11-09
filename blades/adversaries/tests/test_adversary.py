@@ -1,7 +1,7 @@
 import unittest
 
-import torch
 import ray
+import torch
 
 from blades.adversaries import (
     ALIEAdversary,
@@ -12,7 +12,6 @@ from blades.adversaries import (
 )
 from blades.algorithms.fedavg import FedavgConfig
 from fllib.datasets import DatasetCatalog
-
 from fllib.datasets.tests.toy_dataset import ToyFLDataset
 
 

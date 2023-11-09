@@ -1,7 +1,7 @@
 from typing import List, Optional
 
-import torch
 import numpy as np
+import torch
 
 
 def _mean(inputs: List[torch.Tensor]):

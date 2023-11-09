@@ -1,5 +1,7 @@
-import ray
 import unittest
+
+import ray
+
 from fllib.core.execution.worker_group import WorkerGroup
 from fllib.core.execution.worker_group_config import WorkerGroupConfig
 

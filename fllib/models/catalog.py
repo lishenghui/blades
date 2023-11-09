@@ -1,14 +1,13 @@
 # import torch
-from torch.nn import Module
-
 from ray.rllib.utils.annotations import PublicAPI
 from ray.tune.registry import _global_registry
-from fllib.constants import FLLIB_MODEL
+from torch.nn import Module
 
+from fllib.constants import FLLIB_MODEL
 from fllib.models.backbones.cctnets import cct_2_3x2_32
 from fllib.models.cifar10.resnet_cifar import ResNet10
-from fllib.models.mnist.mlp import MLP
 from fllib.models.fashionmnist.cnn import FashionCNN
+from fllib.models.mnist.mlp import MLP
 
 
 class ModelCatalog:

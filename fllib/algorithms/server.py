@@ -1,17 +1,17 @@
 from typing import Dict, Optional, List
 
 import torch
-from torch import Tensor
+from ray.rllib.policy.torch_mixins import LearningRateSchedule
 from ray.rllib.utils import force_list
 from ray.rllib.utils.from_config import from_config
-from ray.rllib.policy.torch_mixins import LearningRateSchedule
 from ray.rllib.utils.typing import (
     ResultDict,
 )
+from torch import Tensor
 
-from fllib.types import ModelWeights
-from fllib.tasks import TaskSpec, Task
 from fllib.aggregators import Mean
+from fllib.tasks import TaskSpec, Task
+from fllib.types import ModelWeights
 
 
 class _Base:

@@ -5,10 +5,9 @@ import torch
 from numpy import inf
 from sklearn.cluster import AgglomerativeClustering
 
+from fllib.aggregators import Clippedclustering
 from fllib.algorithms import Algorithm
 from fllib.constants import CLIENT_UPDATE
-from fllib.aggregators import Clippedclustering
-
 from .adversary import Adversary
 
 

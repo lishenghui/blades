@@ -8,7 +8,6 @@ from ray.train._internal.backend_executor import BackendExecutor
 
 from fllib.core.execution.actor_manager import ActorManager
 
-
 # Generic type var for foreach_* methods.
 T = TypeVar("T")
 

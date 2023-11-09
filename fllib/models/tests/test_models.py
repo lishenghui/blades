@@ -19,7 +19,9 @@
 #     unittest.main()
 
 import unittest
+
 import torch
+
 from fllib.models.catalog import ModelCatalog
 
 

@@ -1,7 +1,9 @@
 import random
 from typing import List
-from fllib.datasets import clientdataset
+
 from torch.utils.data import ConcatDataset
+
+from fllib.datasets import clientdataset
 
 
 class FLDataset:

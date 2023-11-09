@@ -5,11 +5,10 @@ import ray
 from torch import Tensor
 
 from fllib.constants import MAIN_ACTOR
-from fllib.types import ModelWeights
-from fllib.tasks import TaskSpec, Task
-from fllib.utils.annotations import DeveloperAPI
 from fllib.core.execution.scaling_config import WorkerGroupScalingConfig
-
+from fllib.tasks import TaskSpec, Task
+from fllib.types import ModelWeights
+from fllib.utils.annotations import DeveloperAPI
 
 T = TypeVar("T")
 

@@ -1,17 +1,18 @@
 from typing import Callable, Dict, Optional, Union
+
 from ray.air.integrations.wandb import setup_wandb
+from ray.rllib.utils import force_list
+from ray.rllib.utils.from_config import from_config
+from ray.tune.execution.placement_groups import PlacementGroupFactory
 from ray.tune.logger import Logger
 from ray.tune.resources import Resources
 from ray.tune.trainable import Trainable
-from ray.rllib.utils import force_list
 from ray.util.annotations import PublicAPI
-from ray.tune.execution.placement_groups import PlacementGroupFactory
-from ray.rllib.utils.from_config import from_config
 
-from fllib.algorithms.client_manager import ClientManager
 from fllib.algorithms.algorithm_config import AlgorithmConfig
-from fllib.types import ResultDict, PartialAlgorithmConfigDict
 from fllib.algorithms.callbacks import AlgorithmCallbackList
+from fllib.algorithms.client_manager import ClientManager
+from fllib.types import ResultDict, PartialAlgorithmConfigDict
 
 
 class Algorithm(Trainable):

@@ -1,8 +1,9 @@
-import torchvision
 import torch
 import torch.nn as nn
 import torch.optim as optim
+import torchvision
 import torchvision.transforms as transforms
+
 from fllib.models.catalog import ModelCatalog
 
 model = ModelCatalog.get_model("resnet")
