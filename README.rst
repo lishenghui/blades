@@ -109,6 +109,19 @@ Robust Aggregation
 +-----------------------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+----------------------------------------------------------------------------------------------------------+
 
 
+Data Partitioners:
+==================================================
+
+Dirichlet Partitioner
+----------------------
+
+.. image:: https://github.com/lishenghui/blades/blob/master/docs/source/images/dirichlet_partition.png
+
+Sharding Partitioner
+----------------------
+
+.. image:: https://github.com/lishenghui/blades/blob/master/docs/source/images/shard_partition.png
+
 
 Citation
 =========
