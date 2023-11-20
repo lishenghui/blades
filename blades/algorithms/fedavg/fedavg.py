@@ -57,13 +57,8 @@ class FedavgConfig(AlgorithmConfig):
         return config
 
     def get_client_config(self) -> ClientConfig:
-        config = (
-            ClientConfig(class_specifier="blades.clients.Client")
-            # .training(
-            #     num_batch_per_round=self.num_batch_per_round,
-            #     lr=self.local_lr,
-            # )
-            .update_from_dict(self.client_config)
+        config = ClientConfig(class_specifier="blades.clients.Client").update_from_dict(
+            self.client_config
         )
         return config
 
@@ -126,7 +121,7 @@ class Fedavg(Algorithm):
 
     def setup(self, config: AlgorithmConfig):
         super().setup(config)
-        # Setup our config: Merge the user-supplied config dict (which could
+        # Set up our config: Merge the user-supplied config dict (which could
         # be a partial config dict) with the class' default.
         if not isinstance(config, AlgorithmConfig):
             assert isinstance(config, PartialAlgorithmConfigDict)

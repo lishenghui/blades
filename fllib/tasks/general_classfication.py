@@ -28,7 +28,7 @@ class CustomCrossEntropy(Metric):
         return ce_loss.item()
 
 
-class GeneralClassfication(Task):
+class GeneralClassification(Task):
     _num_classes = None
 
     @staticmethod
@@ -42,19 +42,19 @@ class GeneralClassfication(Task):
         data, target = data.to(device), target.to(device)
         output = model(data)
 
-        if GeneralClassfication._num_classes is None:
-            GeneralClassfication._num_classes = output.shape[1]
+        if GeneralClassification._num_classes is None:
+            GeneralClassification._num_classes = output.shape[1]
         loss = F.cross_entropy(output, target)
         return torch.clamp(loss, 0, 1e6)
 
     @property
     def num_classes(self):
-        if GeneralClassfication._num_classes is None:
+        if GeneralClassification._num_classes is None:
             raise ValueError(
                 "The number of classes is not defined yet, you may need to run a"
                 " forward pass first, so that the number of outputs is known."
             )
-        return GeneralClassfication._num_classes
+        return GeneralClassification._num_classes
 
     def init_metrics(self):
         # Define a base partial function with shared arguments

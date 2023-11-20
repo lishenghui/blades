@@ -1,20 +1,25 @@
-# Configuration file for the Sphinx documentation builder.
-#
-# For the full list of built-in configuration values, see the documentation:
-# https://www.sphinx-doc.org/en/master/usage/configuration.html
+import os.path as osp
+import sys
+import pyg_sphinx_theme
 
-# -- Project information -----------------------------------------------------
-# https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
 project = "blades"
 copyright = "2023, Shenghui Li"
 author = "Shenghui Li"
 release = "0.2"
 
-# -- General configuration ---------------------------------------------------
-# https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
+sys.path.append(osp.join(osp.dirname(pyg_sphinx_theme.__file__), "extension"))
 
-extensions = []
+extensions = [
+    "sphinx.ext.autodoc",
+    "sphinx.ext.autosummary",
+    "sphinx.ext.intersphinx",
+    "sphinx.ext.mathjax",
+    "sphinx.ext.napoleon",
+    "sphinx.ext.viewcode",
+    "nbsphinx",
+    "pyg",
+]
 
 templates_path = ["_templates"]
 exclude_patterns = []
@@ -34,14 +39,17 @@ html_logo = "_static/blades_logo.png"
 html_favicon = "_static/favicon.ico"
 
 
-# html_theme_options = {
-#     "navigation_depth": 5,
-#     "collapse_navigation": False,
-#     "icon_links": [
-#         {
-#             "name": "GitHub",
-#             "url": "https://github.com/bladesteam/blades",
-#             "icon": "fab fa-github-square",
-#         },
-#     ],
-# }
+intersphinx_mapping = {
+    "python": ("https://docs.python.org/", None),
+    "numpy": ("http://docs.scipy.org/doc/numpy", None),
+    "pandas": ("http://pandas.pydata.org/pandas-docs/dev", None),
+    "torch": ("https://pytorch.org/docs/master", None),
+}
+
+# def setup(app):
+#     def rst_jinja_render(app, _, source):
+#         rst_context = {'torch_geometric': torch_geometric}
+#         source[0] = app.builder.templates.render_string(source[0], rst_context)
+#
+#     app.connect('source-read', rst_jinja_render)
+#     app.add_js_file('js/version_alert.js')
