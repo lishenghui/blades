@@ -50,7 +50,7 @@ class AlgorithmConfig:
         >>> # In combination with a tune.grid_search:
         >>> config = AlgorithmConfig()
         >>> config.training(lr=tune.grid_search([0.01, 0.001]))
-        >>> # Use `to_dict()` method to get the legacy plain python config dict
+        >>> # Use `to_dict()` method to get the legacy plain Python config dict
         >>> # for usage with `tune.Tuner().fit()`.
         >>> tune.Tuner("[registered trainer class]", param_space=config.to_dict()).fit()
     """
@@ -68,7 +68,7 @@ class AlgorithmConfig:
         self.server_config = {}
         self.logger_creator = None
         self.learner_class = None
-        self.task_config = {"task_class": "fllib.tasks.GeneralClassfication"}
+        self.task_config = {"task_class": "fllib.tasks.GeneralClassification"}
 
         # experimental: this will contain the hyper-parameters that are passed to the
         # Learner, for computing loss, etc. New algorithms have to set this to their
