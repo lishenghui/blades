@@ -24,6 +24,10 @@
        :alt: Static Badge
        :target: https://docs.ray.io/en/releases-2.8.0/
 
+    .. image:: https://readthedocs.org/projects/blades/badge/?version=latest
+        :target: https://blades.readthedocs.io/en/latest/?badge=latest
+        :alt: Documentation Status
+
     .. image:: https://img.shields.io/github/license/lishenghui/blades?logo=apache&logoColor=red
         :alt: GitHub
         :target: https://github.com/lishenghui/blades/blob/master/LICENSE
