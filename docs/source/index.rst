@@ -9,13 +9,8 @@
 Blades documentation
 ======================
 
-:pyg:`null` **PyG** *(PyTorch Geometric)* is a library built upon :pytorch:`null` `PyTorch <https://pytorch.org>`_ to easily write and train Graph Neural Networks (GNNs) for a wide range of applications related to structured data.
-
-
-**Blades** is a Python library for cooks and food lovers that
-creates recipes mixing random ingredients.  It pulls data from the `Open Food
-Facts database <https://world.openfoodfacts.org/>`_ and offers a *simple* and
-*intuitive* API.
+:blades:`null` **Blades** is a open-sourced library built upon :pytorch:`null` `PyTorch <https://pytorch.org>`_
+and :ray:`null` `Ray <https://ray.io>`_ to study the state-of-the-art attacks and defenses in Federated Learning (FL).
 
 .. note::
 

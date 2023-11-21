@@ -1,6 +1,6 @@
 import os.path as osp
 import sys
-import pyg_sphinx_theme
+import blades_sphinx_theme
 
 
 project = "blades"
@@ -8,7 +8,7 @@ copyright = "2023, Shenghui Li"
 author = "Shenghui Li"
 release = "0.2"
 
-sys.path.append(osp.join(osp.dirname(pyg_sphinx_theme.__file__), "extension"))
+sys.path.append(osp.join(osp.dirname(blades_sphinx_theme.__file__), "extension"))
 
 extensions = [
     "sphinx.ext.autodoc",
@@ -18,7 +18,7 @@ extensions = [
     "sphinx.ext.napoleon",
     "sphinx.ext.viewcode",
     "nbsphinx",
-    "pyg",
+    "blades_sphinx",
 ]
 
 templates_path = ["_templates"]
@@ -28,8 +28,7 @@ exclude_patterns = []
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
-# html_theme = "pydata_sphinx_theme"
-html_theme = "pyg_sphinx_theme"
+html_theme = "blades_sphinx_theme"
 html_static_path = ["_static"]
 
 html_logo = "_static/blades_logo.png"
