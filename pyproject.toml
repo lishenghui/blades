@@ -9,7 +9,7 @@ authors=[
     {name="Shenghui Li", email="shenghui.li@it.uu.se"},
 ]
 description="A Unified Benchmark Suite for Byzantine Attacks and Defenses in Federated Learning"
-#readme="README.rst"
+readme="README.rst"
 requires-python=">=3.9"
 keywords=[
     "deep-learning",
@@ -18,7 +18,7 @@ keywords=[
 ]
 classifiers=[
     "Development Status :: 5 - Production/Stable",
-    "License :: OSI Approved :: MIT License",
+    "License :: OSI Approved :: Apache 2.0",
     "Programming Language :: Python",
     "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",

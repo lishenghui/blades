@@ -1,7 +1,7 @@
 
-.. raw:: html
+.. .. raw:: html
 
-    <div style="text-align: center;">
+..     <div style="text-align: center;">
 
 .. container:: badges
 
@@ -33,11 +33,14 @@
         :target: https://github.com/lishenghui/blades/blob/master/LICENSE
 
 
-.. raw:: html
+.. .. raw:: html
 
-    <p align=center>
-        <img src="https://github.com/lishenghui/blades/blob/master/docs/source/images/arch.png" width="1000" alt="Blades Logo">
-    </p>
+..     <p align=center>
+..         <img src="https://github.com/lishenghui/blades/blob/master/docs/source/images/arch.png" width="1000" alt="Blades Logo">
+..     </p>
+
+image:: https://github.com/lishenghui/blades/blob/master/docs/source/images/arch.png
+
 
 
 Installation

@@ -16,6 +16,13 @@ and :ray:`null` `Ray <https://ray.io>`_ to study the state-of-the-art attacks an
 
    This project is under active development.
 
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Install Blades
+
+   install/installation
+
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
