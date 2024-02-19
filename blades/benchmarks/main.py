@@ -4,7 +4,7 @@ import torch.optim as optim
 import torchvision
 import torchvision.transforms as transforms
 
-from fllib.models.catalog import ModelCatalog
+from fedlib.models.catalog import ModelCatalog
 
 model = ModelCatalog.get_model("resnet")
 data_root = "./data"

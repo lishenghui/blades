@@ -4,7 +4,7 @@ import numpy as np
 import torch
 from sklearn.cluster import KMeans
 
-from fllib.utils import torch_utils
+from fedlib.utils import torch_utils
 from .aggregators import Mean, Median
 
 

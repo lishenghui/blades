@@ -3,7 +3,7 @@ from ray import tune
 from ray.tune.stopper import MaximumIterationStopper
 
 from blades.algorithms.fedavg import FedavgConfig, Fedavg
-from fllib.algorithms import AlgorithmConfig
+from fedlib.algorithms import AlgorithmConfig
 
 
 class ExampleFedavgConfig(FedavgConfig):

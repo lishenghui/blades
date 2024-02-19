@@ -1,6 +1,6 @@
 import torch
 
-from fllib.clients.callbacks import ClientCallback
+from fedlib.clients.callbacks import ClientCallback
 
 
 class ClippingCallback(ClientCallback):

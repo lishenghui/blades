@@ -3,9 +3,9 @@ from unittest.mock import MagicMock
 
 import ray
 import torch
+from fedlib.constants import CLIENT_UPDATE
 
 from blades.adversaries import AdaptiveAdversary
-from fllib.constants import CLIENT_UPDATE
 
 
 class TestAdaptiveAdversary(unittest.TestCase):

@@ -40,8 +40,8 @@ def _patch_path(path: str):
 
     Returns: Patched path.
     """
-    # This script runs in the fllib dir.
-    fllib_dir = Path(__file__).parent
+    # This script runs in the fedlib dir.
+    fedlib_dir = Path(__file__).parent
     if isinstance(path, list):
         return [_patch_path(i) for i in path]
     elif isinstance(path, dict):
@@ -50,7 +50,7 @@ def _patch_path(path: str):
         if os.path.exists(path):
             return path
         else:
-            abs_path = str(fllib_dir.absolute().joinpath(path))
+            abs_path = str(fedlib_dir.absolute().joinpath(path))
             return abs_path if os.path.exists(abs_path) else path
     else:
         return path
@@ -108,7 +108,7 @@ def load_experiments_from_file(
             stop = json.loads(stop)
 
         # Note: we do this gymnastics to support the old format that
-        # "run_fllib_experiments" expects. Ideally, we'd just build the config and
+        # "run_fedlib_experiments" expects. Ideally, we'd just build the config and
         # run the algo.
         config = algo_config.to_dict()
         experiments = {
@@ -193,7 +193,7 @@ def file(
     if temp_file:
         temp_file.close()
 
-    run_fllib_experiments(
+    run_fedlib_experiments(
         experiments=experiments,
         v=v,
         vv=vv,
@@ -289,7 +289,7 @@ def run(
             }
         }
 
-        run_fllib_experiments(
+        run_fedlib_experiments(
             experiments=experiments,
             v=v,
             vv=vv,
@@ -308,7 +308,7 @@ def run(
         )
 
 
-def run_fllib_experiments(
+def run_fedlib_experiments(
     experiments: dict,
     v: cli.V,
     vv: cli.VV,
@@ -410,7 +410,7 @@ def run_fllib_experiments(
             "\nYou can now evaluate your trained algorithm from any "
             "checkpoint, e.g. by running:"
         )
-        print(Panel(f"[green]  fllib evaluate {checkpoints[0]} --algo {algo}"))
+        print(Panel(f"[green]  fedlib evaluate {checkpoints[0]} --algo {algo}"))
 
 
 def main():

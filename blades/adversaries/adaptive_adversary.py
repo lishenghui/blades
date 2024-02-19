@@ -2,8 +2,8 @@ from typing import Dict
 
 import torch
 
-from fllib.algorithms import Algorithm
-from fllib.constants import CLIENT_UPDATE
+from fedlib.constants import CLIENT_UPDATE
+from fedlib.algorithms.fedavg.fedavg import Fedavg as Algorithm
 from .adversary import Adversary
 
 

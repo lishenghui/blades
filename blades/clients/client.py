@@ -1,11 +1,11 @@
 import copy
 from typing import Iterable, Type, Optional
 
-import fllib.clients
-from fllib.clients import ClientConfig
+import fedlib.clients
+from fedlib.clients import ClientConfig
 
 
-class Client(fllib.clients.Client):
+class Client(fedlib.clients.Client):
     """Represents a client.
 
     Attributes:
@@ -70,7 +70,7 @@ class ClientProxy:
 
     def __init__(
         self,
-        client: fllib.clients.Client,
+        client: fedlib.clients.Client,
         malicious_cls: Type = None,
         local_training: Optional[bool] = False,
     ) -> None:

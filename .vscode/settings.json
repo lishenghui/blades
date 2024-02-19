@@ -13,7 +13,7 @@
     "--generated-members=numpy.* ,torch.*"
   ],
   "python.analysis.extraPaths": [
-    "./fllib/communication"
+    "./fedlib/communication"
   ],
   "[python]": {
     "editor.defaultFormatter": "ms-python.black-formatter"

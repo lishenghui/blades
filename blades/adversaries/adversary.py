@@ -4,8 +4,8 @@ from typing import Any, Dict, Type, List
 import torch
 from ray.rllib.utils.from_config import from_config
 
-from fllib.algorithms import Algorithm
-from fllib.constants import CLIENT_UPDATE
+from fedlib.constants import CLIENT_UPDATE
+from fedlib.algorithms.fedavg.fedavg import FedavgConfig as Algorithm
 
 
 class Adversary:

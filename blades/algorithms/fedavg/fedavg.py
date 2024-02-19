@@ -2,25 +2,21 @@ from collections import defaultdict
 from typing import DefaultDict, List, Optional, Dict
 
 import numpy as np
-import ray
 from ray.rllib.utils import deep_update
 from ray.rllib.utils.annotations import override
-from ray.rllib.utils.debug import update_global_seed_if_necessary
-from ray.util.timer import _Timer
+
+from fedlib.datasets import FLDataset
+from fedlib.utils.types import NotProvided
+from fedlib.algorithms import AlgorithmConfig
+from fedlib.clients import ClientConfig
+from fedlib.algorithms.fedavg.fedavg import Fedavg as FedavgAlgorithm
+from fedlib.constants import CLIENT_UPDATE, GLOBAL_MODEL, NUM_GLOBAL_STEPS
+from fedlib.algorithms.fedavg.fedavg import FedavgConfig as FedavgConfigBase
 
 from blades.adversaries import Adversary, AdversaryConfig
-from fllib.algorithms import Algorithm, AlgorithmConfig
-from fllib.clients import ClientConfig
-from fllib.constants import CLIENT_UPDATE, GLOBAL_MODEL, NUM_GLOBAL_STEPS
-from fllib.core.execution.worker_group import WorkerGroup
-from fllib.core.execution.worker_group_config import WorkerGroupConfig
-from fllib.datasets import DatasetCatalog
-from fllib.datasets.dataset import FLDataset
-from fllib.types import NotProvided
-from fllib.types import PartialAlgorithmConfigDict
 
 
-class FedavgConfig(AlgorithmConfig):
+class FedavgConfig(FedavgConfigBase):
     def __init__(self, algo_class=None):
         """Initializes a FedavgConfig instance."""
         super().__init__(algo_class=algo_class or Fedavg)
@@ -62,23 +58,23 @@ class FedavgConfig(AlgorithmConfig):
         )
         return config
 
-    def get_worker_group_config(self) -> WorkerGroupConfig:
-        if not self._is_frozen:
-            raise ValueError(
-                "Cannot call `get_learner_group_config()` on an unfrozen "
-                "AlgorithmConfig! Please call `freeze()` first."
-            )
+    # def get_worker_group_config(self) -> WorkerGroupConfig:
+    #     if not self._is_frozen:
+    #         raise ValueError(
+    #             "Cannot call `get_learner_group_config()` on an unfrozen "
+    #             "AlgorithmConfig! Please call `freeze()` first."
+    #         )
 
-        config = (
-            WorkerGroupConfig()
-            .resources(
-                num_remote_workers=self.num_remote_workers,
-                num_cpus_per_worker=self.num_cpus_per_worker,
-                num_gpus_per_worker=self.num_gpus_per_worker,
-            )
-            .task(task_spec=self.get_task_spec())
-        )
-        return config
+    #     config = (
+    #         WorkerGroupConfig()
+    #         .resources(
+    #             num_remote_workers=self.num_remote_workers,
+    #             num_cpus_per_worker=self.num_cpus_per_worker,
+    #             num_gpus_per_worker=self.num_gpus_per_worker,
+    #         )
+    #         .task(task_spec=self.get_task_spec())
+    #     )
+    #     return config
 
     @override(AlgorithmConfig)
     def validate(self) -> None:
@@ -107,7 +103,7 @@ class FedavgConfig(AlgorithmConfig):
             )
 
 
-class Fedavg(Algorithm):
+class Fedavg(FedavgAlgorithm):
     """Federated Averaging Algorithm."""
 
     def __init__(self, config=None, logger_creator=None, **kwargs):
@@ -121,108 +117,27 @@ class Fedavg(Algorithm):
 
     def setup(self, config: AlgorithmConfig):
         super().setup(config)
-        # Set up our config: Merge the user-supplied config dict (which could
-        # be a partial config dict) with the class' default.
-        if not isinstance(config, AlgorithmConfig):
-            assert isinstance(config, PartialAlgorithmConfigDict)
-            config_obj = self.get_default_config()
-            if not isinstance(config_obj, AlgorithmConfig):
-                assert isinstance(config, PartialAlgorithmConfigDict)
-                config_obj = AlgorithmConfig().from_dict(config_obj)
-            config_obj.update_from_dict(config)
-            self.config = config_obj
-
-        # Set Algorithm's seed.
-        update_global_seed_if_necessary("torch", self.config.random_seed)
-
-        server_device = "cuda" if self.config.num_gpus_for_driver > 0 else "cpu"
-        self.server = self.config.get_server_config().build(server_device)
-        self.worker_group = self._setup_worker_group()
-
-        self._setup_dataset()
-        self.client_manager = self.client_manager_cls(
-            self._dataset.client_ids,
-            self._dataset.train_client_ids,
-            self._dataset.test_client_ids,
-            client_config=self.config.get_client_config(),
-        )
-
-        # Metrics-related properties.
-        self._timers = defaultdict(_Timer)
-        self._counters = defaultdict(int)
-        self.global_vars = defaultdict(lambda: defaultdict(list))
-
-        clients = self.client_manager.clients
-        if self.worker_group.workers:
-            affinity_actors = [
-                self._client_actors_affinity[client.client_id] for client in clients
-            ]
-            self.local_results = self.worker_group.execute_with_actor_pool(
-                lambda _, client: client.setup(), clients, affinity_actors
-            )
-        else:
-            self.local_results = self.worker_group.local_execute(
-                lambda _, client: client.setup(), clients
-            )
 
         self.adversary = self.config.get_adversary_config().build(
             self.client_manager.clients[: self.config.num_malicious_clients]
         )
         self.adversary.on_algorithm_start(self)
 
-    def _setup_worker_group(self) -> WorkerGroup:
-        worker_group_config = self.config.get_worker_group_config()
-        worker_group = worker_group_config.build()
-        return worker_group
-
-    def _setup_dataset(self):
-        self._dataset = DatasetCatalog.get_dataset(self.config.dataset_config)
-
-        if self.worker_group.workers:
-
-            def setup_dataset(subset):
-                def bind_dataset(worker):
-                    setattr(worker, "dataset", subset)
-                    return ray.get_runtime_context().get_actor_id(), subset.client_ids
-
-                return bind_dataset
-
-            subdatasets = self._dataset.split(len(self.worker_group.workers))
-            results = self.worker_group.foreach_actor(
-                [setup_dataset(subset) for subset in subdatasets]
-            )
-            results = [result.get() for result in results.ignore_errors()]
-
-            for actor, clients in results:
-                for client in clients:
-                    self._client_actors_affinity[client].append(actor)
-        else:
-            self.worker_group.local_worker().dataset = self._dataset
-
     def training_step(self):
-        self.worker_group.sync_state(
-            GLOBAL_MODEL, self.server.get_global_model().state_dict()
-        )
+        self.worker_group.sync_weights(self.server.get_global_model().state_dict())
 
         def local_training(worker, client):
             if isinstance(worker.dataset, FLDataset):
                 dataset = worker.dataset.get_client_dataset(client.client_id)
             else:
                 dataset = worker.dataset.get_train_loader(client.client_id)
-            return client.train_one_round(dataset)
+            result = client.train_one_round(dataset)
+            return result
 
         clients = self.client_manager.trainable_clients
-        if self.worker_group.workers:
-            affinity_actors = [
-                self._client_actors_affinity[client.client_id] for client in clients
-            ]
-            self.local_results = self.worker_group.execute_with_actor_pool(
-                local_training, clients, affinity_actors
-            )
-        else:
-            self.local_results = self.worker_group.local_execute(
-                local_training, clients
-            )
+        self.local_results = self.worker_group.foreach_execution(
+            local_training, clients
+        )
 
         self.adversary.on_local_round_end(self)
 
@@ -236,7 +151,6 @@ class Fedavg(Algorithm):
                 losses.append(loss)
 
         self._counters[NUM_GLOBAL_STEPS] += 1
-        # train_results
         global_vars = {
             "timestep": self._counters[NUM_GLOBAL_STEPS],
         }
@@ -253,7 +167,6 @@ class Fedavg(Algorithm):
         clients = self.client_manager.testable_clients
 
         def validate_func(worker, client):
-            # test_loader = worker.dataset.get_test_loader(client.client_id)
             if isinstance(worker.dataset, FLDataset):
                 test_loader = worker.dataset.get_client_dataset(
                     client.client_id

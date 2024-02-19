@@ -3,6 +3,10 @@ import unittest
 import ray
 import torch
 
+from fedlib.datasets import ToyFLDataset
+from fedlib.datasets import DatasetCatalog
+
+from blades.algorithms.fedavg import FedavgConfig
 from blades.adversaries import (
     ALIEAdversary,
     IPMAdversary,
@@ -10,9 +14,6 @@ from blades.adversaries import (
     LabelFlipAdversary,
     AdaptiveAdversary,
 )
-from blades.algorithms.fedavg import FedavgConfig
-from fllib.datasets import DatasetCatalog
-from fllib.datasets.tests.toy_dataset import ToyFLDataset
 
 
 class TestAdversary(unittest.TestCase):

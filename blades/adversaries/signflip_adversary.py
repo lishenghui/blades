@@ -1,5 +1,5 @@
-from fllib.algorithms import Algorithm
-from fllib.clients import ClientCallback
+from fedlib.algorithms import Algorithm
+from fedlib.clients import ClientCallback
 from .adversary import Adversary
 
 

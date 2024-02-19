@@ -8,8 +8,9 @@ from torch.utils.data import DataLoader
 
 from blades.adversaries import LabelFlipAdversary
 from blades.algorithms.fedavg import FedavgConfig
-from fllib.datasets import DatasetCatalog
-from fllib.datasets.tests.toy_dataset import ToyFLDataset
+
+from fedlib.datasets import DatasetCatalog
+from fedlib.datasets.tests.toy_dataset import ToyFLDataset
 
 
 class TestAdaptiveAdversary(unittest.TestCase):

@@ -3,7 +3,7 @@ import math
 from ray.rllib.utils.annotations import override
 
 from blades.clients.dp_client import DPCliengConfig
-from fllib.algorithms import AlgorithmConfig
+from fedlib.algorithms import AlgorithmConfig
 from .fedavg import FedavgConfig, Fedavg
 
 

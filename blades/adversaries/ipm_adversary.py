@@ -1,7 +1,7 @@
 from typing import Dict
 
-from fllib.algorithms import Algorithm
-from fllib.constants import CLIENT_UPDATE
+from fedlib.algorithms import Algorithm
+from fedlib.constants import CLIENT_UPDATE
 from .adversary import Adversary
 
 

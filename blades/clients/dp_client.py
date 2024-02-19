@@ -1,10 +1,12 @@
 import torch
 
 from blades.clients import Client
-from fllib.clients.callbacks import ClientCallback
-from fllib.clients.client_config import ClientConfig
-from fllib.types import NotProvided
-from fllib.utils.torch_utils import clip_tensor_norm_
+from fedlib.clients.callbacks import ClientCallback
+from fedlib.clients.client_config import ClientConfig
+from fedlib.utils.types import (
+    NotProvided,
+)
+from fedlib.utils.torch_utils import clip_tensor_norm_
 
 
 class DPCliengConfig(ClientConfig):

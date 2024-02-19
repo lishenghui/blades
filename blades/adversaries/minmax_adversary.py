@@ -3,9 +3,9 @@ from typing import Dict
 
 import torch
 
-from fllib.aggregators import Signguard
-from fllib.algorithms import Algorithm
-from fllib.constants import CLIENT_UPDATE
+from blades.aggregators import Signguard
+from fedlib.algorithms import Algorithm
+from fedlib.constants import CLIENT_UPDATE
 from .adversary import Adversary
 
 

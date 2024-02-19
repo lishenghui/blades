@@ -1,24 +1,17 @@
-[build-system]
-requires=["flit_core >=3.2,<4"]
-build-backend="flit_core.buildapi"
-
-[project]
-name="blades"
-version="0.2.0"
-authors=[
-    {name="Shenghui Li", email="shenghui.li@it.uu.se"},
-]
-description="A Unified Benchmark Suite for Byzantine Attacks and Defenses in Federated Learning"
-readme="README.rst"
-requires-python=">=3.9"
-keywords=[
-    "deep-learning",
-    "pytorch",
-    "federated-learning",
-]
-classifiers=[
+[tool.poetry]
+name = "blades"
+version = "0.3.0"
+description = "A Unified Benchmark Suite for Byzantine Attacks and Defenses in Federated Learning"
+authors = ["Shenghui Li <shenghui.li@it.uu.se>"]
+license = "Apache-2.0"
+readme = "README.rst"
+homepage = "https://github.com/fedlib/fedlib"
+repository = "https://github.com/fedlib/fedlib"
+documentation = "https://fedlib.readthedocs.io"
+keywords = ["deep-learning", "pytorch", "federated-learning"]
+classifiers = [
     "Development Status :: 5 - Production/Stable",
-    "License :: OSI Approved :: Apache 2.0",
+    "License :: OSI Approved :: Apache Software License",
     "Programming Language :: Python",
     "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
@@ -26,95 +19,46 @@ classifiers=[
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3 :: Only",
 ]
-dependencies=[
-    "torch>=2.0.1",
-    "torchvision~=0.15.2",
-    "torchaudio",
-    "numpy>=1.26.1",
-    "ray>=2.8.0",
-    "matplotlib>=3.8.1",
-    "requests>=2.27.1",
-    "setuptools",
-    "ruamel.yaml",
-    "tqdm",
-    "wandb>=0.15.12",
-    "typer",
-    "dm_tree",
-    "scikit-learn>=1.3.2",
-    "pytest",
-    "ray[rllib]",
-    "pre-commit",
-    "torchmetrics",
-]
 
-[project.urls]
-repository="https://github.com/lishenghui/blades"
+[tool.poetry.dependencies]
+python = "^3.9"
+torch = "^2.0.1"
+torchvision = "^0.15.2"
+torchaudio = "*"
+numpy = "^1.26.1"
+ray = { version = "^2.7.0", extras = ["rllib", "tune"] }
+matplotlib = "^3.8.1"
+requests = "^2.27.1"
+setuptools = "*"
+tqdm = "*"
+wandb = "^0.15.12"
+typer = "*"
+dm_tree = "*"
+scikit-learn = "^1.3.2"
+pytest = "*"
+pre-commit = "*"
+torchmetrics = "*"
+fedlib = { git = "git@github.com:fedlib/fedlib.git", branch = "main" }
 
-[project.scripts]
-blades = "blades.train:main"
+[tool.poetry.dev-dependencies]
+yapf = "*"
+isort = "*"
+codespell = "*"
+black = "*"
+pylint = "*"
+pytest-xdist = "*"
 
-[tool.flit.module]
-name="blades"
+#[tool.poetry.scripts]
+#blades = "blades.train:main"
 
-[tool.yapf]
-based_on_style = "pep8"
-split_before_named_assigns = false
-blank_line_before_nested_class_or_def = false
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.black]
+line-length = 88
 
 [tool.isort]
 multi_line_output = 3
 include_trailing_comma = true
 skip = [".gitignore", "__init__.py"]
-
-[tool.codespell]
-skip = ["./src/3rdParty"]
-
-
-[tool.black]
-line_length = 88
-# exclude = [
-#     ".git",
-#     "__pycache__",
-#     "docs",
-#     "build",
-#     "dist",
-#     "blades/fllib/models/backbones"
-# ]
-
-
-[tool.pytest.ini_options]
-norecursedirs = "fllib/core"
-addopts = "--capture=no"
-filterwarnings = [
-    "ignore:distutils:DeprecationWarning",
-    "ignore:'torch_geometric.contrib' contains experimental code:UserWarning",
-    # Filter `torch` warnings:
-    "ignore:The PyTorch API of nested tensors is in prototype stage:UserWarning",
-    "ignore:scatter_reduce():UserWarning",
-    "ignore:Sparse CSR tensor support is in beta state:UserWarning",
-    "ignore:Sparse CSC tensor support is in beta state:UserWarning",
-    "ignore:torch.distributed._sharded_tensor will be deprecated:DeprecationWarning",
-    # Filter `captum` warnings:
-    "ignore:Setting backward hooks on ReLU activations:UserWarning",
-    "ignore:.*did not already require gradients, required_grads has been set automatically:UserWarning",
-    # Filter `pytorch_lightning` warnings:
-    "ignore:GPU available but not used:UserWarning",
-]
-
-[tool.pylint.messages_control]
-disable = [
-    "import-outside-toplevel",
-    "missing-module-docstring",
-    "missing-class-docstring",
-    "missing-function-docstring",
-    "empty-docstring",
-    "import-error",
-    "too-many-arguments",
-    "arguments-differ",
-    "invalid-name",
-    "redefined-builtin",
-]
-attr-rgx = "[A-Za-z_][A-Za-z0-9_]*$"
-argument-rgx = "[A-Za-z_][A-Za-z0-9_]*$"
-variable-rgx = "[A-Za-z_][A-Za-z0-9_]*$"
-generated-members = ["torch.*"]
