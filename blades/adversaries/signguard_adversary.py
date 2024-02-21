@@ -2,8 +2,8 @@ from typing import Dict
 
 import torch
 
-from fedlib.algorithms import Algorithm
-from fedlib.constants import CLIENT_UPDATE
+from fedlib.trainers import Trainer as Algorithm
+from fedlib.constants import CLIENT_UPDATE, CLIENT_ID
 from .adversary import Adversary
 
 
@@ -30,7 +30,7 @@ class SignGuardAdversary(Adversary):
     def on_local_round_end(self, algorithm: Algorithm):
         updates = self._attack_sign_guard(algorithm)
         for result in algorithm.local_results:
-            client = algorithm.client_manager.get_client_by_id(result["id"])
+            client = algorithm.client_manager.get_client_by_id(result[CLIENT_ID])
             if client.is_malicious:
                 result[CLIENT_UPDATE] = updates
 

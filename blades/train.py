@@ -11,7 +11,7 @@ import typer
 import yaml
 from ray.rllib.common import CLIArguments as cli
 from ray.rllib.common import SupportedFileType
-from ray.rllib.common import download_example_file, get_file_type
+from ray.rllib.common import _download_example_file, _get_file_type
 from ray.tune.registry import register_trainable
 from ray.tune.resources import resources_to_json, json_to_resources
 from ray.tune.schedulers import create_scheduler
@@ -168,7 +168,7 @@ def file(
       master/rllib/tuned_examples/ppo/cartpole-ppo.yaml
     """
     # Attempt to download the file if it's not found locally.
-    config_file, temp_file = download_example_file(
+    config_file, temp_file = _download_example_file(
         example_file=config_file, base_url=None
     )
 
@@ -179,7 +179,7 @@ def file(
         "checkpoint_score_attribute": checkpoint_score_attr,
     }
 
-    file_type = get_file_type(config_file)
+    file_type = _get_file_type(config_file)
 
     experiments = load_experiments_from_file(
         config_file, file_type, stop, checkpoint_config

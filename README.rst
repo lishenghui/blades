@@ -1,47 +1,71 @@
+.. raw:: html
 
-.. .. raw:: html
+   <div style="text-align: center;">
+   <a href="https://arxiv.org/pdf/2206.05359.pdf">
+       <img alt="Tests Status" src="https://img.shields.io/badge/arXiv-2206.05359-red?logo=arxiv&style=flat-square&link=https%3A%2F%2Farxiv.org%2Fpdf%2F2206.05359.pdf"/>
+   </a>
+   <a href="https://github.com/lishenghui/blades">
+       <img alt="Build Status" src="https://img.shields.io/github/last-commit/lishenghui/blades/master?logo=Github"/>
+   </a>
+   <a href="https://github.com/lishenghui/blades/actions/workflows/unit-tests.yml">
+       <img alt="Tests Status" src="https://github.com/lishenghui/blades/actions/workflows/unit-tests.yml/badge.svg?branch=master"/>
+   </a>
+   <a href="https://blades.readthedocs.io/en/latest/?badge=latest">
+       <img alt="Docs" src="https://readthedocs.org/projects/blades/badge/?version=latest"/>
+   </a>
+   <a href="https://pytorch.org/get-started/pytorch-2.0/">
+       <img alt="Docs" src="https://img.shields.io/badge/Pytorch-2.0-brightgreen?logo=pytorch&logoColor=red"/>
+   </a>
+   <a href="https://docs.ray.io/en/releases-2.9.0/">
+       <img alt="Docs" src="https://img.shields.io/badge/Ray-2.9-brightgreen?logo=ray&logoColor=blue"/>
+   </a>
+   <a href="https://github.com/lishenghui/blades/blob/master/LICENSE">
+       <img alt="License" src="https://img.shields.io/github/license/lishenghui/blades?logo=apache&logoColor=red"/>
+   </a>
+   </div>
 
-..     <div style="text-align: center;">
-
-.. container:: badges
-
-    .. image:: https://img.shields.io/badge/arXiv-2206.05359-red?logo=arxiv&style=flat-square&link=https%3A%2F%2Farxiv.org%2Fpdf%2F2206.05359.pdf
-        :alt: Static Badge
-        :target: https://arxiv.org/pdf/2206.05359.pdf
-
+..
     .. image:: https://img.shields.io/github/last-commit/lishenghui/blades/master?logo=Github
         :alt: GitHub last commit (branch)
         :target: https://github.com/lishenghui/blades
-
-    .. image:: https://img.shields.io/github/actions/workflow/status/lishenghui/blades/.github%2Fworkflows%2Funit-tests.yml?logo=Pytest&logoColor=hsl&label=Unit%20Testing
+    .. image:: https://github.com/lishenghui/blades/actions/workflows/unit-tests.yml/badge.svg?branch=master
        :alt: GitHub Workflow Status (with event)
 
-    .. image:: https://img.shields.io/badge/Pytorch-2.0-brightgreen?logo=pytorch&logoColor=red
-       :alt: Static Badge
-       :target: https://pytorch.org/get-started/pytorch-2.0/
+    .. container:: badges
 
-    .. image:: https://img.shields.io/badge/Ray-2.8-brightgreen?logo=ray&logoColor=blue
-       :alt: Static Badge
-       :target: https://docs.ray.io/en/releases-2.8.0/
+        .. image:: https://img.shields.io/github/last-commit/lishenghui/blades/master?logo=Github
+           :alt: GitHub last commit (branch)
+           :target: https://github.com/lishenghui/blades
 
-    .. image:: https://readthedocs.org/projects/blades/badge/?version=latest
-        :target: https://blades.readthedocs.io/en/latest/?badge=latest
-        :alt: Documentation Status
+        .. image:: https://github.com/lishenghui/blades/actions/workflows/unit-tests.yml/badge.svg?branch=master
+           :alt: GitHub Workflow Status (with event)
 
-    .. image:: https://img.shields.io/github/license/lishenghui/blades?logo=apache&logoColor=red
-        :alt: GitHub
-        :target: https://github.com/lishenghui/blades/blob/master/LICENSE
+        .. image:: https://img.shields.io/badge/Pytorch-2.0-brightgreen?logo=pytorch&logoColor=red
+           :alt: Static Badge
+           :target: https://pytorch.org/get-started/pytorch-2.0/
+
+        .. image:: https://img.shields.io/badge/Ray-2.8-brightgreen?logo=ray&logoColor=blue
+           :alt: Static Badge
+           :target: https://docs.ray.io/en/releases-2.8.0/
+
+        .. image:: https://readthedocs.org/projects/blades/badge/?version=latest
+            :target: https://blades.readthedocs.io/en/latest/?badge=latest
+            :alt: Documentation Status
+
+        .. image:: https://img.shields.io/github/license/lishenghui/blades?logo=apache&logoColor=red
+            :alt: GitHub
+            :target: https://github.com/lishenghui/blades/blob/master/LICENSE
+
+        .. image:: https://img.shields.io/badge/arXiv-2206.05359-red?logo=arxiv&style=flat-square&link=https%3A%2F%2Farxiv.org%2Fpdf%2F2206.05359.pdf
+            :alt: Static Badge
+            :target: https://arxiv.org/pdf/2206.05359.pdf
 
 
-.. .. raw:: html
+.. raw:: html
 
-..     <p align=center>
-..         <img src="https://github.com/lishenghui/blades/blob/master/docs/source/images/arch.png" width="1000" alt="Blades Logo">
-..     </p>
-
-image:: https://github.com/lishenghui/blades/blob/master/docs/source/images/arch.png
-
-
+   <p align=center>
+        <img src="https://github.com/lishenghui/blades/blob/master/docs/source/images/client_pipeline.png" width="1000" alt="Blades Logo">
+   </p>
 
 Installation
 ==================================================
@@ -168,9 +192,9 @@ Please cite our `paper <https://arxiv.org/abs/2206.05359>`_ (and the respective 
 
 ::
 
-   @article{li2023blades,
-     title={Blades: A Unified Benchmark Suite for Byzantine Attacks and Defenses in Federated Learning},
-     author= {Li, Shenghui and Ju, Li and Zhang, Tianru and Ngai, Edith and Voigt, Thiemo},
-     journal={arXiv preprint arXiv:2206.05359},
-     year={2023}
-   }
+    @inproceedings{li2024blades,
+    title={Blades: A Unified Benchmark Suite for Byzantine Attacks and Defenses in Federated Learning},
+    author={Li, Shenghui and Ngai, Edith and Ye, Fanghua and Ju, Li and Zhang, Tianru and Voigt, Thiemo},
+    booktitle={2024 IEEE/ACM Ninth International Conference on Internet-of-Things Design and Implementation (IoTDI)},
+    year={2024}
+    }

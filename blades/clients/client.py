@@ -3,6 +3,7 @@ from typing import Iterable, Type, Optional
 
 import fedlib.clients
 from fedlib.clients import ClientConfig
+from fedlib.constants import CLIENT_ID
 
 
 class Client(fedlib.clients.Client):
@@ -105,7 +106,7 @@ class ClientProxy:
         """Trains the client for one round."""
         if not self._local_training:
             return {
-                "id": self.client_id,
+                CLIENT_ID: self.client_id,
             }
         if self._is_under_attack:
             return self.malicious_client.train_one_round(data_reader=data_reader)

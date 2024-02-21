@@ -1,9 +1,9 @@
 import math
 
 from ray.rllib.utils.annotations import override
+from fedlib.trainers import TrainerConfig
 
 from blades.clients.dp_client import DPCliengConfig
-from fedlib.algorithms import AlgorithmConfig
 from .fedavg import FedavgConfig, Fedavg
 
 
@@ -36,7 +36,7 @@ class FedavgDPConfig(FedavgConfig):
         )
         return config
 
-    @override(AlgorithmConfig)
+    @override(TrainerConfig)
     def validate(self) -> None:
         super().validate()
         self.dp_privacy_sensitivity = (
@@ -45,9 +45,6 @@ class FedavgDPConfig(FedavgConfig):
 
 
 class FedavgDP(Fedavg):
-    def __init__(self, config=None, logger_creator=None, **kwargs):
-        super().__init__(config, logger_creator, **kwargs)
-
     @classmethod
-    def get_default_config(cls) -> AlgorithmConfig:
+    def get_default_config(cls) -> TrainerConfig:
         return FedavgDPConfig()

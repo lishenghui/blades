@@ -1,26 +1,21 @@
-from typing import Dict
-
 import torch
 
-from fedlib.constants import CLIENT_UPDATE
-from fedlib.algorithms.fedavg.fedavg import Fedavg as Algorithm
+from fedlib.constants import CLIENT_UPDATE, CLIENT_ID
+from fedlib.trainers import FedavgTrainer
 from .adversary import Adversary
 
 
 class AdaptiveAdversary(Adversary):
-    def __init__(self, clients, global_config: Dict = None):
-        super().__init__(clients, global_config)
-
-    def on_local_round_end(self, algorithm: Algorithm):
-        updates = self._attack_median_and_trimmedmean(algorithm)
-        for result in algorithm.local_results:
-            client = algorithm.client_manager.get_client_by_id(result["id"])
+    def on_local_round_end(self, trainer: FedavgTrainer):
+        updates = self._attack_median_and_trimmedmean(trainer)
+        for result in trainer.local_results:
+            client = trainer.client_manager.get_client_by_id(result[CLIENT_ID])
             if client.is_malicious:
                 result[CLIENT_UPDATE] = updates
 
         return updates
 
-    def _attack_median_and_trimmedmean(self, algorithm: Algorithm):
+    def _attack_median_and_trimmedmean(self, algorithm: FedavgTrainer):
         benign_updates = self.get_benign_updates(algorithm)
         device = benign_updates.device
         mean_grads = benign_updates.mean(dim=0)

@@ -18,3 +18,4 @@ scripts/data
 ./src/dist/
 *.pytest_cache/
 *.DS_Store
+blades/run_alie.sh
