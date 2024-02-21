@@ -79,9 +79,9 @@ fedavg_blades:
         # - type: blades.adversaries.ALIEAdversary
         # - type: blades.adversaries.LabelFlipAdversary
         # - type: blades.adversaries.NoiseAdversary
-        # - type: blades.adversaries.SignFlipAdversary
-        - type: blades.adversaries.IPMAdversary
-          scale: 0.1
+        - type: blades.adversaries.SignFlipAdversary
+        # - type: blades.adversaries.IPMAdversary
+          # scale: 0.1
         # - type: blades.adversaries.IPMAdversary
         #   scale: 100
         # - type: blades.adversaries.MinMaxAdversary

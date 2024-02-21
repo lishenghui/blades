@@ -41,11 +41,11 @@ fedavg_blades:
     server_config:
       aggregator:
         grid_search: [
-          # type: Mean,
+          type: Mean,
           # type: Clippedclustering,
           # type: Median,
           # type: GeoMed,
-          type: DnC,
+          # type: DnC,
           # type: Trimmedmean,
           # type: Signguard,
           # type: Multikrum,
@@ -61,17 +61,17 @@ fedavg_blades:
 
     num_malicious_clients:
       # grid_search:  [3]
-      grid_search:  [6, 9]
+      grid_search:  [26, 9]
       # grid_search:  [3, 6, 9, 12, 15, 18]
 
     adversary_config:
       grid_search:
-        - type: blades.adversaries.ALIEAdversary
-        - type: blades.adversaries.LabelFlipAdversary
-        - type: blades.adversaries.NoiseAdversary
+        # - type: blades.adversaries.ALIEAdversary
+        # - type: blades.adversaries.LabelFlipAdversary
+        # - type: blades.adversaries.NoiseAdversary
         - type: blades.adversaries.SignFlipAdversary
-        - type: blades.adversaries.IPMAdversary
-          scale: 0.1
-        - type: blades.adversaries.IPMAdversary
-          scale: 100
-        - type: blades.adversaries.MinMaxAdversary
+        # - type: blades.adversaries.IPMAdversary
+        #   scale: 0.1
+        # - type: blades.adversaries.IPMAdversary
+        #   scale: 100
+        # - type: blades.adversaries.MinMaxAdversary

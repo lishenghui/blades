@@ -5,12 +5,11 @@ import numpy as np
 from ray.rllib.utils import deep_update
 from ray.rllib.utils.annotations import override
 
-from fedlib.datasets import FLDataset
 from fedlib.utils.types import NotProvided
 from fedlib.algorithms import AlgorithmConfig
 from fedlib.clients import ClientConfig
 from fedlib.algorithms.fedavg.fedavg import Fedavg as FedavgAlgorithm
-from fedlib.constants import CLIENT_UPDATE, GLOBAL_MODEL, NUM_GLOBAL_STEPS
+from fedlib.constants import CLIENT_UPDATE, NUM_GLOBAL_STEPS
 from fedlib.algorithms.fedavg.fedavg import FedavgConfig as FedavgConfigBase
 
 from blades.adversaries import Adversary, AdversaryConfig
@@ -22,7 +21,6 @@ class FedavgConfig(FedavgConfigBase):
         super().__init__(algo_class=algo_class or Fedavg)
 
         self.adversary_config = {}
-
         self.num_malicious_clients = 0
 
     def adversary(
@@ -57,24 +55,6 @@ class FedavgConfig(FedavgConfigBase):
             self.client_config
         )
         return config
-
-    # def get_worker_group_config(self) -> WorkerGroupConfig:
-    #     if not self._is_frozen:
-    #         raise ValueError(
-    #             "Cannot call `get_learner_group_config()` on an unfrozen "
-    #             "AlgorithmConfig! Please call `freeze()` first."
-    #         )
-
-    #     config = (
-    #         WorkerGroupConfig()
-    #         .resources(
-    #             num_remote_workers=self.num_remote_workers,
-    #             num_cpus_per_worker=self.num_cpus_per_worker,
-    #             num_gpus_per_worker=self.num_gpus_per_worker,
-    #         )
-    #         .task(task_spec=self.get_task_spec())
-    #     )
-    #     return config
 
     @override(AlgorithmConfig)
     def validate(self) -> None:
@@ -127,10 +107,7 @@ class Fedavg(FedavgAlgorithm):
         self.worker_group.sync_weights(self.server.get_global_model().state_dict())
 
         def local_training(worker, client):
-            if isinstance(worker.dataset, FLDataset):
-                dataset = worker.dataset.get_client_dataset(client.client_id)
-            else:
-                dataset = worker.dataset.get_train_loader(client.client_id)
+            dataset = worker.dataset.get_client_dataset(client.client_id)
             result = client.train_one_round(dataset)
             return result
 
@@ -140,7 +117,6 @@ class Fedavg(FedavgAlgorithm):
         )
 
         self.adversary.on_local_round_end(self)
-
         updates = [result.pop(CLIENT_UPDATE, None) for result in self.local_results]
 
         losses = []
@@ -161,30 +137,16 @@ class Fedavg(FedavgAlgorithm):
         return results
 
     def evaluate(self):
-        self.worker_group.sync_state(
-            GLOBAL_MODEL, self.server.get_global_model().state_dict()
-        )
+        self.worker_group.sync_weights(self.server.get_global_model().state_dict())
+
         clients = self.client_manager.testable_clients
 
         def validate_func(worker, client):
-            if isinstance(worker.dataset, FLDataset):
-                test_loader = worker.dataset.get_client_dataset(
-                    client.client_id
-                ).get_test_loader()
-            else:
-                test_loader = worker.dataset.get_test_loader(client.client_id)
+            dataset = worker.dataset.get_client_dataset(client.client_id)
+            test_loader = dataset.get_test_loader()
             return client.evaluate(test_loader)
 
-        if self.worker_group.workers:
-            affinity_actors = [
-                self._client_actors_affinity[client.client_id] for client in clients
-            ]
-
-            evaluate_results = self.worker_group.execute_with_actor_pool(
-                validate_func, clients, affinity_actors
-            )
-        else:
-            evaluate_results = self.worker_group.local_execute(validate_func, clients)
+        evaluate_results = self.worker_group.foreach_execution(validate_func, clients)
         results = {
             "ce_loss": np.average(
                 [metric["ce_loss"] for metric in evaluate_results],

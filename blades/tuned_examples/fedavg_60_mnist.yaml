@@ -49,11 +49,11 @@ fedavg_blades:
     server_config:
       aggregator:
         grid_search: [
-          type: Mean,
-          type: Median,
-          type: GeoMed,
-          type: DnC,
-          type: Trimmedmean
+          type: Mean
+          # type: Median,
+          # type: GeoMed,
+          # type: DnC,
+          # type: Trimmedmean
           ]
 
       optimizer:
@@ -75,8 +75,8 @@ fedavg_blades:
       # type: blades.adversaries.AdaptiveAdversary
       grid_search:
         - type: blades.adversaries.ALIEAdversary
-        - type: blades.adversaries.LabelFlipAdversary
-        - type: blades.adversaries.IPMAdversary
-          scale: 0.1
-        - type: blades.adversaries.IPMAdversary
-          scale: 100
+        # - type: blades.adversaries.LabelFlipAdversary
+        # - type: blades.adversaries.IPMAdversary
+        #   scale: 0.1
+        # - type: blades.adversaries.IPMAdversary
+        #   scale: 100
