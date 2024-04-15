@@ -7,7 +7,7 @@
    <a href="https://github.com/lishenghui/blades">
        <img alt="Build Status" src="https://img.shields.io/github/last-commit/lishenghui/blades/master?logo=Github"/>
    </a>
-   <a href="https://github.com/yourusername/yourrepo">
+   <a href="https://github.com/lishenghui/blades/actions/workflows/unit-tests.yml">
        <img alt="Tests Status" src="https://github.com/lishenghui/blades/actions/workflows/unit-tests.yml/badge.svg?branch=master"/>
    </a>
    <a href="https://blades.readthedocs.io/en/latest/?badge=latest">
