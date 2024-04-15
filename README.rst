@@ -13,6 +13,12 @@
    <a href="https://blades.readthedocs.io/en/latest/?badge=latest">
        <img alt="Docs" src="https://readthedocs.org/projects/blades/badge/?version=latest"/>
    </a>
+   <a href="https://pytorch.org/get-started/pytorch-2.0/">
+       <img alt="Docs" src="https://img.shields.io/badge/Pytorch-2.0-brightgreen?logo=pytorch&logoColor=red"/>
+   </a>
+   <a href="https://docs.ray.io/en/releases-2.9.0/">
+       <img alt="Docs" src="https://img.shields.io/badge/Ray-2.9-brightgreen?logo=ray&logoColor=blue"/>
+   </a>
    <a href="https://github.com/lishenghui/blades/blob/master/LICENSE">
        <img alt="License" src="https://img.shields.io/github/license/lishenghui/blades?logo=apache&logoColor=red"/>
    </a>
