@@ -2,20 +2,18 @@ from collections import defaultdict
 from typing import DefaultDict, List, Optional, Dict
 
 import numpy as np
+from ray.rllib.utils import force_list
 from ray.rllib.utils import deep_update
 from ray.rllib.utils.annotations import override
 
 from fedlib.utils.types import NotProvided
-from fedlib.algorithms import AlgorithmConfig
 from fedlib.clients import ClientConfig
-from fedlib.algorithms.fedavg.fedavg import Fedavg as FedavgAlgorithm
-from fedlib.constants import CLIENT_UPDATE, NUM_GLOBAL_STEPS
-from fedlib.algorithms.fedavg.fedavg import FedavgConfig as FedavgConfigBase
+from fedlib.trainers import FedavgTrainer, FedavgTrainerConfig, TrainerCallbackList
 
 from blades.adversaries import Adversary, AdversaryConfig
 
 
-class FedavgConfig(FedavgConfigBase):
+class FedavgConfig(FedavgTrainerConfig):
     def __init__(self, algo_class=None):
         """Initializes a FedavgConfig instance."""
         super().__init__(algo_class=algo_class or Fedavg)
@@ -42,12 +40,18 @@ class FedavgConfig(FedavgConfigBase):
     def get_adversary_config(self) -> AdversaryConfig:
         if not self._is_frozen:
             raise ValueError(
-                "Cannot call `get_learner_group_config()` on an unfrozen "
-                "AlgorithmConfig! Please call `freeze()` first."
+                "Cannot call `get_adversary_config()` on an unfrozen "
+                "FedavgTrainerConfig! Please call `freeze()` first."
             )
-        config = AdversaryConfig(
-            adversary_cls=self.adversary_config.get("type", Adversary), config=self
-        ).update_from_dict(self.adversary_config)
+        config = (
+            AdversaryConfig(
+                adversary_cls=self.adversary_config.get(
+                    "type", Adversary
+                )  # , config=self
+            )
+            .update_from_dict(self.adversary_config)
+            .pre_build()
+        )
         return config
 
     def get_client_config(self) -> ClientConfig:
@@ -56,7 +60,17 @@ class FedavgConfig(FedavgConfigBase):
         )
         return config
 
-    @override(AlgorithmConfig)
+    @override(FedavgTrainerConfig)
+    def build_callbacks(self, callbacllist_cls=None) -> TrainerCallbackList:
+        self.callbacks_config = force_list(self.callbacks_config, to_tuple=False)
+        self.callbacks_config.append(self.get_adversary_config())
+        # self.callbacks_config = list(force_list(self.callbacks_config)).append(
+        #     self.get_adversary_config()
+        # )
+        # breakpoint()
+        return super().build_callbacks(callbacllist_cls)
+
+    @override(FedavgTrainerConfig)
     def validate(self) -> None:
         super().validate()
 
@@ -83,7 +97,7 @@ class FedavgConfig(FedavgConfigBase):
             )
 
 
-class Fedavg(FedavgAlgorithm):
+class Fedavg(FedavgTrainer):
     """Federated Averaging Algorithm."""
 
     def __init__(self, config=None, logger_creator=None, **kwargs):
@@ -92,49 +106,49 @@ class Fedavg(FedavgAlgorithm):
         super().__init__(config, logger_creator, **kwargs)
 
     @classmethod
-    def get_default_config(cls) -> AlgorithmConfig:
+    def get_default_config(cls) -> FedavgTrainerConfig:
         return FedavgConfig()
 
-    def setup(self, config: AlgorithmConfig):
+    def setup(self, config: FedavgTrainerConfig):
         super().setup(config)
 
-        self.adversary = self.config.get_adversary_config().build(
-            self.client_manager.clients[: self.config.num_malicious_clients]
-        )
-        self.adversary.on_algorithm_start(self)
+        # self.adversary = self.config.get_adversary_config().build(
+        #     self.client_manager.clients[: self.config.num_malicious_clients]
+        # )
+        # self.adversary.on_algorithm_start(self)
 
-    def training_step(self):
-        self.worker_group.sync_weights(self.server.get_global_model().state_dict())
+    # def training_step(self):
+    #     self.worker_group.sync_weights(self.server.get_global_model().state_dict())
 
-        def local_training(worker, client):
-            dataset = worker.dataset.get_client_dataset(client.client_id)
-            result = client.train_one_round(dataset)
-            return result
+    #     def local_training(worker, client):
+    #         dataset = worker.dataset.get_client_dataset(client.client_id)
+    #         result = client.train_one_round(dataset)
+    #         return result
 
-        clients = self.client_manager.trainable_clients
-        self.local_results = self.worker_group.foreach_execution(
-            local_training, clients
-        )
+    #     clients = self.client_manager.trainable_clients
+    #     self.local_results = self.worker_group.foreach_execution(
+    #         local_training, clients
+    #     )
 
-        self.adversary.on_local_round_end(self)
-        updates = [result.pop(CLIENT_UPDATE, None) for result in self.local_results]
+    #     self.adversary.on_local_round_end(self)
+    #     updates = [result.pop(CLIENT_UPDATE, None) for result in self.local_results]
 
-        losses = []
-        for result in self.local_results:
-            client = self.client_manager.get_client_by_id(result["id"])
-            if not client.is_malicious:
-                loss = result.pop("avg_loss")
-                losses.append(loss)
+    #     losses = []
+    #     for result in self.local_results:
+    #         client = self.client_manager.get_client_by_id(result[CLIENT_ID])
+    #         if not client.is_malicious:
+    #             loss = result.pop("avg_loss")
+    #             losses.append(loss)
 
-        self._counters[NUM_GLOBAL_STEPS] += 1
-        global_vars = {
-            "timestep": self._counters[NUM_GLOBAL_STEPS],
-        }
-        results = {"train_loss": np.mean(losses)}
-        server_return = self.server.step(updates, global_vars)
-        results.update(server_return)
+    #     self._counters[NUM_GLOBAL_STEPS] += 1
+    #     global_vars = {
+    #         "timestep": self._counters[NUM_GLOBAL_STEPS],
+    #     }
+    #     results = {"train_loss": np.mean(losses)}
+    #     server_return = self.server.step(updates, global_vars)
+    #     results.update(server_return)
 
-        return results
+    #     return results
 
     def evaluate(self):
         self.worker_group.sync_weights(self.server.get_global_model().state_dict())

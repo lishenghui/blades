@@ -1,20 +1,21 @@
 import random
-from typing import Dict
 
 import torch
 
+from fedlib.constants import CLIENT_UPDATE, CLIENT_ID
+from fedlib.trainers import Trainer as Algorithm
+from fedlib.trainers import Trainer
+
 from blades.aggregators import Signguard
-from fedlib.algorithms import Algorithm
-from fedlib.constants import CLIENT_UPDATE
 from .adversary import Adversary
 
 
 class ALIEAdversary(Adversary):
-    def __init__(self, clients, global_config: Dict = None):
-        super().__init__(clients, global_config)
-
-        self.num_clients = global_config.num_clients
-        num_byzantine = len(clients)
+    def on_trainer_init(self, trainer: Trainer):
+        # super().__init__(clients, global_config)
+        # trainer.config.num_clients = len(trainer.clients)
+        self.num_clients = trainer.config.num_clients
+        num_byzantine = len(self.clients)
 
         s = torch.floor_divide(self.num_clients, 2) + 1 - num_byzantine
         cdf_value = (self.num_clients - num_byzantine - s) / (
@@ -25,13 +26,13 @@ class ALIEAdversary(Adversary):
 
         self.negative_indices = None
 
-    def on_local_round_end(self, algorithm: Algorithm):
-        benign_updates = self.get_benign_updates(algorithm)
+    def on_local_round_end(self, trainer: Algorithm):
+        benign_updates = self.get_benign_updates(trainer)
         mean = benign_updates.mean(dim=0)
         std = benign_updates.std(dim=0)
 
         # For SignGuard, we need to negate some of the elements
-        if isinstance(algorithm.server.aggregator, Signguard):
+        if isinstance(trainer.server.aggregator, Signguard):
             if self.negative_indices is None:
                 num_elements = len(std)
                 num_negate = num_elements // 2
@@ -40,7 +41,7 @@ class ALIEAdversary(Adversary):
             std[self.negative_indices] *= -1
 
         update = mean + std * self.z_max
-        for result in algorithm.local_results:
-            client = algorithm.client_manager.get_client_by_id(result["id"])
+        for result in trainer.local_results:
+            client = trainer.client_manager.get_client_by_id(result[CLIENT_ID])
             if client.is_malicious:
                 result[CLIENT_UPDATE] = update

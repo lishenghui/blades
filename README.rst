@@ -168,9 +168,9 @@ Please cite our `paper <https://arxiv.org/abs/2206.05359>`_ (and the respective 
 
 ::
 
-   @article{li2023blades,
-     title={Blades: A Unified Benchmark Suite for Byzantine Attacks and Defenses in Federated Learning},
-     author= {Li, Shenghui and Ju, Li and Zhang, Tianru and Ngai, Edith and Voigt, Thiemo},
-     journal={arXiv preprint arXiv:2206.05359},
-     year={2023}
-   }
+    @inproceedings{li2024blades,
+    title={Blades: A Unified Benchmark Suite for Byzantine Attacks and Defenses in Federated Learning},
+    author={Li, Shenghui and Ngai, Edith and Ye, Fanghua and Ju, Li and Zhang, Tianru and Voigt, Thiemo},
+    booktitle={2024 IEEE/ACM Ninth International Conference on Internet-of-Things Design and Implementation (IoTDI)},
+    year={2024}
+    }

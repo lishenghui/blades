@@ -1,26 +1,23 @@
 import copy
-from typing import Any, Dict, Type, List
+from typing import Dict, Type, List
 
 import torch
+from ray.rllib.utils.annotations import override
 from ray.rllib.utils.from_config import from_config
 
-from fedlib.constants import CLIENT_UPDATE
-from fedlib.algorithms.fedavg.fedavg import FedavgConfig as Algorithm
+from fedlib.constants import CLIENT_UPDATE, CLIENT_ID
+from fedlib.trainers import FedavgTrainer, Trainer, TrainerCallback
 
 
-class Adversary:
+class Adversary(TrainerCallback):
     """Base class for all adversaries."""
-
-    def __init__(self, clients: List, global_config: Dict = None):
-        self.clients = clients
-        self.global_config = global_config
 
     def get_benign_updates(self, algorithm) -> torch.Tensor:
         """Returns a tensor of benign updates from the local results."""
         updates = []
         for result in algorithm.local_results:
             psudo_grad = result.get(CLIENT_UPDATE, None)
-            client = algorithm.client_manager.get_client_by_id(result["id"])
+            client = algorithm.client_manager.get_client_by_id(result[CLIENT_ID])
             if psudo_grad is not None and not client.is_malicious:
                 updates.append(psudo_grad)
 
@@ -31,22 +28,29 @@ class Adversary:
             )
         return torch.vstack(updates)
 
-    def on_algorithm_start(self, algorithm: Algorithm):
+    @override(TrainerCallback)
+    def setup(self, trainer: Trainer, **info):
+        super().setup(trainer, **info)
+
+        num_malicious = trainer.config.num_malicious_clients
+        self.clients = trainer.client_manager.clients[:num_malicious]
+
+    @override(TrainerCallback)
+    def on_trainer_init(self, trainer: FedavgTrainer):
         """Called when the algorithm starts."""
         for client in self.clients:
             client.to_malicious(local_training=False)
-        _ = algorithm  # Mute "unused argument" warning
+        _ = trainer  # Mute "unused argument" warning
 
-    def on_local_round_end(self, algorithm):
+    def on_local_round_end(self, trainer: FedavgTrainer):
         """Called when the local round ends."""
 
 
 class AdversaryConfig:
     """Base class for all adversary configs."""
 
-    def __init__(self, adversary_cls=Adversary, config=None) -> None:
+    def __init__(self, adversary_cls=Adversary) -> None:
         self.adversary_class: Type["Adversary"] = adversary_cls
-        self.global_config: Dict[str, Any] = config
 
     def to_dict(self) -> dict:
         """Converts all settings into a legacy config dict for backward
@@ -72,16 +76,6 @@ class AdversaryConfig:
             >>> print(config["lr"])
             ... 0.001
         """
-        # TODO: Uncomment this once all algorithms use AlgorithmConfigs under the
-        #  hood (as well as Ray Tune).
-        # if log_once("algo_config_getitem"):
-        #    logger.warning(
-        #        "AlgorithmConfig objects should NOT be used as dict! "
-        #        f"Try accessing `{item}` directly as a property."
-        #    )
-        # In case user accesses "old" keys, which need to
-        # be translated to their correct property names.
-        # item = self._translate_special_keys(item)
         return getattr(self, item)
 
     def get(self, key, default=None):
@@ -93,9 +87,20 @@ class AdversaryConfig:
         """Builds the Adversary instance."""
         config_dict = self.to_dict()
         cls = config_dict.pop("adversary_class", Adversary)
-        # if cls is None:
-        #     raise ValueError("No `adversary_class` specified in config.")
         return from_config(cls, config_dict, clients=clients)
+
+    def pre_build(self) -> "Adversary":
+        """Builds the Adversary instance."""
+
+        config_dict = self.to_dict()
+        config_dict["type"] = config_dict.pop("adversary_class", Adversary)
+        return config_dict
+        # cls = config_dict.pop("adversary_class", Adversary)
+        # partial_cls = partial(cls, **config_dict)
+        # partial_cls = from_config(cls, **config_dict)
+        # breakpoint()
+
+        # return partial_cls
 
     def update_from_dict(
         self,
@@ -119,5 +124,7 @@ class AdversaryConfig:
 
         # Modify our properties one by one.
         for key, value in config_dict.items():
+            if key == "type":
+                key = "adversary_class"
             setattr(self, key, value)
         return self

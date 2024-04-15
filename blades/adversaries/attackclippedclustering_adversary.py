@@ -5,8 +5,8 @@ import torch
 from numpy import inf
 from sklearn.cluster import AgglomerativeClustering
 
-from fedlib.algorithms import Algorithm
-from fedlib.constants import CLIENT_UPDATE
+from fedlib.trainers import Trainer
+from fedlib.constants import CLIENT_UPDATE, CLIENT_ID
 
 from blades.aggregators import Clippedclustering
 
@@ -19,7 +19,7 @@ class AttackclippedclusteringAdversary(Adversary):
         self.linkage = linkage
         self.agg = Clippedclustering()
 
-    def on_local_round_end(self, algorithm: Algorithm):
+    def on_local_round_end(self, algorithm: Trainer):
         self._chain_attack(algorithm)
 
     def _chain_attack(self, algorithm):
@@ -77,7 +77,7 @@ class AttackclippedclusteringAdversary(Adversary):
             benign_updates[idx_max_dis]
         )
         for result in algorithm.local_results:
-            client = algorithm.client_manager.get_client_by_id(result["id"])
+            client = algorithm.client_manager.get_client_by_id(result[CLIENT_ID])
             if client.is_malicious:
                 if theta + theta_cross >= np.pi:
                     mal_update = -10 * benign_updates.mean(dim=0)

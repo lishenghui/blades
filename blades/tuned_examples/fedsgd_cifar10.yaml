@@ -13,8 +13,8 @@ fedavg_blades:
       num_classes: 10
       train_batch_size: 64
 
-      splitter_config:
-        type: IIDSplitter
+      partitioner_config:
+        type: DirichletPartitioner
         # alpha: 100.
         num_clients: 60
 

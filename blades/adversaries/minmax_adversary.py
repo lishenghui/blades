@@ -4,8 +4,8 @@ from typing import Dict
 import torch
 
 from blades.aggregators import Signguard
-from fedlib.algorithms import Algorithm
-from fedlib.constants import CLIENT_UPDATE
+from fedlib.trainers import Trainer as Algorithm
+from fedlib.constants import CLIENT_UPDATE, CLIENT_ID
 from .adversary import Adversary
 
 
@@ -22,7 +22,7 @@ class MinMaxAdversary(Adversary):
         if self.num_byzantine is None:
             self.num_byzantine = 0
             for result in algorithm.local_results:
-                client = algorithm.client_manager.get_client_by_id(result["id"])
+                client = algorithm.client_manager.get_client_by_id(result[CLIENT_ID])
                 if client.is_malicious:
                     self.num_byzantine += 1
 
@@ -30,7 +30,7 @@ class MinMaxAdversary(Adversary):
         # updates = self._attack_median_and_trimmedmean(algorithm)
         self.num_byzantine = 0
         for result in algorithm.local_results:
-            client = algorithm.client_manager.get_client_by_id(result["id"])
+            client = algorithm.client_manager.get_client_by_id(result[CLIENT_ID])
             if client.is_malicious:
                 result[CLIENT_UPDATE] = updates
                 self.num_byzantine += 1

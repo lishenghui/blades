@@ -36,7 +36,8 @@ class TestAdversary(unittest.TestCase):
             .resources(num_remote_workers=1, num_gpus_per_worker=0)
             .build()
         )
-        self.adversary = self.algorithm.adversary
+        self.adversary = self.algorithm.callbacks[-1]
+        self.adversary.setup(self.algorithm)
 
     @classmethod
     def tearDownClass(cls):
@@ -44,6 +45,7 @@ class TestAdversary(unittest.TestCase):
 
     def test_on_algorithm_start(self):
         """Tests the on_algorithm_start method."""
+        # self.adversary.setup(self.algorithm)
         for client in self.adversary.clients:
             self.assertTrue(client.is_malicious)
 
@@ -75,13 +77,13 @@ class TestAdversary(unittest.TestCase):
                 adv = (
                     config.adversary(adversary_config={"type": adv_cls, "scale": 0.1})
                     .build()
-                    .adversary
+                    .callbacks[-1]
                 )
             else:
                 adv = (
                     config.adversary(adversary_config={"type": adv_cls})
                     .build()
-                    .adversary
+                    .callbacks[-1]
                 )
             self.assertIsInstance(adv, adv_cls)
 

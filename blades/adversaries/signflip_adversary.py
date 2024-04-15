@@ -1,4 +1,4 @@
-from fedlib.algorithms import Algorithm
+from fedlib.trainers import Trainer as Algorithm
 from fedlib.clients import ClientCallback
 from .adversary import Adversary
 
