@@ -55,15 +55,11 @@
             :target: https://arxiv.org/pdf/2206.05359.pdf
 
 
-.. .. raw:: html
+.. raw:: html
 
-..     <p align=center>
-..         <img src="https://github.com/lishenghui/blades/blob/master/docs/source/images/arch.png" width="1000" alt="Blades Logo">
-..     </p>
-
-image:: https://github.com/lishenghui/blades/blob/master/docs/source/images/arch.png
-
-
+   <p align=center>
+        <img src="https://github.com/lishenghui/blades/blob/master/docs/source/images/client_pipeline.png" width="1000" alt="Blades Logo">
+   </p>
 
 Installation
 ==================================================
