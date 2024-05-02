@@ -12,10 +12,12 @@ fedavg_blades:
       type: CIFAR10
       num_clients: 60
       train_batch_size: 64
-      iid:
-        grid_search: [False]
-      alpha:
-        grid_search: [0.1, 0.5, 1, 10]
+
+      partitioner_config:
+        type: DirichletPartitioner
+        alpha:
+          grid_search: [0.1, 0.5, 1, 10]
+        num_clients: 60
 
     evaluation_interval: 50
 
