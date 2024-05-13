@@ -38,7 +38,8 @@ scikit-learn = "^1.3.2"
 pytest = "*"
 pre-commit = "*"
 torchmetrics = "*"
-fedlib = { git = "git@github.com:fedlib/fedlib.git", branch = "main" }
+# fedlib = { git = "git@github.com:fedlib/fedlib.git", branch = "main" }
+fedlib = { git = "https://github.com/fedlib/fedlib.git", branch = "main" }
 
 [tool.poetry.dev-dependencies]
 yapf = "*"
