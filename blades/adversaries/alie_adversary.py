@@ -12,8 +12,6 @@ from .adversary import Adversary
 
 class ALIEAdversary(Adversary):
     def on_trainer_init(self, trainer: Trainer):
-        # super().__init__(clients, global_config)
-        # trainer.config.num_clients = len(trainer.clients)
         self.num_clients = trainer.config.num_clients
         num_byzantine = len(self.clients)
 

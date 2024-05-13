@@ -95,7 +95,7 @@ class GeoMed:
             # return (torch.sum(norms * weights) / torch.sum(weights)).item()
 
             return np.average(
-                [torch.norm(p - median).item() for p in inputs],
+                [torch.norm(p - median, p=1).item() for p in inputs],
                 weights=weights.cpu(),
             )
 
@@ -107,7 +107,7 @@ class GeoMed:
             # Weiszfeld iterations
             for _ in range(maxiter):
                 prev_obj_value = objective_value
-                denom = torch.stack([torch.norm(p - median) for p in inputs])
+                denom = torch.stack([torch.norm(p - median, p=1) for p in inputs])
                 new_weights = weights / torch.clamp(denom, min=eps)
                 median = weighted_average(inputs, new_weights)
 

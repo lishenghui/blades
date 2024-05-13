@@ -1,5 +1,4 @@
 import random
-from typing import Dict
 
 import torch
 
@@ -10,10 +9,10 @@ from .adversary import Adversary
 
 
 class MinMaxAdversary(Adversary):
-    def __init__(self, clients, global_config: Dict = None):
-        super().__init__(clients, global_config)
+    def __init__(self, threshold=1.0):
+        super().__init__()
 
-        self.threshold = 3.0
+        self.threshold = threshold
         self.threshold_diff = 1e-4
         self.num_byzantine = None
         self.negative_indices = None
@@ -27,7 +26,6 @@ class MinMaxAdversary(Adversary):
                     self.num_byzantine += 1
 
         updates = self._attack_by_binary_search(algorithm)
-        # updates = self._attack_median_and_trimmedmean(algorithm)
         self.num_byzantine = 0
         for result in algorithm.local_results:
             client = algorithm.client_manager.get_client_by_id(result[CLIENT_ID])

@@ -112,44 +112,6 @@ class Fedavg(FedavgTrainer):
     def setup(self, config: FedavgTrainerConfig):
         super().setup(config)
 
-        # self.adversary = self.config.get_adversary_config().build(
-        #     self.client_manager.clients[: self.config.num_malicious_clients]
-        # )
-        # self.adversary.on_algorithm_start(self)
-
-    # def training_step(self):
-    #     self.worker_group.sync_weights(self.server.get_global_model().state_dict())
-
-    #     def local_training(worker, client):
-    #         dataset = worker.dataset.get_client_dataset(client.client_id)
-    #         result = client.train_one_round(dataset)
-    #         return result
-
-    #     clients = self.client_manager.trainable_clients
-    #     self.local_results = self.worker_group.foreach_execution(
-    #         local_training, clients
-    #     )
-
-    #     self.adversary.on_local_round_end(self)
-    #     updates = [result.pop(CLIENT_UPDATE, None) for result in self.local_results]
-
-    #     losses = []
-    #     for result in self.local_results:
-    #         client = self.client_manager.get_client_by_id(result[CLIENT_ID])
-    #         if not client.is_malicious:
-    #             loss = result.pop("avg_loss")
-    #             losses.append(loss)
-
-    #     self._counters[NUM_GLOBAL_STEPS] += 1
-    #     global_vars = {
-    #         "timestep": self._counters[NUM_GLOBAL_STEPS],
-    #     }
-    #     results = {"train_loss": np.mean(losses)}
-    #     server_return = self.server.step(updates, global_vars)
-    #     results.update(server_return)
-
-    #     return results
-
     def evaluate(self):
         self.worker_group.sync_weights(self.server.get_global_model().state_dict())
 

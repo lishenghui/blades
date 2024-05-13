@@ -15,7 +15,7 @@ fedavg_blades:
 
       partitioner_config:
         type: DirichletPartitioner
-        # alpha: 100.
+        alpha: 100.
         num_clients: 60
 
     evaluation_interval: 50
@@ -41,9 +41,10 @@ fedavg_blades:
     server_config:
       aggregator:
         grid_search: [
-          type: Mean,
+          # type: Mean,
           # type: Clippedclustering,
           # type: Median,
+          type: blades.aggregators.GeoMed,
           # type: GeoMed,
           # type: DnC,
           # type: Trimmedmean,
@@ -68,10 +69,10 @@ fedavg_blades:
       grid_search:
         # - type: blades.adversaries.ALIEAdversary
         # - type: blades.adversaries.LabelFlipAdversary
-        # - type: blades.adversaries.NoiseAdversary
+        - type: blades.adversaries.NoiseAdversary
         - type: blades.adversaries.SignFlipAdversary
         # - type: blades.adversaries.IPMAdversary
         #   scale: 0.1
         # - type: blades.adversaries.IPMAdversary
         #   scale: 100
-        # - type: blades.adversaries.MinMaxAdversary
+        - type: blades.adversaries.MinMaxAdversary

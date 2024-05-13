@@ -14,7 +14,7 @@ fedavg_blades:
       train_batch_size: 64
       partitioner_config:
         type: DirichletPartitioner
-        # alpha: 100.
+        alpha: 100.
         num_clients: 4
 
     evaluation_interval: 50

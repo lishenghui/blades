@@ -1,5 +1,3 @@
-from typing import Dict
-
 import torch
 
 from fedlib.trainers import Trainer as Algorithm
@@ -8,15 +6,12 @@ from .adversary import Adversary
 
 
 def find_orthogonal_unit_vector(v):
-    # 随机生成一个与v不平行的向量
     random_vector = torch.randn_like(v)
 
-    # 使用Gram-Schmidt正交化方法
     orthogonal_vector = (
         random_vector - torch.dot(random_vector, v) / torch.dot(v, v) * v
     )
 
-    # 标准化向量
     orthogonal_vector[-200] = 20000
     orthogonal_vector[-100] = 20000
     orthogonal_unit_vector = orthogonal_vector / torch.norm(orthogonal_vector)
@@ -24,9 +19,6 @@ def find_orthogonal_unit_vector(v):
 
 
 class SignGuardAdversary(Adversary):
-    def __init__(self, clients, global_config: Dict = None):
-        super().__init__(clients, global_config)
-
     def on_local_round_end(self, algorithm: Algorithm):
         updates = self._attack_sign_guard(algorithm)
         for result in algorithm.local_results:
