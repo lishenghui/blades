@@ -19,3 +19,5 @@ scripts/data
 *.pytest_cache/
 *.DS_Store
 blades/run_alie.sh
+.vscode
+.vscode-upload.json
