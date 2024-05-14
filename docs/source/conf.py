@@ -2,7 +2,6 @@ import os.path as osp
 import sys
 import blades_sphinx_theme
 
-
 project = "blades"
 copyright = "2023, Shenghui Li"
 author = "Shenghui Li"
@@ -10,16 +9,33 @@ release = "0.2"
 
 sys.path.append(osp.join(osp.dirname(blades_sphinx_theme.__file__), "extension"))
 
+example_path = osp.abspath("../../examples")
+
+print(example_path)
+sys.path.insert(0, example_path)  # 添加 example 目录到路径
+sys.path.insert(0, osp.abspath("../../blades/aggregators"))  # 添加 example 目录到路径
+
+# sys.path.insert(0, os.path.abspath("/Users/sheli564/Desktop/blades/src/blades"))
+# sys.path.insert(0, os.path.abspath("/Users/sheli564/Desktop/blades/"))
+
+
 extensions = [
     "sphinx.ext.autodoc",
+    "sphinx_autodoc_typehints",
     "sphinx.ext.autosummary",
+    "sphinx.ext.doctest",
+    "sphinx.ext.extlinks",
     "sphinx.ext.intersphinx",
     "sphinx.ext.mathjax",
     "sphinx.ext.napoleon",
     "sphinx.ext.viewcode",
     "nbsphinx",
+    "sphinx_gallery.gen_gallery",
+    "sphinx_gallery.load_style",
     "blades_sphinx",
+    "m2r2",
 ]
+
 
 templates_path = ["_templates"]
 exclude_patterns = []
@@ -43,6 +59,13 @@ intersphinx_mapping = {
     "numpy": ("http://docs.scipy.org/doc/numpy", None),
     "pandas": ("http://pandas.pydata.org/pandas-docs/dev", None),
     "torch": ("https://pytorch.org/docs/master", None),
+}
+
+sphinx_gallery_conf = {
+    "line_numbers": False,
+    "ignore_pattern": "/todo_",
+    "examples_dirs": "../../examples",  # path to your example scripts
+    "gallery_dirs": "_examples",  # path to where to save gallery generated output
 }
 
 # def setup(app):

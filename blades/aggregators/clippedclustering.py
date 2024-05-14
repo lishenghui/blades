@@ -10,9 +10,14 @@ from .aggregators import Mean, Median
 
 
 class Clippedclustering(object):
-    def __init__(self, agg="mean", max_tau=1e5, linkage="average") -> None:
-        super(Clippedclustering, self).__init__()
+    """Clipped clustering aggregator."""
 
+    # def __init__(self, agg="mean", max_tau=1e5, linkage="average") -> None:
+    def __init__(self):
+        agg = "mean"
+        max_tau = 1e5
+        linkage = "average"
+        # def __init__(self, agg="mean", max_tau=1e5, linkage="average") -> None:
         assert linkage in ["average", "single"]
         self.tau = max_tau
         self.linkage = linkage

@@ -17,16 +17,29 @@ def _median(inputs: List[torch.Tensor]):
 
 
 class Mean(object):
+    """Computes the ``sample mean`` over the updates from all give clients."""
+
     def __call__(self, inputs: List[torch.Tensor]):
         return _mean(inputs)
 
 
 class Median(object):
+    """Partitioner that uses Dirichlet distribution to allocate samples to
+    clients."""
+
     def __call__(self, inputs: List[torch.Tensor]):
+        """A robust aggregator from paper `Byzantine-robust distributed
+        learning:
+
+        Towards optimal statistical rates.<https://proceedings.mlr.press/v80/yin18a>`_.
+        It computes the coordinate-wise median of the given set of clients
+        """
         return _median(inputs)
 
 
 class Trimmedmean(object):
+    """A robust aggregator."""
+
     def __init__(self, num_byzantine: int, *, filter_frac=1.0):
         if filter_frac > 1.0 or filter_frac < 0.0:
             raise ValueError(f"filter_frac should be in [0.0, 1.0], got {filter_frac}.")

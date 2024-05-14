@@ -19,14 +19,30 @@ and :ray:`null` `Ray <https://ray.io>`_ to study the state-of-the-art attacks an
 
 .. toctree::
    :maxdepth: 1
-   :caption: Install Blades
+   :caption: Getting Started
 
-   install/installation
+   get_started/installation
+   get_started/overview
+   get_started/key_concepts
+   get_started/quickstart
+
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Example Gallery
+
+   _examples/index
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Package Reference
+
+   modules/datasets
+   modules/aggregators
 
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
-
 
 
 Indices and tables
