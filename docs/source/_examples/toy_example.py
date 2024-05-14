@@ -1,5 +1,5 @@
 """
-A Toy Example
+A FashionMNIST Example
 ==================
 
 """

@@ -18,7 +18,7 @@
 .. _sphx_glr__examples_toy_example.py:
 
 
-A Toy Example
+A FashionMNIST Example
 ==================
 
 .. GENERATED FROM PYTHON SOURCE LINES 6-57

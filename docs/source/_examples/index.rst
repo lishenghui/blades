@@ -15,7 +15,7 @@ Below is a gallery of examples
 
 .. raw:: html
 
-    <div class="sphx-glr-thumbcontainer" tooltip="A Toy Example">
+    <div class="sphx-glr-thumbcontainer" tooltip="A FashionMNIST Example">
 
 .. only:: html
 
@@ -26,7 +26,7 @@ Below is a gallery of examples
 
 .. raw:: html
 
-      <div class="sphx-glr-thumbnail-title">A Toy Example</div>
+      <div class="sphx-glr-thumbnail-title">A FashionMNIST Example</div>
     </div>
 
 

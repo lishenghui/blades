@@ -186,11 +186,11 @@ Dirichlet Partitioner
 Sharding Partitioner
 ----------------------
 
-.. image:: https://github.com/lishenghui/blades/blob/master/docs/source/images/shard_partition.png
+.. raw:: html
+
+    <img src="https://github.com/lishenghui/blades/blob/master/docs/source/images/shard_partition.png" alt="Shard Partition" />
 
 
-Citation
-=========
 
 Please cite our `paper <https://arxiv.org/abs/2206.05359>`_ (and the respective papers of the methods used) if you use this code in your own work:
 
