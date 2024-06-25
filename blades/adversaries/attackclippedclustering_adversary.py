@@ -6,9 +6,8 @@ from numpy import inf
 from sklearn.cluster import AgglomerativeClustering
 
 from fedlib.trainers import Trainer
+from fedlib.aggregators import Clippedclustering
 from fedlib.constants import CLIENT_UPDATE, CLIENT_ID
-
-from blades.aggregators import Clippedclustering
 
 from .adversary import Adversary
 

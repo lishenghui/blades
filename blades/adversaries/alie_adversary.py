@@ -5,8 +5,8 @@ import torch
 from fedlib.constants import CLIENT_UPDATE, CLIENT_ID
 from fedlib.trainers import Trainer as Algorithm
 from fedlib.trainers import Trainer
+from fedlib.aggregators import Signguard
 
-from blades.aggregators import Signguard
 from .adversary import Adversary
 
 

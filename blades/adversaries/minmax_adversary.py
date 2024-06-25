@@ -2,7 +2,7 @@ import random
 
 import torch
 
-from blades.aggregators import Signguard
+from fedlib.aggregators import Signguard
 from fedlib.trainers import Trainer as Algorithm
 from fedlib.constants import CLIENT_UPDATE, CLIENT_ID
 from .adversary import Adversary

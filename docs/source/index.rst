@@ -34,13 +34,6 @@ and :ray:`null` `Ray <https://ray.io>`_ to study the state-of-the-art attacks an
    _examples/index
 
 .. toctree::
-   :maxdepth: 1
-   :caption: Package Reference
-
-   modules/datasets
-   modules/aggregators
-
-.. toctree::
    :maxdepth: 2
    :caption: Contents:
 

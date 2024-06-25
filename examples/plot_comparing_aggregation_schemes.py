@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import torch
 
-from blades.aggregators import (
+from fedlib.aggregators import (
     Clippedclustering,
     DnC,
     GeoMed,
