@@ -44,7 +44,7 @@ fedavg_blades:
 
     server_config:
       aggregator:
-        # Avaliable aggregators are listed in: https://fedlib.readthedocs.io/en/latest/modules/aggregators.html#general-aggregators
+        # Available aggregators are listed in: https://fedlib.readthedocs.io/en/latest/modules/aggregators.html#general-aggregators
         grid_search: [
           type: Mean,
           # type: Median,
